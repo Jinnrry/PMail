@@ -1,10 +1,11 @@
-package mysql
+package db
 
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
+	_ "modernc.org/sqlite"
 	"pmail/config"
 	"pmail/dto"
 )
@@ -12,15 +13,23 @@ import (
 var Instance *sqlx.DB
 
 func Init() {
-	dsn := config.Instance.MysqlDSN
+	dsn := config.Instance.DbDSN
 	var err error
-	Instance, err = sqlx.Open("mysql", dsn)
+
+	switch config.Instance.DbType {
+	case "mysql":
+		Instance, err = sqlx.Open("mysql", dsn)
+	case "sqlite":
+		Instance, err = sqlx.Open("sqlite", dsn)
+	default:
+		return
+	}
 	if err != nil {
 		panic(err)
 	}
 	Instance.SetMaxOpenConns(100)
 	Instance.SetMaxIdleConns(10)
-	showMySQLCharacterSet()
+	//showMySQLCharacterSet()
 	checkTable()
 }
 
@@ -38,7 +47,13 @@ type tables struct {
 
 func checkTable() {
 	var res []*tables
-	err := Instance.Select(&res, "show tables")
+
+	var err error
+	if config.Instance.DbType == "sqlite" {
+		err = Instance.Select(&res, "select name as `Tables_in_pmail` from sqlite_master where type='table'")
+	} else {
+		err = Instance.Select(&res, "show tables")
+	}
 	if err != nil {
 		panic(err)
 	}

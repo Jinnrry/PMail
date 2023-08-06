@@ -13,10 +13,12 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"pmail/config"
 	"pmail/controllers"
 	"pmail/controllers/email"
 	"pmail/dto"
 	"pmail/dto/response"
+	"pmail/i18n"
 	"pmail/session"
 	"time"
 )
@@ -27,6 +29,37 @@ var local embed.FS
 var ip string
 
 const HttpPort = 80
+
+var setupServer *http.Server
+
+func SetupStart() {
+	mux := http.NewServeMux()
+	fe, err := fs.Sub(local, "dist")
+	if err != nil {
+		panic(err)
+	}
+	mux.Handle("/", http.FileServer(http.FS(fe)))
+	mux.HandleFunc("/api/", contextIterceptor(controllers.Setup))
+	mux.HandleFunc("/", controllers.Proxy)
+
+	setupServer := &http.Server{
+		Addr:         fmt.Sprintf(":%d", HttpPort),
+		Handler:      mux,
+		ReadTimeout:  time.Second * 60,
+		WriteTimeout: time.Second * 60,
+	}
+	err = setupServer.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func SetupStop() {
+	err := setupServer.Close()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func Start() {
 	log.Infof("Http Server Start at :%d", HttpPort)
@@ -118,15 +151,20 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 		}
 		ctx.Lang = lang
 
-		user := cast.ToString(session.Instance.Get(ctx, "user"))
-		if user != "" {
-			_ = json.Unmarshal([]byte(user), &ctx.UserInfo)
-		}
-		if ctx.UserInfo == nil || ctx.UserInfo.ID == 0 {
-			if r.URL.Path != "/api/ping" && r.URL.Path != "/api/login" {
-				response.NewErrorResponse(response.NeedLogin, "登陆已失效！", "").FPrint(w)
-				return
+		if config.IsInit {
+			user := cast.ToString(session.Instance.Get(ctx, "user"))
+			if user != "" {
+				_ = json.Unmarshal([]byte(user), &ctx.UserInfo)
 			}
+			if ctx.UserInfo == nil || ctx.UserInfo.ID == 0 {
+				if r.URL.Path != "/api/ping" && r.URL.Path != "/api/login" {
+					response.NewErrorResponse(response.ParamsError, i18n.GetText(ctx.Lang, "login_exp"), "").FPrint(w)
+					return
+				}
+			}
+		} else if r.URL.Path != "/api/setup" {
+			response.NewErrorResponse(response.NeedSetup, "", "").FPrint(w)
+			return
 		}
 		h(ctx, w, r)
 	}

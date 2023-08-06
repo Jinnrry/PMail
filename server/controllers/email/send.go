@@ -7,12 +7,12 @@ import (
 	"io"
 	"net/http"
 	"pmail/config"
+	"pmail/db"
 	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/dto/response"
 	"pmail/hooks"
 	"pmail/i18n"
-	"pmail/mysql"
 	"pmail/smtp_server"
 	"pmail/utils/async"
 	"strings"
@@ -139,7 +139,7 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 
 	// 邮件落库
 	sql := "INSERT INTO email (type,subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,send_user_id,error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	sqlRes, sqlerr := mysql.Instance.Exec(mysql.WithContext(ctx, sql),
+	sqlRes, sqlerr := db.Instance.Exec(db.WithContext(ctx, sql),
 		1,
 		e.Subject,
 		json2string(e.ReplyTo),
@@ -181,12 +181,12 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 
 		if err != nil {
 			errMsg = err.Error()
-			_, err := mysql.Instance.Exec(mysql.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, emailId)
+			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, emailId)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
 		} else {
-			_, err := mysql.Instance.Exec(mysql.WithContext(ctx, "update email set status =1  where id = ? "), emailId)
+			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), emailId)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}

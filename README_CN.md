@@ -37,7 +37,11 @@
 
 ## 1、生成DKIM 秘钥
 
-使用[go-msgauth](https://github.com/emersion/go-msgauth)项目的dkim-keygen工具生成公钥和私钥
+```
+go install github.com/emersion/go-msgauth/cmd/dkim-keygen@latest
+dkim-keygen
+```
+执行后将得到`dkim.priv`文件，公钥数据会直接输出
 
 生成以后将密钥放到`config/dkim`目录中
 

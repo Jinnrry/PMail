@@ -5,10 +5,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"pmail/db"
 	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/i18n"
-	"pmail/mysql"
 )
 
 type modifyPasswordRequest struct {
@@ -29,7 +29,7 @@ func ModifyPassword(ctx *dto.Context, w http.ResponseWriter, req *http.Request) 
 	if retData.Password != "" {
 		encodePwd := md5Encode(md5Encode(retData.Password+"pmail") + "pmail2023")
 
-		_, err := mysql.Instance.Exec(mysql.WithContext(ctx, "update user set password = ? where id =?"), encodePwd, ctx.UserInfo.ID)
+		_, err := db.Instance.Exec(db.WithContext(ctx, "update user set password = ? where id =?"), encodePwd, ctx.UserInfo.ID)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
 			return

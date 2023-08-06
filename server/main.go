@@ -7,12 +7,7 @@ import (
 	"os"
 	"pmail/config"
 	"pmail/dto"
-	"pmail/dto/parsemail"
-	"pmail/hooks"
-	"pmail/http_server"
-	"pmail/mysql"
-	"pmail/session"
-	"pmail/smtp_server"
+	"pmail/res_init"
 	"time"
 )
 
@@ -57,20 +52,10 @@ func main() {
 	var cst, _ = time.LoadLocation("Asia/Shanghai")
 	time.Local = cst
 
-	config.Init()
-	parsemail.Init()
-	mysql.Init()
-	session.Init()
-	hooks.Init()
-
-	// smtp server start
-	go smtp_server.Start()
-
-	// http server start
-	go http_server.Start()
+	res_init.Init()
 
 	log.Infoln("***************************************************")
-	log.Infoln("***\tServer Start Success Version:1.0.0")
+	log.Infof("***\tServer Start Success Version:%s\n", config.Version)
 	log.Infof("***\tGit Commit Hash: %s ", gitHash)
 	log.Infof("***\tBuild TimeStamp: %s ", buildTime)
 	log.Infof("***\tBuild GoLang Version: %s ", goVersion)

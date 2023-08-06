@@ -8,11 +8,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"pmail/db"
 	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/i18n"
 	"pmail/models"
-	"pmail/mysql"
 	"pmail/session"
 )
 
@@ -27,18 +27,18 @@ func Login(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Errorf("%+v", err)
 	}
-	var retData loginRequest
-	err = json.Unmarshal(reqBytes, &retData)
+	var reqData loginRequest
+	err = json.Unmarshal(reqBytes, &reqData)
 	if err != nil {
 		log.Errorf("%+v", err)
 	}
 
 	var user models.User
 
-	encodePwd := md5Encode(md5Encode(retData.Password+"pmail") + "pmail2023")
+	encodePwd := md5Encode(md5Encode(reqData.Password+"pmail") + "pmail2023")
 
-	err = mysql.Instance.Get(&user, mysql.WithContext(ctx, "select * from user where account =? and password =?"),
-		retData.Account, encodePwd)
+	err = db.Instance.Get(&user, db.WithContext(ctx, "select * from user where account =? and password =?"),
+		reqData.Account, encodePwd)
 	if err != nil && err != sql.ErrNoRows {
 		log.Errorf("%+v", err)
 	}

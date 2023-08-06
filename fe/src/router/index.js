@@ -3,6 +3,9 @@ import ListView from '../views/ListView.vue'
 import EditerView from '../views/EditerView.vue'
 import LoginView from '../views/LoginView.vue'
 import EmailDetailView from '../views/EmailDetailView.vue'
+import SetupView from '../views/SetupView.vue'
+
+
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
@@ -25,6 +28,11 @@ const router = createRouter({
       path: '/login',
       name: "login",
       component: LoginView
+    },
+    {
+      path: '/setup',
+      name: "setup",
+      component: SetupView
     },
     {
       path: '/detail/:id',

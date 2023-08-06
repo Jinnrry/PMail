@@ -1,11 +1,14 @@
 {
-  "domain": "demo.com",
+  "domain": "",
+  "webDomain": "",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",
   "SSLPrivateKeyPath": "config/ssl/private.key",
   "SSLPublicKeyPath": "config/ssl/public.crt",
-  "mysqlDSN": "",
+  "dbDSN": "",
+  "dbType": "",
   "weChatPushAppId": "",
   "weChatPushSecret": "",
   "weChatPushTemplateId": "",
-  "weChatPushUserId": ""
+  "weChatPushUserId": "",
+  "isInit": false
 }

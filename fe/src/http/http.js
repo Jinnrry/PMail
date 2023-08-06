@@ -9,7 +9,7 @@ var $http = axios.create({
     timeout: 6000, //设置超时
     headers: {
         'Content-Type': 'application/json;charset=UTF-8;',
-        'Lang':lang.lang
+        'Lang': lang.lang
     }
 })
 
@@ -27,9 +27,18 @@ $http.interceptors.request.use((config) => {
 //响应拦截器
 $http.interceptors.response.use((response) => {
     //响应成功
-    if(response.data.errorNo == 403){
+    if (response.data.errorNo == 403) {
         router.replace({
             path: '/login',
+            query: {
+                redirect: router.currentRoute.fullPath
+            }
+        })
+    }
+    //响应成功
+    if (response.data.errorNo == 402) {
+        router.replace({
+            path: '/setup',
             query: {
                 redirect: router.currentRoute.fullPath
             }

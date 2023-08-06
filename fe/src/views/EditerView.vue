@@ -76,6 +76,8 @@
 
 
 <script setup>
+import $http from '../http/http';
+
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, ref, shallowRef, reactive, onMounted } from 'vue'
@@ -83,7 +85,6 @@ import { Close } from '@element-plus/icons-vue';
 import lang from '../i18n/i18n';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { i18nChangeLanguage } from '@wangeditor/editor'
-import $http from '../http/http';
 import router from "@/router";  //根路由对象
 import useGroupStore from '../stores/group'
 const groupStore = useGroupStore()

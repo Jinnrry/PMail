@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"pmail/config"
+	"pmail/db"
 	parsemail2 "pmail/dto/parsemail"
-	"pmail/mysql"
 	"pmail/session"
 	"testing"
 	"time"
@@ -39,7 +39,7 @@ func testInit() {
 
 	config.Init()
 	parsemail2.Init()
-	mysql.Init()
+	db.Init()
 	session.Init()
 
 }
