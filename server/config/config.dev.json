@@ -1,11 +1,16 @@
 {
-  "domain": "jinnrry.com",
+  "logLevel": "debug",
+  "domain": "domain.com",
+  "webDomain": "mail.domain.com",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",
+  "sslType": "0",
   "SSLPrivateKeyPath": "config/ssl/private.key",
   "SSLPublicKeyPath": "config/ssl/public.crt",
-  "mysqlDSN": "",
+  "dbDSN": "./pmail.db",
+  "dbType": "sqlite",
   "weChatPushAppId": "",
   "weChatPushSecret": "",
   "weChatPushTemplateId": "",
-  "weChatPushUserId": ""
+  "weChatPushUserId": "",
+  "isInit": false
 }

@@ -8,9 +8,9 @@ import (
 	"io"
 	"net"
 	"net/netip"
+	"pmail/db"
 	"pmail/dto/parsemail"
 	"pmail/hooks"
-	"pmail/mysql"
 	"pmail/utils/async"
 	"strings"
 	"time"
@@ -65,7 +65,7 @@ func (s *Session) Data(r io.Reader) error {
 	}
 
 	sql := "INSERT INTO email (send_date, subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err = mysql.Instance.Exec(sql,
+	_, err = db.Instance.Exec(sql,
 		email.Date,
 		email.Subject,
 		json2string(email.ReplyTo),

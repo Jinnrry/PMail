@@ -5,24 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"pmail/db"
 	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/models"
-	"pmail/mysql"
 	"strings"
 )
 
 func GetEmailDetail(ctx *dto.Context, id int, markRead bool) (*models.Email, error) {
 	// 获取邮件内容
 	var email models.Email
-	err := mysql.Instance.Get(&email, mysql.WithContext(ctx, "select * from email where id = ?"), id)
+	err := db.Instance.Get(&email, db.WithContext(ctx, "select * from email where id = ?"), id)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		return nil, err
 	}
 
 	if markRead && email.IsRead == 0 {
-		_, err = mysql.Instance.Exec(mysql.WithContext(ctx, "update email set is_read =1 where id =?"), email.Id)
+		_, err = db.Instance.Exec(db.WithContext(ctx, "update email set is_read =1 where id =?"), email.Id)
 		if err != nil {
 			log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		}

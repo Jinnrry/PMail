@@ -11,6 +11,8 @@ var (
 		"succ":        "成功",
 		"send_fail":   "发送失败",
 		"att_err":     "附件解码错误",
+		"login_exp":   "登录已失效",
+		"ip_taps":     "这是你服务器IP，确保这个IP正确",
 	}
 	en = map[string]string{
 		"all_email":   "All Email",
@@ -22,6 +24,8 @@ var (
 		"succ":        "Success",
 		"send_fail":   "Send Failure",
 		"att_err":     "Attachment decoding error",
+		"login_exp":   "Login has expired.",
+		"ip_taps":     "This is your server's IP, make sure it is correct.",
 	}
 )
 

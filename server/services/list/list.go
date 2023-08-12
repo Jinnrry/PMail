@@ -3,9 +3,9 @@ package list
 import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
+	"pmail/db"
 	"pmail/dto"
 	"pmail/models"
-	"pmail/mysql"
 )
 
 func GetEmailList(ctx *dto.Context, tag string, keyword string, offset, limit int) (emailList []*models.Email, total int) {
@@ -13,12 +13,12 @@ func GetEmailList(ctx *dto.Context, tag string, keyword string, offset, limit in
 	querySQL, queryParams := genSQL(ctx, false, tag, keyword, offset, limit)
 	counterSQL, counterParams := genSQL(ctx, true, tag, keyword, offset, limit)
 
-	err := mysql.Instance.Select(&emailList, querySQL, queryParams...)
+	err := db.Instance.Select(&emailList, querySQL, queryParams...)
 	if err != nil {
 		log.Errorf("SQL ERROR: %s ,Error:%s", querySQL, err)
 	}
 
-	err = mysql.Instance.Get(&total, counterSQL, counterParams...)
+	err = db.Instance.Get(&total, counterSQL, counterParams...)
 	if err != nil {
 		log.Errorf("SQL ERROR: %s ,Error:%s", querySQL, err)
 	}

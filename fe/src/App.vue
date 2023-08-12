@@ -2,11 +2,11 @@
 import { RouterView } from 'vue-router'
 import HomeHeader from '@/components/HomeHeader.vue'
 import HomeAside from '@/components/HomeAside.vue';
-import { watch,ref } from 'vue'
+import { watch, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 
-const pageName = ref(route.name) 
+const pageName = ref(route.name)
 
 watch(
   () => route.fullPath,
@@ -21,7 +21,7 @@ watch(
   <div id="main">
     <HomeHeader />
     <div id="content">
-      <div id="aside" v-if="pageName != 'login'">
+      <div id="aside" v-if="pageName != 'login' && pageName != 'setup'">
         <HomeAside />
       </div>
       <div id="body">

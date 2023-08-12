@@ -1,12 +1,21 @@
-# PMail 
+# PMail
 
-> The current code is not stable, be sure to record the log! Lost letters or letters parsed wrong can find out the original content of the mail from the log!
+> The current code is not stable, be sure to record the log! Lost letters or letters parsed wrong can find out the
+> original content of the mail from the log!
 
 ## [中文文档](./README_CN.md)
 
 ## Introduction
 
-An extremely lightweight mailbox server designed for personal use scenarios. 
+PMail is a personal email server that pursues a minimal deployment process and extreme resource consumption. It runs on
+a single file and contains complete send/receive mail service and web-side mail management functions. Just a server , a
+domain name , a line of code , a minute of deployment time , you will be able to build a domain name mailbox of your
+own .
+
+Any project related Issue, PR is welcome.At present, the project UI design is ugly, UI interaction experience is poor,
+welcome all UI, designers, front-end guidance. Finally, also for this project to solicit a beautiful and lovely Logo!
+
+<img src="./docs/en.gif" alt="Editor" width="800px">
 
 ## Features
 
@@ -16,36 +25,29 @@ An extremely lightweight mailbox server designed for personal use scenarios.
 
 * Support dkim, spf checksum, [Email Test](https://www.mail-tester.com/) score 10 points if correctly configured.
 
+* Implementing the ACME protocol, the program will automatically obtain and update Let's Encrypt certificates.
+
 ## Disadvantages
 
-* At present, only the core function of sending and receiving emails has been completed. Basically, it can only be used by a single person, and does not deal with issues related to permission management in the process of multiple users.
+* At present, only the core function of sending and receiving emails has been completed. Basically, it can only be used
+  by a single person, and does not deal with issues related to permission management in the process of multiple users.
 
 * The UI is ugly
 
 # How to run
 
-## 1、Generate DKIM secret key
+## 1、Download
 
-Generate public and private keys by the dkim-keygen tool of the [go-msgauth](https://github.com/emersion/go-msgauth) project
+[Click Here](https://github.com/Jinnrry/PMail/releases) Download a program file that matches you.
 
-Put the key in the `config/dkim` directory.
+## 2、Run
 
-## 2、Set DNS
+`double-click to open` Or `execute command to run`
 
-Add the following records to your domain DNS settings
+## 3、Configuration
 
-| type | hostname             | address / value      |
-|------|----------------------|----------------------|
-| A    | smtp                 | server ip            |
-| MX   | _                    | smtp.YourDomain      |
-| TXT  | _                    | v=spf1 a mx ~all     |
-| TXT  | default._domainkey	  | Your DKIM public key |
-
-## 3、Domain SSL Key
-
-Prepare the certificate of `smtp.YourDomain`, the private key in ".key" format and the public key in ".crt" format
-
-Put the certificate in the `config/ssl` directory.
+Open `http://127.0.0.1` in your browser or use your server's public IP to visit, then follow the instructions to
+configure.
 
 ## 4、Build（or download）
 
@@ -59,35 +61,15 @@ Put the certificate in the `config/ssl` directory.
 
 Modify the `config.json` file in the config directory and fill in your secret key and domain information.
 
-Tips:
+## 6、Email Test
 
-MySQL database name must is `pmail`, and charset must is `utf8_general_ci`.
+Check if your mailbox has completed all the security configuration. It is recommended to
+use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
 
-Configuration file description ：
-```json
-{
-  "domain": "demo.com", // Your domain
-  "dkimPrivateKeyPath": "config/dkim/dkim.priv",  // dkim private key
-  "SSLPrivateKeyPath": "config/ssl/private.key",  // ssl private key
-  "SSLPublicKeyPath": "config/ssl/public.crt",    // ssl public key
-  "mysqlDSN": "username:password@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local", // mysql connect infonation
-  "weChatPushAppId": "",  // WeChat public account appid (for new email message push) . If you don't need it, you can make it empty.
-  "weChatPushSecret": "",   // WeChat api secret
-  "weChatPushTemplateId": "",  // push template id
-  "weChatPushUserId": "" // wechat user id
-}
-```
+## 7、 WeChat Message Push
 
-## 6、Run
-
-exec `pmail` and check port of 25、80.
-
-The webmail service address is http://yourip. Default account is `admin` and password is `admin`
-
-## 7、Email Test
-
-Check if your mailbox has completed all the security configuration. It is recommended to use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking. 
-
+Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `weChatPush`
+and restart the service.
 
 # For Developer
 
@@ -104,7 +86,3 @@ The code is in `server` folder.
 ## Plugin Development
 
 Reference this file. `server/hooks/wechat_push/wechat_push.go`
-
-# What's More
-
-Welcome PR! Welcome Issues! The project need a Logo !

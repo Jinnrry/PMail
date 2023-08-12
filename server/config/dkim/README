@@ -1,1 +1,0 @@
-使用[go-msgauth](https://github.com/emersion/go-msgauth)项目的dkim-keygen工具生成公钥和私钥

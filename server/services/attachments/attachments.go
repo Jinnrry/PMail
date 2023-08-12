@@ -3,10 +3,10 @@ package attachments
 import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
+	"pmail/db"
 	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/models"
-	"pmail/mysql"
 	"pmail/services/auth"
 )
 
@@ -14,7 +14,7 @@ func GetAttachments(ctx *dto.Context, emailId int, cid string) (string, []byte) 
 
 	// 获取邮件内容
 	var email models.Email
-	err := mysql.Instance.Get(&email, mysql.WithContext(ctx, "select * from email where id = ?"), emailId)
+	err := db.Instance.Get(&email, db.WithContext(ctx, "select * from email where id = ?"), emailId)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		return "", nil
@@ -39,7 +39,7 @@ func GetAttachmentsByIndex(ctx *dto.Context, emailId int, index int) (string, []
 
 	// 获取邮件内容
 	var email models.Email
-	err := mysql.Instance.Get(&email, mysql.WithContext(ctx, "select * from email where id = ?"), emailId)
+	err := db.Instance.Get(&email, db.WithContext(ctx, "select * from email where id = ?"), emailId)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		return "", nil

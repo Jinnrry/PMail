@@ -35,8 +35,9 @@
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
 import $http from "../http/http";
+
+import { RouterLink } from 'vue-router'
 import { reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import router from "@/router";  //根路由对象

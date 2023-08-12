@@ -8,24 +8,38 @@ import (
 	"strings"
 )
 
+var IsInit bool
+
 type Config struct {
-	Domain             string `json:"domain"`
-	DkimPrivateKeyPath string `json:"dkimPrivateKeyPath"`
-	SSLPrivateKeyPath  string `json:"SSLPrivateKeyPath"`
-	SSLPublicKeyPath   string `json:"SSLPublicKeyPath"`
-	MysqlDSN           string `json:"mysqlDSN"`
-
-	WeChatPushAppId      string `json:"weChatPushAppId"`
-	WeChatPushSecret     string `json:"weChatPushSecret"`
-	WeChatPushTemplateId string `json:"weChatPushTemplateId"`
-	WeChatPushUserId     string `json:"weChatPushUserId"`
-
-	Tables         map[string]string
-	TablesInitData map[string]string
+	LogLevel             string            `json:"logLevel"`
+	Domain               string            `json:"domain"`
+	WebDomain            string            `json:"webDomain"`
+	DkimPrivateKeyPath   string            `json:"dkimPrivateKeyPath"`
+	SSLType              string            `json:"sslType"` // 0表示自动生成证书，1表示用户上传证书
+	SSLPrivateKeyPath    string            `json:"SSLPrivateKeyPath"`
+	SSLPublicKeyPath     string            `json:"SSLPublicKeyPath"`
+	DbDSN                string            `json:"dbDSN"`
+	DbType               string            `json:"dbType"`
+	WeChatPushAppId      string            `json:"weChatPushAppId"`
+	WeChatPushSecret     string            `json:"weChatPushSecret"`
+	WeChatPushTemplateId string            `json:"weChatPushTemplateId"`
+	WeChatPushUserId     string            `json:"weChatPushUserId"`
+	IsInit               bool              `json:"isInit"`
+	Tables               map[string]string `json:"-"`
+	TablesInitData       map[string]string `json:"-"`
 }
 
 //go:embed tables/*
 var tableConfig embed.FS
+
+const Version = "2.0.0"
+
+const DBTypeMySQL = "mysql"
+const DBTypeSQLite = "sqlite"
+const SSLTypeAuto = "0" //自动生成证书
+const SSLTypeUser = "1" //用户上传证书
+
+var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite}
 
 var Instance *Config
 
@@ -37,25 +51,29 @@ func Init() {
 	if len(args) >= 2 && args[len(args)-1] == "dev" {
 		cfgData, err = os.ReadFile("./config/config.dev.json")
 		if err != nil {
-			panic("dev环境配置文件加载失败" + err.Error())
+			return
 		}
 	} else {
 		cfgData, err = os.ReadFile("./config/config.json")
 		if err != nil {
-			panic("配置文件加载失败" + err.Error())
+			return
 		}
 	}
 
 	err = json.Unmarshal(cfgData, &Instance)
 	if err != nil {
-		panic("配置文件加载失败" + err.Error())
+		return
 	}
 
 	// 读取表设置
 	Instance.Tables = map[string]string{}
 	Instance.TablesInitData = map[string]string{}
 
-	err = fs.WalkDir(tableConfig, "tables", func(path string, info fs.DirEntry, err error) error {
+	root := "tables/mysql"
+	if Instance.DbType == DBTypeSQLite {
+		root = "tables/sqlite"
+	}
+	err = fs.WalkDir(tableConfig, root, func(path string, info fs.DirEntry, err error) error {
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".sql") {
 			tableName := strings.ReplaceAll(info.Name(), ".sql", "")
 			i, e := tableConfig.ReadFile(path)
@@ -74,6 +92,10 @@ func Init() {
 
 	if err != nil {
 		panic(err)
+	}
+
+	if Instance.Domain != "" && Instance.IsInit {
+		IsInit = true
 	}
 
 }
