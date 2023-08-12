@@ -49,24 +49,12 @@ welcome all UI, designers, front-end guidance. Finally, also for this project to
 Open `http://127.0.0.1` in your browser or use your server's public IP to visit, then follow the instructions to
 configure.
 
-## 4、Build（or download）
-
-1、installed `nodejs` and `yarn`
-
-2、installed `golang`
-
-3、exec `./build.sh`
-
-## 5、Config
-
-Modify the `config.json` file in the config directory and fill in your secret key and domain information.
-
-## 6、Email Test
+## 4、Email Test
 
 Check if your mailbox has completed all the security configuration. It is recommended to
 use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
 
-## 7、 WeChat Message Push
+## 5、 WeChat Message Push
 
 Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `weChatPush`
 and restart the service.
