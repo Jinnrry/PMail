@@ -37,6 +37,8 @@ var lang = {
     "setDNS": "Set DNS",
     "setSSL": "Set SSL",
     "setDatabase": "Set Database",
+    "setAdminPassword": "Set Password",
+    "admin_account": "Administrator Account",
     "setOther": "Other",
     "welcome": "Welcome",
     "next": "Next",
@@ -52,7 +54,10 @@ var lang = {
     "smtp_domain": "SMTP Domain",
     "web_domain": "Web Domain",
     "dns_desc": "Please add the following information to your DNS records",
-
+    "ssl_auto": "Automatically configure SSL certificates (recommended)",
+    "ssl_manuallyf": "Manually configure an SSL certificate",
+    "ssl_key_path": "ssl key file path",
+    "ssl_crt_path": "ssl crt file path",
 };
 
 
@@ -96,6 +101,8 @@ var zhCN = {
     "setDNS": "DNS设置",
     "setSSL": "SSL设置",
     "setDatabase": "数据库设置",
+    "setAdminPassword": "密码设置",
+    "admin_account": "管理员账号",
     "setOther": "其他设置",
     "welcome": "欢迎",
     "next": "下一步",
@@ -110,7 +117,11 @@ var zhCN = {
     "domain_desc": "设置你的域名信息。",
     "smtp_domain": "SMTP域名地址",
     "web_domain": "Web域名地址",
-    "dns_desc": "请将以下信息添加到DNS记录中"
+    "dns_desc": "请将以下信息添加到DNS记录中",
+    "ssl_auto": "自动配置SSL证书(推荐)",
+    "ssl_manuallyf": "手动配置SSL证书",
+    "ssl_key_path": "ssl key文件位置",
+    "ssl_crt_path": "ssl crt文件位置",
 }
 
 switch (navigator.language) {

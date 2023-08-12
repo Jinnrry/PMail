@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"crypto/md5"
 	"database/sql"
-	"encoding/hex"
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -14,6 +12,7 @@ import (
 	"pmail/i18n"
 	"pmail/models"
 	"pmail/session"
+	"pmail/utils/password"
 )
 
 type loginRequest struct {
@@ -35,7 +34,7 @@ func Login(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 
 	var user models.User
 
-	encodePwd := md5Encode(md5Encode(reqData.Password+"pmail") + "pmail2023")
+	encodePwd := password.Encode(reqData.Password)
 
 	err = db.Instance.Get(&user, db.WithContext(ctx, "select * from user where account =? and password =?"),
 		reqData.Account, encodePwd)
@@ -50,10 +49,4 @@ func Login(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 	} else {
 		response.NewErrorResponse(response.ParamsError, i18n.GetText(ctx.Lang, "aperror"), "").FPrint(w)
 	}
-}
-
-func md5Encode(str string) string {
-	h := md5.New()
-	h.Write([]byte(str))
-	return hex.EncodeToString(h.Sum(nil))
 }

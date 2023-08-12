@@ -135,7 +135,7 @@ const validateSender = function (rule, value, callback) {
 }
 
 const checkEmail = function (str) {
-    var re = /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/
+    var re = /.+@.+\..+/
     if (re.test(str)) {
         return true
     } else {

@@ -43,19 +43,21 @@ func (s *Session) Logout() error {
 	return nil
 }
 
+var instance *smtp.Server
+
 func Start() {
 	be := &Backend{}
 
-	s := smtp.NewServer(be)
+	instance = smtp.NewServer(be)
 
-	s.Addr = ":25"
-	s.Domain = config.Instance.Domain
-	s.ReadTimeout = 10 * time.Second
-	s.WriteTimeout = 10 * time.Second
-	s.MaxMessageBytes = 1024 * 1024
-	s.MaxRecipients = 50
+	instance.Addr = ":25"
+	instance.Domain = config.Instance.Domain
+	instance.ReadTimeout = 10 * time.Second
+	instance.WriteTimeout = 10 * time.Second
+	instance.MaxMessageBytes = 1024 * 1024
+	instance.MaxRecipients = 50
 	// force TLS for auth
-	s.AllowInsecureAuth = false
+	instance.AllowInsecureAuth = false
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
@@ -63,10 +65,16 @@ func Start() {
 		return
 	}
 	// Configure the TLS support
-	s.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
+	instance.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	log.Println("Starting server at", s.Addr)
-	if err := s.ListenAndServe(); err != nil {
+	log.Println("Starting server at", instance.Addr)
+	if err := instance.ListenAndServe(); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func Stop() {
+	if instance != nil {
+		instance.Close()
 	}
 }

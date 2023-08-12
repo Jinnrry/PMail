@@ -8,11 +8,12 @@ import (
 	_ "modernc.org/sqlite"
 	"pmail/config"
 	"pmail/dto"
+	"pmail/utils/errors"
 )
 
 var Instance *sqlx.DB
 
-func Init() {
+func Init() error {
 	dsn := config.Instance.DbDSN
 	var err error
 
@@ -22,15 +23,16 @@ func Init() {
 	case "sqlite":
 		Instance, err = sqlx.Open("sqlite", dsn)
 	default:
-		return
+		return errors.New("Database Type Error!")
 	}
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err)
 	}
 	Instance.SetMaxOpenConns(100)
 	Instance.SetMaxIdleConns(10)
 	//showMySQLCharacterSet()
 	checkTable()
+	return nil
 }
 
 func WithContext(ctx *dto.Context, sql string) string {

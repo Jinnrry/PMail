@@ -4,22 +4,62 @@ import (
 	"encoding/json"
 	"os"
 	"pmail/config"
+	"pmail/db"
+	"pmail/dto"
+	"pmail/models"
 	"pmail/utils/array"
 	"pmail/utils/errors"
 	"pmail/utils/file"
+	"pmail/utils/password"
 )
 
-func GetDatabaseSettings() (string, string, error) {
-	configData, err := readConfig()
+func GetDatabaseSettings(ctx *dto.Context) (string, string, error) {
+	configData, err := ReadConfig()
 	if err != nil {
 		return "", "", errors.Wrap(err)
+	}
+
+	if configData.DbType == "" && configData.DbDSN == "" {
+		return config.DBTypeSQLite, "./pmail.db", nil
 	}
 
 	return configData.DbType, configData.DbDSN, nil
 }
 
-func SetDatabaseSettings(dbType, dbDSN string) error {
-	configData, err := readConfig()
+func GetAdminPassword(ctx *dto.Context) (string, error) {
+
+	users := []*models.User{}
+	err := db.Instance.Select(&users, "select * from user")
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+
+	if len(users) > 0 {
+		return users[0].Account, nil
+	}
+
+	return "", nil
+}
+
+func SetAdminPassword(ctx *dto.Context, account, pwd string) error {
+	encodePwd := password.Encode(pwd)
+	res, err := db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user (account, name, password) VALUES (?, 'admin',?)"), account, encodePwd)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	_, err = db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user_auth (user_id, email_account) VALUES (?, '*')"), id)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func SetDatabaseSettings(ctx *dto.Context, dbType, dbDSN string) error {
+	configData, err := ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -31,16 +71,20 @@ func SetDatabaseSettings(dbType, dbDSN string) error {
 	configData.DbType = dbType
 	configData.DbDSN = dbDSN
 
-	// 检查数据库是否能正确连接 todo
-
-	err = writeConfig(configData)
+	err = WriteConfig(configData)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	config.Init()
+	// 检查数据库是否能正确连接
+	err = db.Init()
 	if err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
 }
 
-func writeConfig(cfg *config.Config) error {
+func WriteConfig(cfg *config.Config) error {
 	bytes, _ := json.Marshal(cfg)
 	err := os.WriteFile("./config/config.json", bytes, 0666)
 	if err != nil {
@@ -49,7 +93,7 @@ func writeConfig(cfg *config.Config) error {
 	return nil
 }
 
-func readConfig() (*config.Config, error) {
+func ReadConfig() (*config.Config, error) {
 	configData := config.Config{
 		DkimPrivateKeyPath: "config/dkim/dkim.priv",
 		SSLPrivateKeyPath:  "config/ssl/private.key",

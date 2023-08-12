@@ -51,7 +51,7 @@ func DkimGen() string {
 		err     error
 	)
 
-	privKey, err = rsa.GenerateKey(rand.Reader, 3072)
+	privKey, err = rsa.GenerateKey(rand.Reader, 1024)
 
 	if err != nil {
 		log.Fatalf("Failed to generate key: %v", err)

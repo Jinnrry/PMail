@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"pmail/config"
+	"pmail/cron_server"
 	"pmail/dto"
 	"pmail/res_init"
 	"time"
@@ -47,12 +48,25 @@ func main() {
 	// 日志消息输出可以是任意的io.writer类型
 	log.SetOutput(os.Stdout)
 
-	// 设置日志级别为warn以上
-	log.SetLevel(log.DebugLevel)
 	var cst, _ = time.LoadLocation("Asia/Shanghai")
 	time.Local = cst
 
-	res_init.Init()
+	config.Init()
+
+	switch config.Instance.LogLevel {
+	case "":
+		log.SetLevel(log.InfoLevel)
+	case "debug":
+		log.SetLevel(log.DebugLevel)
+	case "info":
+		log.SetLevel(log.InfoLevel)
+	case "warn":
+		log.SetLevel(log.WarnLevel)
+	case "error":
+		log.SetLevel(log.ErrorLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
+	}
 
 	log.Infoln("***************************************************")
 	log.Infof("***\tServer Start Success Version:%s\n", config.Version)
@@ -60,6 +74,12 @@ func main() {
 	log.Infof("***\tBuild TimeStamp: %s ", buildTime)
 	log.Infof("***\tBuild GoLang Version: %s ", goVersion)
 	log.Infoln("***************************************************")
+
+	// 定时任务启动
+	go cron_server.Start()
+
+	// 核心服务启动
+	res_init.Init()
 
 	s := make(chan bool)
 	<-s

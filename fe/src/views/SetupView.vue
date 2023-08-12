@@ -3,10 +3,10 @@
         <el-steps :active="active" align-center finish-status="success" id="status">
             <el-step :title="lang.welcome" />
             <el-step :title="lang.setDatabase" />
+            <el-step :title="lang.setAdminPassword" />
             <el-step :title="lang.SetDomail" />
             <el-step :title="lang.setDNS" />
             <el-step :title="lang.setSSL" />
-            <el-step :title="lang.setOther" />
         </el-steps>
 
 
@@ -49,6 +49,33 @@
 
         <div v-if="active == 2" class="ctn">
             <div class="desc">
+                <h2>{{ lang.setAdminPassword }}</h2>
+                <!-- <div style="margin-top: 10px;">{{ lang.domain_desc }}</div> -->
+            </div>
+            <div class="form" style="width: 400px;">
+                <el-form label-width="120px">
+
+                    <el-form-item :label="lang.admin_account">
+                        <el-input v-bind:disabled="adminSettings.hadSeted" placeholder="admin"
+                            v-model="adminSettings.account"></el-input>
+                    </el-form-item>
+
+                    <el-form-item :label="lang.password">
+                        <el-input type="password" v-bind:disabled="adminSettings.hadSeted" placeholder=""
+                            v-model="adminSettings.password"></el-input>
+                    </el-form-item>
+
+                    <el-form-item :label="lang.enter_again">
+                        <el-input type="password" v-bind:disabled="adminSettings.hadSeted" placeholder=""
+                            v-model="adminSettings.password2"></el-input>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+
+
+        <div v-if="active == 3" class="ctn">
+            <div class="desc">
                 <h2>{{ lang.SetDomail }}</h2>
                 <!-- <div style="margin-top: 10px;">{{ lang.domain_desc }}</div> -->
             </div>
@@ -69,7 +96,7 @@
         </div>
 
 
-        <div v-if="active == 3" class="ctn_s">
+        <div v-if="active == 4" class="ctn_s">
             <div class="desc">
                 <h2>{{ lang.setDNS }}</h2>
                 <div style="margin-top: 10px;">{{ lang.dns_desc }}</div>
@@ -94,8 +121,34 @@
             </div>
         </div>
 
+        <div v-if="active == 5" class="ctn">
+            <div class="desc">
+                <h2>{{ lang.setSSL }}</h2>
+                <div style="margin-top: 10px;">{{ lang.setSSL }}</div>
+            </div>
+            <div class="form" width="600px">
+                <el-form label-width="120px">
+                    <el-form-item :label="lang.type">
+                        <el-select :placeholder="lang.ssl_auto" v-model="sslSettings.type">
+                            <el-option :label="lang.ssl_auto" value="0" />
+                            <el-option :label="lang.ssl_manuallyf" value="1" />
+                        </el-select>
+                    </el-form-item>
 
-        <el-button id="next" style="margin-top: 12px" @click="next">{{ lang.next }}</el-button>
+                    <el-form-item :label="lang.ssl_key_path" v-if="sslSettings.type == '1'">
+                        <el-input placeholder="./config/ssl/private.key" v-model="sslSettings.key_path"></el-input>
+                    </el-form-item>
+
+                    <el-form-item :label="lang.ssl_crt_path" v-if="sslSettings.type == '1'">
+                        <el-input placeholder="./config/ssl/public.crt" v-model="sslSettings.crt_path"></el-input>
+                    </el-form-item>
+
+                </el-form>
+            </div>
+        </div>
+
+        <el-button v-loading.fullscreen.lock="fullscreenLoading" id="next" style="margin-top: 12px" @click="next">{{
+            lang.next }}</el-button>
 
     </div>
 </template>
@@ -108,10 +161,16 @@ import { ElMessage } from 'element-plus'
 import router from "@/router";  //根路由对象
 import lang from '../i18n/i18n';
 
+const adminSettings = reactive({
+    "account": "admin",
+    "password": "",
+    "password2": "",
+    "hadSeted": false
+})
 
 const dbSettings = reactive({
-    "type": "",
-    "dsn": "",
+    "type": "sqlite",
+    "dsn": "./pmail.db",
     "lable": ""
 })
 
@@ -120,11 +179,56 @@ const domainSettings = reactive({
     "smtp_domain": ""
 })
 
+const sslSettings = reactive({
+    "type": "0",
+    "key_path": "./config/ssl/private.key",
+    "crt_path": "./config/ssl/public.crt"
+})
+
 const active = ref(0)
+const fullscreenLoading = ref(false)
+
 
 const dnsInfos = ref([
-    { "host": "smtp", "type": "A", "value": "YouServerIp", "prid": "NA", "ttl": "3600" }
 ])
+
+const setPassword = () => {
+    if (adminSettings.hadSeted) {
+        active.value++;
+        getDomainConfig();
+        return;
+    }
+
+    if (adminSettings.password != adminSettings.password2) {
+        ElMessage.error(lang.err_pwd_diff)
+    } else {
+        $http.post("/api/setup", { "action": "set", "step": "password", "account": adminSettings.account, "password": adminSettings.password }).then((res) => {
+            if (res.errorNo != 0) {
+                ElMessage.error(res.errorMsg)
+            } else {
+                active.value++;
+                getDomainConfig();
+            }
+        })
+    }
+}
+
+const getPassword = () => {
+    $http.post("/api/setup", { "action": "get", "step": "password" }).then((res) => {
+        if (res.errorNo != 0) {
+            ElMessage.error(res.errorMsg)
+        } else {
+            adminSettings.hadSeted = res.data != ""
+            if (adminSettings.hadSeted) {
+                adminSettings.account = res.data
+                adminSettings.password = "*******"
+                adminSettings.password2 = "*******"
+            }
+
+        }
+    })
+}
+
 
 const getDbConfig = () => {
     $http.post("/api/setup", { "action": "get", "step": "database" }).then((res) => {
@@ -154,7 +258,7 @@ const setDbConfig = () => {
             ElMessage.error(res.errorMsg)
         } else {
             active.value++;
-            getDomainConfig();
+            getPassword();
         }
     })
 }
@@ -168,6 +272,34 @@ const getDNSConfig = () => {
         }
     })
 }
+
+
+const getSSLConfig = () => {
+    $http.post("/api/setup", { "action": "get", "step": "ssl" }).then((res) => {
+        if (res.errorNo != 0) {
+            ElMessage.error(res.errorMsg)
+        } else {
+            sslSettings.type = res.data
+        }
+    })
+}
+
+
+const setSSLConfig = () => {
+    fullscreenLoading.value = true;
+    $http.post("/api/setup", { "action": "set", "step": "ssl", "ssl_type": sslSettings.type, "key_path": sslSettings.key_path, "crt_path": sslSettings.crt_path }).then((res) => {
+        if (res.errorNo != 0) {
+            fullscreenLoading.value = false;
+            ElMessage.error(res.errorMsg)
+        } else {
+            setTimeout(function () {
+                window.location.href = "https://" + domainSettings.web_domain;
+            }, 10000);
+
+        }
+    })
+}
+
 
 const setDomainConfig = () => {
     $http.post("/api/setup", { "action": "set", "step": "domain", "web_domain": domainSettings.web_domain, "smtp_domain": domainSettings.smtp_domain }).then((res) => {
@@ -191,9 +323,17 @@ const next = () => {
             setDbConfig();
             break;
         case 2:
-            setDomainConfig();
+            setPassword();
             break;
         case 3:
+            setDomainConfig();
+            break;
+        case 4:
+            getSSLConfig();
+            active.value++
+            break
+        case 5:
+            setSSLConfig();
             active.value++
             break
     }

@@ -11,9 +11,11 @@ import (
 var IsInit bool
 
 type Config struct {
+	LogLevel             string            `json:"logLevel"`
 	Domain               string            `json:"domain"`
 	WebDomain            string            `json:"webDomain"`
 	DkimPrivateKeyPath   string            `json:"dkimPrivateKeyPath"`
+	SSLType              string            `json:"sslType"` // 0表示自动生成证书，1表示用户上传证书
 	SSLPrivateKeyPath    string            `json:"SSLPrivateKeyPath"`
 	SSLPublicKeyPath     string            `json:"SSLPublicKeyPath"`
 	DbDSN                string            `json:"dbDSN"`
@@ -30,10 +32,12 @@ type Config struct {
 //go:embed tables/*
 var tableConfig embed.FS
 
-const Version = "1.1.0"
+const Version = "2.0.0"
 
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"
+const SSLTypeAuto = "0" //自动生成证书
+const SSLTypeUser = "1" //用户上传证书
 
 var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite}
 

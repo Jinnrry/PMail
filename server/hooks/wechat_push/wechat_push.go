@@ -41,6 +41,10 @@ func (w *WeChatPushHook) ReceiveParseBefore(email []byte) {
 }
 
 func (w *WeChatPushHook) ReceiveParseAfter(email *parsemail.Email) {
+	if w.appId == "" || w.secret == "" || w.pushUser == "" {
+		return
+	}
+
 	w.sendUserMsg(nil, w.pushUser, string(email.Text))
 }
 
@@ -91,18 +95,13 @@ func (w *WeChatPushHook) sendUserMsg(ctx *dto.Context, userId string, content st
 
 }
 func NewWechatPushHook() *WeChatPushHook {
-	if config.Instance.WeChatPushAppId != "" &&
-		config.Instance.WeChatPushSecret != "" &&
-		config.Instance.WeChatPushTemplateId != "" &&
-		config.Instance.WeChatPushUserId != "" {
-		ret := &WeChatPushHook{
-			appId:      config.Instance.WeChatPushAppId,
-			secret:     config.Instance.WeChatPushSecret,
-			templateId: config.Instance.WeChatPushTemplateId,
-			pushUser:   config.Instance.WeChatPushUserId,
-		}
-		return ret
 
+	ret := &WeChatPushHook{
+		appId:      config.Instance.WeChatPushAppId,
+		secret:     config.Instance.WeChatPushSecret,
+		templateId: config.Instance.WeChatPushTemplateId,
+		pushUser:   config.Instance.WeChatPushUserId,
 	}
-	return nil
+	return ret
+
 }

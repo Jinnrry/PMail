@@ -5,7 +5,7 @@ import (
 )
 
 func GetDomainSettings() (string, string, error) {
-	configData, err := readConfig()
+	configData, err := ReadConfig()
 	if err != nil {
 		return "", "", errors.Wrap(err)
 	}
@@ -14,9 +14,17 @@ func GetDomainSettings() (string, string, error) {
 }
 
 func SetDomainSettings(smtpDomain, webDomain string) error {
-	configData, err := readConfig()
+	configData, err := ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)
+	}
+
+	if smtpDomain == "" {
+		return errors.New("domain must not empty!")
+	}
+
+	if webDomain == "" {
+		return errors.New("web domain must not empty!")
 	}
 
 	configData.Domain = smtpDomain
@@ -24,7 +32,7 @@ func SetDomainSettings(smtpDomain, webDomain string) error {
 
 	// 检查域名是否指向本机 todo
 
-	err = writeConfig(configData)
+	err = WriteConfig(configData)
 	if err != nil {
 		return errors.Wrap(err)
 	}

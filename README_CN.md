@@ -1,6 +1,12 @@
-# PMail 
+# PMail
 
 > Welcome PR! Welcome Issues! 目前代码并不稳定，一定记录好日志！丢信或者信件解析错误可以从日志中找出邮件原始内容！
+
+PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱服务器。单文件运行，包含完整的收发邮件服务和Web端邮件管理功能。只需一台服务器、一个域名、一行代码、一分钟部署时间，你就能够搭建出一个自己的域名邮箱。
+
+目前项目UI设计比较丑陋、UI交互体验较差，欢迎各位UI、设计师、前端提出指导意见。最后，也为这个项目征集一个漂亮可爱的Logo！
+
+<img src="./docs/cn.gif" alt="Editor" width="800px">
 
 ## 为什么写这个项目
 
@@ -22,6 +28,10 @@
 
 支持dkim、spf校验。正确配置的情况下，Email Test得分10分。
 
+### 4、自动SSL证书
+
+实现了ACME协议，程序将自动获取并更新Let’s Encrypt证书。
+
 ## 其他
 
 ### 不足
@@ -35,78 +45,25 @@
 
 # 如何部署
 
-## 1、生成DKIM 秘钥
+## 1、下载文件
 
-```
-go install github.com/emersion/go-msgauth/cmd/dkim-keygen@latest
-dkim-keygen
-```
-执行后将得到`dkim.priv`文件，公钥数据会直接输出
+[点击这里](https://github.com/Jinnrry/PMail/releases)下载一个与你匹配的程序文件。
 
-生成以后将密钥放到`config/dkim`目录中
+## 2、运行
 
-## 2、设置域名DNS
+双击打开 OR 执行命令运行
 
-添加以下记录到你到域名解析中
+## 3、配置
 
-| 类型  | 主机记录                | 记录值              |
-|-----|---------------------|------------------|
-| A   | smtp                | 服务器IP            |
-| MX  | _                   | smtp.你的域名        |
-| TXT | _                   | v=spf1 a mx ~all |
-| TXT | default._domainkey	 | 你生成的DKIM公钥       |
+浏览器打开 `http://127.0.0.1` 或者是用你服务器公网IP访问，然后按提示配置
 
-## 3、申请域名证书
-
-准备好 `smtp.你的域名` 的证书，key格式的私钥和crt格式的公钥
-
-放到`config/ssl`目录中
-
-## 4、编译程序（或者直接下载编译好的二进制文件）
-
-1、前端环境：安装好node环境，配置好yarn
-
-2、后端环境：安装最新的golang
-
-3、执行`./build.sh`
-
-## 5、修改配置文件
-
-修改config目录中的`config.json`文件，填入你的秘钥与域名信息
-
-Tips:
-
-MySQL库名必须叫pmail，另外，数据库必须使用utf8_general_ci字符集
-
-配置文件说明：
-```json
-{
-  "domain": "demo.com", // 你的域名
-  "dkimPrivateKeyPath": "config/dkim/dkim.priv",  // dkim私钥
-  "SSLPrivateKeyPath": "config/ssl/private.key",  // ssl证书私钥
-  "SSLPublicKeyPath": "config/ssl/public.crt",    // ssl证书公钥
-  "mysqlDSN": "username:password@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local", // mysql连接信息
-  "weChatPushAppId": "",  //微信公众号id（用于新消息提醒），没有留空即可
-  "weChatPushSecret": "",   // 微信公众号api秘钥
-  "weChatPushTemplateId": "",  // 微信公众号推送模板id
-  "weChatPushUserId": "" // 微信推送用户id
-}
-```
-
-## 6、启动
-
-运行`PMail`程序，检查服务器25、80端口正常即可
-
-邮箱后台, http://yourip，默认账号admin，默认密码admin
-
-## 7、邮箱得分测试
+## 4、邮箱得分测试
 
 建议找一下邮箱测试服务(比如[https://www.mail-tester.com/](https://www.mail-tester.com/))进行邮件得分检测，避免自己某些步骤漏配，导致发件进对方垃圾箱。
 
-## 8、其他说明
+## 5、微信推送
 
-邮件是否进对方垃圾箱与程序无关、与你的服务器IP、服务器域名有关。我自己搭建的服务，测试了收发QQ、Gmail、Outlook、163、126均正常，无任何拦截，且不会进垃圾箱。
-
+打开运行目录下的 `config/config.json`文件，编辑 `weChatPush` 开头的几个配置项，重启服务即可。
 
 # 参与开发
 
@@ -124,6 +81,3 @@ MySQL库名必须叫pmail，另外，数据库必须使用utf8_general_ci字符�
 
 参考微信推送插件`server/hooks/wechat_push/wechat_push.go`
 
-# 最后
-
-欢迎PR! 欢迎Issue！求个Logo！

@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io/fs"
+	olog "log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -26,43 +27,19 @@ import (
 //go:embed dist/*
 var local embed.FS
 
-var ip string
+const HttpsPort = 443
 
-const HttpPort = 80
+var httpsServer *http.Server
 
-var setupServer *http.Server
-
-func SetupStart() {
-	mux := http.NewServeMux()
-	fe, err := fs.Sub(local, "dist")
-	if err != nil {
-		panic(err)
-	}
-	mux.Handle("/", http.FileServer(http.FS(fe)))
-	mux.HandleFunc("/api/", contextIterceptor(controllers.Setup))
-	mux.HandleFunc("/", controllers.Proxy)
-
-	setupServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", HttpPort),
-		Handler:      mux,
-		ReadTimeout:  time.Second * 60,
-		WriteTimeout: time.Second * 60,
-	}
-	err = setupServer.ListenAndServe()
-	if err != nil {
-		panic(err)
-	}
+type nullWrite struct {
 }
 
-func SetupStop() {
-	err := setupServer.Close()
-	if err != nil {
-		panic(err)
-	}
+func (w *nullWrite) Write(p []byte) (int, error) {
+	return len(p), nil
 }
 
-func Start() {
-	log.Infof("Http Server Start at :%d", HttpPort)
+func HttpsStart() {
+	log.Infof("Http Server Start")
 
 	mux := http.NewServeMux()
 
@@ -82,36 +59,27 @@ func Start() {
 	mux.HandleFunc("/attachments/", contextIterceptor(controllers.GetAttachments))
 	mux.HandleFunc("/attachments/download/", contextIterceptor(controllers.Download))
 
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", HttpPort),
+	// go http server会打一堆没用的日志，写一个空的日志处理器，屏蔽掉日志输出
+	nullLog := olog.New(&nullWrite{}, "", olog.Ldate)
+
+	httpsServer = &http.Server{
+		Addr:         fmt.Sprintf(":%d", HttpsPort),
 		Handler:      session.Instance.LoadAndSave(mux),
 		ReadTimeout:  time.Second * 60,
 		WriteTimeout: time.Second * 60,
+		ErrorLog:     nullLog,
 	}
 
-	//err := server.ListenAndServeTLS( "config/ssl/public.crt", "config/ssl/private.key", nil)
-	err = server.ListenAndServe()
+	err = httpsServer.ListenAndServeTLS("config/ssl/public.crt", "config/ssl/private.key")
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getLocalIP() string {
-	ip := "127.0.0.1"
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return ip
+func HttpsStop() {
+	if httpsServer != nil {
+		httpsServer.Close()
 	}
-	for _, a := range addrs {
-		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				ip = ipnet.IP.String()
-				break
-			}
-		}
-	}
-
-	return ip
 }
 
 func genLogID() string {
@@ -158,7 +126,7 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 			}
 			if ctx.UserInfo == nil || ctx.UserInfo.ID == 0 {
 				if r.URL.Path != "/api/ping" && r.URL.Path != "/api/login" {
-					response.NewErrorResponse(response.ParamsError, i18n.GetText(ctx.Lang, "login_exp"), "").FPrint(w)
+					response.NewErrorResponse(response.NeedLogin, i18n.GetText(ctx.Lang, "login_exp"), "").FPrint(w)
 					return
 				}
 			}

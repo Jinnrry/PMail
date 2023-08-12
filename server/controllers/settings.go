@@ -9,6 +9,7 @@ import (
 	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/i18n"
+	"pmail/utils/password"
 )
 
 type modifyPasswordRequest struct {
@@ -27,7 +28,7 @@ func ModifyPassword(ctx *dto.Context, w http.ResponseWriter, req *http.Request) 
 	}
 
 	if retData.Password != "" {
-		encodePwd := md5Encode(md5Encode(retData.Password+"pmail") + "pmail2023")
+		encodePwd := password.Encode(retData.Password)
 
 		_, err := db.Instance.Exec(db.WithContext(ctx, "update user set password = ? where id =?"), encodePwd, ctx.UserInfo.ID)
 		if err != nil {

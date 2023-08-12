@@ -6,7 +6,7 @@ import lang from '../i18n/i18n';
 //创建axios的一个实例 
 var $http = axios.create({
     baseURL: import.meta.env.VITE_APP_URL, //接口统一域名
-    timeout: 6000, //设置超时
+    timeout: 60000, //设置超时
     headers: {
         'Content-Type': 'application/json;charset=UTF-8;',
         'Lang': lang.lang

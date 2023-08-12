@@ -20,7 +20,7 @@ type DNSItem struct {
 }
 
 func GetDNSSettings(ctx *dto.Context) ([]*DNSItem, error) {
-	configData, err := readConfig()
+	configData, err := ReadConfig()
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
