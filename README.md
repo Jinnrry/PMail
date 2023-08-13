@@ -12,8 +12,8 @@ a single file and contains complete send/receive mail service and web-side mail 
 domain name , a line of code , a minute of deployment time , you will be able to build a domain name mailbox of your
 own .
 
-Any project related Issue, PR is welcome.At present, the project UI design is ugly, UI interaction experience is poor,
-welcome all UI, designers, front-end guidance. Finally, also for this project to solicit a beautiful and lovely Logo!
+All kinds of PR are welcome, whether you are fixing bugs, adding features, or optimizing translations. Also, call for a
+beautiful and cute Logo for this project!
 
 <img src="./docs/en.gif" alt="Editor" width="800px">
 
@@ -26,6 +26,12 @@ welcome all UI, designers, front-end guidance. Finally, also for this project to
 * Support dkim, spf checksum, [Email Test](https://www.mail-tester.com/) score 10 points if correctly configured.
 
 * Implementing the ACME protocol, the program will automatically obtain and update Let's Encrypt certificates.
+
+> By default, a ssl certificate is generated for the web service, allowing pages to use the https protocol.
+> If you have your own gateway or don't need https, set `httpsEnabled` to `2` in the configuration file so that the web
+> service will not use https.
+(Note: Even if you don't need https, please make sure the path to the ssl certificate file is correct, although the web
+> service doesn't use the certificate anymore, the smtp protocol still needs the certificate)
 
 ## Disadvantages
 
