@@ -1,7 +1,6 @@
 # PMail
 
-> The current code is not stable, be sure to record the log! Lost letters or letters parsed wrong can find out the
-> original content of the mail from the log!
+> A server, a domain, a line of code, a minute, and you'll be able to build a domain mailbox of your own.
 
 ## [中文文档](./README_CN.md)
 
