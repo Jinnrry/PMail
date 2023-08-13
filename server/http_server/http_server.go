@@ -7,6 +7,7 @@ import (
 	"pmail/config"
 	"pmail/controllers"
 	"pmail/controllers/email"
+	"pmail/session"
 	"time"
 )
 
@@ -45,7 +46,7 @@ func HttpStart() {
 
 	httpServer = &http.Server{
 		Addr:         fmt.Sprintf(":%d", HttpPort),
-		Handler:      mux,
+		Handler:      session.Instance.LoadAndSave(mux),
 		ReadTimeout:  time.Second * 60,
 		WriteTimeout: time.Second * 60,
 	}
