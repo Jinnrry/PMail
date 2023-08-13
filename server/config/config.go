@@ -11,7 +11,7 @@ import (
 var IsInit bool
 
 type Config struct {
-	LogLevel             string            `json:"logLevel"`
+	LogLevel             string            `json:"logLevel"` // 日志级别
 	Domain               string            `json:"domain"`
 	WebDomain            string            `json:"webDomain"`
 	DkimPrivateKeyPath   string            `json:"dkimPrivateKeyPath"`
@@ -25,6 +25,7 @@ type Config struct {
 	WeChatPushTemplateId string            `json:"weChatPushTemplateId"`
 	WeChatPushUserId     string            `json:"weChatPushUserId"`
 	IsInit               bool              `json:"isInit"`
+	HttpsEnabled         int               `json:"httpsEnabled"` //后台页面是否启用https，0默认（启用），1启用，2不启用
 	Tables               map[string]string `json:"-"`
 	TablesInitData       map[string]string `json:"-"`
 }
@@ -32,7 +33,7 @@ type Config struct {
 //go:embed tables/*
 var tableConfig embed.FS
 
-const Version = "2.0.0"
+const Version = "2.0.1"
 
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"

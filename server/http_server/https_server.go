@@ -62,17 +62,18 @@ func HttpsStart() {
 	// go http server会打一堆没用的日志，写一个空的日志处理器，屏蔽掉日志输出
 	nullLog := olog.New(&nullWrite{}, "", olog.Ldate)
 
-	httpsServer = &http.Server{
-		Addr:         fmt.Sprintf(":%d", HttpsPort),
-		Handler:      session.Instance.LoadAndSave(mux),
-		ReadTimeout:  time.Second * 60,
-		WriteTimeout: time.Second * 60,
-		ErrorLog:     nullLog,
-	}
-
-	err = httpsServer.ListenAndServeTLS("config/ssl/public.crt", "config/ssl/private.key")
-	if err != nil {
-		panic(err)
+	if config.Instance.HttpsEnabled != 2 {
+		httpsServer = &http.Server{
+			Addr:         fmt.Sprintf(":%d", HttpsPort),
+			Handler:      session.Instance.LoadAndSave(mux),
+			ReadTimeout:  time.Second * 60,
+			WriteTimeout: time.Second * 60,
+			ErrorLog:     nullLog,
+		}
+		err = httpsServer.ListenAndServeTLS("config/ssl/public.crt", "config/ssl/private.key")
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

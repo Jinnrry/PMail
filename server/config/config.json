@@ -12,5 +12,6 @@
   "weChatPushSecret": "",
   "weChatPushTemplateId": "",
   "weChatPushUserId": "",
-  "isInit": false
+  "isInit": false,
+  "httpsEnabled": 0
 }
