@@ -27,6 +27,12 @@ func HttpStart() {
 
 	if config.Instance.HttpsEnabled != 2 {
 		mux.HandleFunc("/", controllers.Interceptor)
+		httpServer = &http.Server{
+			Addr:         fmt.Sprintf(":%d", HttpPort),
+			Handler:      mux,
+			ReadTimeout:  time.Second * 60,
+			WriteTimeout: time.Second * 60,
+		}
 	} else {
 		fe, err := fs.Sub(local, "dist")
 		if err != nil {
@@ -42,13 +48,12 @@ func HttpStart() {
 		mux.HandleFunc("/api/settings/modify_password", contextIterceptor(controllers.ModifyPassword))
 		mux.HandleFunc("/attachments/", contextIterceptor(controllers.GetAttachments))
 		mux.HandleFunc("/attachments/download/", contextIterceptor(controllers.Download))
-	}
-
-	httpServer = &http.Server{
-		Addr:         fmt.Sprintf(":%d", HttpPort),
-		Handler:      session.Instance.LoadAndSave(mux),
-		ReadTimeout:  time.Second * 60,
-		WriteTimeout: time.Second * 60,
+		httpServer = &http.Server{
+			Addr:         fmt.Sprintf(":%d", HttpPort),
+			Handler:      session.Instance.LoadAndSave(mux),
+			ReadTimeout:  time.Second * 60,
+			WriteTimeout: time.Second * 60,
+		}
 	}
 
 	err := httpServer.ListenAndServe()
