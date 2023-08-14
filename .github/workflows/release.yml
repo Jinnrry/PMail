@@ -1,0 +1,44 @@
+name: Docker Image CI
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - uses: actions/checkout@v3
+
+      - name: set lower case repository name
+        run: |
+          echo "REPOSITORY_LC=${REPOSITORY,,}" >>${GITHUB_ENV}
+        env:
+          REPOSITORY: '${{ github.repository }}'
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:${{ steps.get_version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:latest
