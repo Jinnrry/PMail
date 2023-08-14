@@ -40,5 +40,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ REPOSITORY_LC }}:${{ steps.get_version.outputs.VERSION }}
-            ${{ env.REGISTRY }}/${{ REPOSITORY_LC }}:latest
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:${{ steps.get_version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:latest
