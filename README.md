@@ -43,7 +43,9 @@ beautiful and cute Logo for this project!
 
 ## 1、Download
 
-[Click Here](https://github.com/Jinnrry/PMail/releases) Download a program file that matches you.
+* [Click Here](https://github.com/Jinnrry/PMail/releases) Download a program file that matches you.
+
+* Or use Docker `docker pull ghcr.io/jinnrry/pmail:latest`
 
 ## 2、Run
 

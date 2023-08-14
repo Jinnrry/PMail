@@ -47,7 +47,9 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 ## 1、下载文件
 
-[点击这里](https://github.com/Jinnrry/PMail/releases)下载一个与你匹配的程序文件。
+* [点击这里](https://github.com/Jinnrry/PMail/releases)下载一个与你匹配的程序文件。
+
+* 或者使用Docker运行 `docker pull ghcr.io/jinnrry/pmail:latest`
 
 ## 2、运行
 
