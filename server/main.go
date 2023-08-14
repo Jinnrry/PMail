@@ -53,18 +53,22 @@ func main() {
 
 	config.Init()
 
-	switch config.Instance.LogLevel {
-	case "":
-		log.SetLevel(log.InfoLevel)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	default:
+	if config.Instance != nil {
+		switch config.Instance.LogLevel {
+		case "":
+			log.SetLevel(log.InfoLevel)
+		case "debug":
+			log.SetLevel(log.DebugLevel)
+		case "info":
+			log.SetLevel(log.InfoLevel)
+		case "warn":
+			log.SetLevel(log.WarnLevel)
+		case "error":
+			log.SetLevel(log.ErrorLevel)
+		default:
+			log.SetLevel(log.InfoLevel)
+		}
+	} else {
 		log.SetLevel(log.InfoLevel)
 	}
 
