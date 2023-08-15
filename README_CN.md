@@ -79,6 +79,10 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 后端代码进入`server`文件夹，运行`main.go`文件
 
+## 后端接口文档
+
+[参见Wiki](https://github.com/Jinnrry/PMail/wiki)
+
 ## 插件开发
 
 参考微信推送插件`server/hooks/wechat_push/wechat_push.go`
