@@ -78,6 +78,10 @@ The code is in `fe` folder.
 
 The code is in `server` folder.
 
+## Api Documentation
+
+[go to wiki](https://github.com/Jinnrry/PMail/wiki)
+
 ## Plugin Development
 
 Reference this file. `server/hooks/wechat_push/wechat_push.go`
