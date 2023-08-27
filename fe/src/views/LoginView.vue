@@ -1,7 +1,7 @@
 <template>
     <div id="main">
         <div id="form">
-            <el-form :model="form" label-width="120px">
+            <el-form :model="form" label-width="120px" @keyup.enter.native="onSubmit">
                 <el-form-item :label="lang.account">
                     <el-input v-model="form.account" placeholder="User Name" />
                 </el-form-item>

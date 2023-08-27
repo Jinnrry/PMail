@@ -6,7 +6,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"pmail/config"
-	"pmail/cron_server"
 	"pmail/dto"
 	"pmail/res_init"
 	"time"
@@ -80,7 +79,7 @@ func main() {
 	log.Infoln("***************************************************")
 
 	// 定时任务启动
-	go cron_server.Start()
+	//go cron_server.Start()
 
 	// 核心服务启动
 	res_init.Init()
