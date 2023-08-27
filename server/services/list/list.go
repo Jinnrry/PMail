@@ -48,6 +48,11 @@ func genSQL(ctx *dto.Context, counter bool, tag, keyword string, offset, limit i
 		sqlParams = append(sqlParams, tagInfo.Status)
 	}
 
+	if tagInfo.GroupId != -1 {
+		sql += " and group_id=? "
+		sqlParams = append(sqlParams, tagInfo.GroupId)
+	}
+
 	if keyword != "" {
 		sql += " and (subject like ? or text like ? )"
 		sqlParams = append(sqlParams, "%"+keyword+"%", "%"+keyword+"%")

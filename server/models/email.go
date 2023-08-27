@@ -9,6 +9,7 @@ import (
 type Email struct {
 	Id           int            `db:"id" json:"id"`
 	Type         int8           `db:"type" json:"type"`
+	GroupId      int            `db:"group_id" json:"group_id"`
 	Subject      string         `db:"subject" json:"subject"`
 	ReplyTo      string         `db:"reply_to" json:"reply_to"`
 	FromName     string         `db:"from_name" json:"from_name"`

@@ -2,6 +2,7 @@ CREATE table email
 (
     id             INT unsigned AUTO_INCREMENT PRIMARY KEY COMMENT '自增id',
     type           tinyint(4) NOT NULL DEFAULT 0 COMMENT '邮件类型，0:收到的邮件，1:发送的邮件',
+    group_id       int unsigned NOT NULL DEFAULT 0 COMMENT '分组id',
     subject        varchar(1000) NOT NULL DEFAULT '' COMMENT '邮件标题',
     reply_to       json COMMENT '回复人',
     from_name      varchar(50)   NOT NULL DEFAULT '' COMMENT '发件人名称',

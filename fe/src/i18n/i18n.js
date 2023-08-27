@@ -58,6 +58,13 @@ var lang = {
     "ssl_manuallyf": "Manually configure an SSL certificate",
     "ssl_key_path": "ssl key file path",
     "ssl_crt_path": "ssl crt file path",
+    "group_settings": "Group",
+    "add_group": "Add Group",
+    "del_email_confirm": "Are you sure you want to delete them?",
+    "move_email_confirm": "Are you sure you want to move them?",
+    "del_btn": "Delete",
+    "move_btn": "Move",
+    "read_btn": "Readed"
 };
 
 
@@ -122,6 +129,13 @@ var zhCN = {
     "ssl_manuallyf": "手动配置SSL证书",
     "ssl_key_path": "ssl key文件位置",
     "ssl_crt_path": "ssl crt文件位置",
+    "group_settings": "分组",
+    "add_group": "新建分组",
+    "del_email_confirm": "你确定要删除吗?",
+    "move_email_confirm": "你确定要移动这些邮件吗?",
+    "del_btn": "删除",
+    "move_btn": "移动",
+    "read_btn": "已读"
 }
 
 switch (navigator.language) {

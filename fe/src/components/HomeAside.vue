@@ -61,4 +61,10 @@ const handleNodeClick = function (data) {
 .el-tree {
   background-color: #F1F1F1;
 }
+
+.add_group{
+  font-size: 14px;
+  text-align: left;
+  padding-left: 15px;
+}
 </style>

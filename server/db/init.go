@@ -9,6 +9,7 @@ import (
 	"pmail/config"
 	"pmail/dto"
 	"pmail/utils/errors"
+	"strings"
 )
 
 var Instance *sqlx.DB
@@ -32,6 +33,8 @@ func Init() error {
 	Instance.SetMaxIdleConns(10)
 	//showMySQLCharacterSet()
 	checkTable()
+	// 处理版本升级带来的数据表变更
+	databaseUpdate()
 	return nil
 }
 
@@ -84,21 +87,27 @@ func checkTable() {
 	}
 }
 
-func showMySQLCharacterSet() {
-	var res []struct {
-		Variable_name string `db:"Variable_name"`
-		Value         string `db:"Value"`
-	}
-	err := Instance.Select(&res, "show variables like '%character%';")
-	log.Debugf("%+v  %+v", res, err)
-
+type tableSQL struct {
+	Table       string `db:"Table"`
+	CreateTable string `db:"Create Table"`
 }
 
-func testSlowLog() {
-	var res []struct {
-		Value string `db:"Value"`
+func databaseUpdate() {
+	// 检查email表是否有group id
+	var err error
+	var res []tableSQL
+	if config.Instance.DbType == "sqlite" {
+		err = Instance.Select(&res, "select sql as `Create Table` from sqlite_master where type='table' and tbl_name = 'email'")
+	} else {
+		err = Instance.Select(&res, "show create table `email`")
 	}
-	err := Instance.Select(&res, "/* asddddasad */select /* this is test */ sleep(4) as Value")
-	log.Debugf("%+v  %+v", res, err)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if len(res) > 0 && !strings.Contains(res[0].CreateTable, "group_id") {
+		Instance.Exec("alter table email add group_id integer default 0 not null;")
+	}
 
 }
