@@ -24,6 +24,8 @@ type Config struct {
 	WeChatPushSecret     string            `json:"weChatPushSecret"`
 	WeChatPushTemplateId string            `json:"weChatPushTemplateId"`
 	WeChatPushUserId     string            `json:"weChatPushUserId"`
+	TgBotToken           string            `json:"tgBotToken"`
+	TgChatId             string            `json:"tgChatId"`
 	IsInit               bool              `json:"isInit"`
 	HttpsEnabled         int               `json:"httpsEnabled"` //后台页面是否启用https，0默认（启用），1启用，2不启用
 	Tables               map[string]string `json:"-"`

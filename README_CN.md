@@ -67,6 +67,9 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 打开运行目录下的 `config/config.json`文件，编辑 `weChatPush` 开头的几个配置项，重启服务即可。
 
+## 6、Telegram推送
+从 [BotFather](https://t.me/BotFather) 创建并获取令牌机器人。 打开运行目录下的 config/config.json 文件，编辑 `tg` 开头的几个配置项，重启服务即可。
+
 # 参与开发
 
 ## 项目架构

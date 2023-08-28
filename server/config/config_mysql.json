@@ -12,6 +12,8 @@
   "weChatPushSecret": "",
   "weChatPushTemplateId": "",
   "weChatPushUserId": "",
+  "tgChatId": "",
+  "tgBotToken": "",
   "isInit": true,
   "httpsEnabled": 2
 }
