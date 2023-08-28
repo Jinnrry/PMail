@@ -66,6 +66,10 @@ use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
 Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `weChatPush`
 and restart the service.
 
+## 6、Telegram Message Push
+Create bot and get token from [BotFather](https://t.me/BotFather)
+Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `tg`and restart the service.
+
 # For Developer
 
 ## Project Framework
