@@ -181,6 +181,7 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 				hk.(hooks.EmailHook).SendAfter(ctx, e, sendErr)
 			}, hook)
 		}
+		as2.Wait()
 
 		if err != nil {
 			errMsg = err.Error()
