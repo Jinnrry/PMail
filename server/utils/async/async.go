@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-type Callback func()
+type Callback func(params any)
 
 type Async struct {
 	wg        *sync.WaitGroup
@@ -27,25 +27,25 @@ func (as *Async) LastError() error {
 	return as.lastError
 }
 
-func (as *Async) WaitProcess(callback Callback) {
+func (as *Async) WaitProcess(callback Callback, params any) {
 	if as.wg == nil {
 		as.wg = &sync.WaitGroup{}
 	}
 	as.wg.Add(1)
-	as.Process(func() {
+	as.Process(func(params any) {
 		defer as.wg.Done()
-		callback()
-	})
+		callback(params)
+	}, params)
 }
 
-func (as *Async) Process(callback Callback) {
+func (as *Async) Process(callback Callback, params any) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
 				as.lastError = as.HandleErrRecover(err)
 			}
 		}()
-		callback()
+		callback(params)
 	}()
 }
 
