@@ -61,7 +61,7 @@ func Send(ctx *dto.Context, e *parsemail.Email) (error, map[string]error) {
 	for domain, tos := range toByDomain {
 		domain := domain
 		tos := tos
-		as.WaitProcess(func() {
+		as.WaitProcess(func(p any) {
 
 			err := smtp.SendMail("", domain.mxHost+":25", nil, e.From.EmailAddress, buildAddress(tos), b)
 
@@ -85,7 +85,7 @@ func Send(ctx *dto.Context, e *parsemail.Email) (error, map[string]error) {
 				}
 			}
 			errMap[domain.domain] = err
-		})
+		}, nil)
 	}
 	as.Wait()
 

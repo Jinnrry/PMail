@@ -23,14 +23,16 @@ func (s *Session) Data(r io.Reader) error {
 		return err
 	}
 
+	as1 := async.New(nil)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
 		}
-		async.New(nil).Process(func() {
-			hook.ReceiveParseBefore(emailData)
-		})
+		as1.WaitProcess(func(hk any) {
+			hk.(hooks.EmailHook).ReceiveParseBefore(emailData)
+		}, hook)
 	}
+	as1.Wait()
 
 	log.Infof("邮件原始内容: %s", emailData)
 
@@ -55,14 +57,16 @@ func (s *Session) Data(r io.Reader) error {
 		spfV = 1
 	}
 
+	as2 := async.New(nil)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
 		}
-		async.New(nil).Process(func() {
-			hook.ReceiveParseAfter(email)
-		})
+		as2.WaitProcess(func(hk any) {
+			hk.(hooks.EmailHook).ReceiveParseAfter(email)
+		}, hook)
 	}
+	as2.Wait()
 
 	sql := "INSERT INTO email (send_date, subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	_, err = db.Instance.Exec(sql,
