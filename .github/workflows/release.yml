@@ -17,13 +17,13 @@ jobs:
     steps:
       - name: Get version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> ${GITHUB_ENV}
 
       - uses: actions/checkout@v3
 
       - name: set lower case repository name
         run: |
-          echo "REPOSITORY_LC=${REPOSITORY,,}" >>${GITHUB_ENV}
+          echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
         env:
           REPOSITORY: '${{ github.repository }}'
 
@@ -40,5 +40,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:${{ steps.get_version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:${{ env.VERSION }}
             ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:latest
