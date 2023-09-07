@@ -5,17 +5,17 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/auth"
 	"pmail/services/detail"
+	"pmail/utils/context"
 )
 
 type emailDetailRequest struct {
 	ID int `json:"id"`
 }
 
-func EmailDetail(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func EmailDetail(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.WithContext(ctx).Errorf("%+v", err)

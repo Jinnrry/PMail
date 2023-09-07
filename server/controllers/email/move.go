@@ -5,9 +5,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/group"
+	"pmail/utils/context"
 )
 
 type moveRequest struct {
@@ -15,7 +15,7 @@ type moveRequest struct {
 	IDs     []int `json:"ids"`
 }
 
-func Move(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func Move(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.WithContext(ctx).Errorf("%+v", err)

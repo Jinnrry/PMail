@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite"
 	"pmail/config"
-	"pmail/dto"
+	"pmail/utils/context"
 	"pmail/utils/errors"
 	"strings"
 )
@@ -38,9 +38,9 @@ func Init() error {
 	return nil
 }
 
-func WithContext(ctx *dto.Context, sql string) string {
+func WithContext(ctx *context.Context, sql string) string {
 	if ctx != nil {
-		logId := ctx.GetValue(dto.LogID)
+		logId := ctx.GetValue(context.LogID)
 		return fmt.Sprintf("/* %s */ %s", logId, sql)
 	}
 	return sql

@@ -49,7 +49,11 @@ beautiful and cute Logo for this project!
 
 ## 2、Run
 
-`double-click to open` Or `execute command to run`
+`./pmail` 
+
+Or 
+
+`docker run -p 25:25 -p 80:80 -p 443:443 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
 ## 3、Configuration
 
@@ -69,6 +73,36 @@ and restart the service.
 ## 6、Telegram Message Push
 Create bot and get token from [BotFather](https://t.me/BotFather)
 Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `tg`and restart the service.
+
+# Configuration file format description
+
+```json
+{
+  "logLevel": "info", //log output level
+  "domain": "domain.com", // Your domain
+  "webDomain": "mail.domain.com", // web domain
+  "dkimPrivateKeyPath": "config/dkim/dkim.priv", // dkim key path
+  "sslType": "0", // ssl certificate update mode, 0 automatic, 1 manual
+  "SSLPrivateKeyPath": "config/ssl/private.key", // ssl certificate path
+  "SSLPublicKeyPath": "config/ssl/public.crt", // ssl certificate path
+  "dbDSN": "./config/pmail.db", // database connect DSN
+  "dbType": "sqlite", //database type ，`sqlite` or `mysql`
+  "httpsEnabled": 0, // enabled https , 0:enabled 1:enablde 2:disenabled
+  "httpPort": 80, // http port . default 80
+  "httpsPort": 443, // https port . default 443
+  "spamFilterLevel": 0,// Spam filter level, 0: no filter, 1: filtering when `spf` and `dkim` don't pass, 2: filtering when `spf` don't pass
+  "weChatPushAppId": "", // wechat appid
+  "weChatPushSecret": "", // weChat  Secret
+  "weChatPushTemplateId": "", // weChat TemplateId
+  "weChatPushUserId": "", // weChat UserId
+  "tgChatId": "", // telegram chatid
+  "tgBotToken": "", // telegram  token
+  "isInit": true // If false, it will enter the bootstrap process.
+}
+```
+
+
+
 
 # For Developer
 

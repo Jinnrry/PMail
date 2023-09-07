@@ -33,6 +33,11 @@ const rules = reactive({
 })
 
 const submit = function () {
+    if (ruleForm.new_pwd == ""){
+        return
+    }
+
+
     if (ruleForm.new_pwd != ruleForm.new_pwd2) {
         ElNotification({
             title: 'Error',

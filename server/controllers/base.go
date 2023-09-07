@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"pmail/dto"
+	"pmail/utils/context"
 )
 
-type HandlerFunc func(*dto.Context, http.ResponseWriter, *http.Request)
+type HandlerFunc func(*context.Context, http.ResponseWriter, *http.Request)

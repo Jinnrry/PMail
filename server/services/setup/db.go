@@ -5,15 +5,15 @@ import (
 	"os"
 	"pmail/config"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/models"
 	"pmail/utils/array"
+	"pmail/utils/context"
 	"pmail/utils/errors"
 	"pmail/utils/file"
 	"pmail/utils/password"
 )
 
-func GetDatabaseSettings(ctx *dto.Context) (string, string, error) {
+func GetDatabaseSettings(ctx *context.Context) (string, string, error) {
 	configData, err := ReadConfig()
 	if err != nil {
 		return "", "", errors.Wrap(err)
@@ -26,7 +26,7 @@ func GetDatabaseSettings(ctx *dto.Context) (string, string, error) {
 	return configData.DbType, configData.DbDSN, nil
 }
 
-func GetAdminPassword(ctx *dto.Context) (string, error) {
+func GetAdminPassword(ctx *context.Context) (string, error) {
 
 	users := []*models.User{}
 	err := db.Instance.Select(&users, "select * from user")
@@ -41,7 +41,7 @@ func GetAdminPassword(ctx *dto.Context) (string, error) {
 	return "", nil
 }
 
-func SetAdminPassword(ctx *dto.Context, account, pwd string) error {
+func SetAdminPassword(ctx *context.Context, account, pwd string) error {
 	encodePwd := password.Encode(pwd)
 	res, err := db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user (account, name, password) VALUES (?, 'admin',?)"), account, encodePwd)
 	if err != nil {
@@ -58,7 +58,7 @@ func SetAdminPassword(ctx *dto.Context, account, pwd string) error {
 	return nil
 }
 
-func SetDatabaseSettings(ctx *dto.Context, dbType, dbDSN string) error {
+func SetDatabaseSettings(ctx *context.Context, dbType, dbDSN string) error {
 	configData, err := ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)
@@ -66,6 +66,10 @@ func SetDatabaseSettings(ctx *dto.Context, dbType, dbDSN string) error {
 
 	if !array.InArray(dbType, config.DBTypes) {
 		return errors.New("dbtype error")
+	}
+
+	if dbDSN == "" {
+		return errors.New("DSN error")
 	}
 
 	configData.DbType = dbType

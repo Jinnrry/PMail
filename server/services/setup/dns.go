@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"pmail/dto"
 	"pmail/i18n"
 	"pmail/services/auth"
+	"pmail/utils/context"
 	"pmail/utils/errors"
 )
 
@@ -19,7 +19,7 @@ type DNSItem struct {
 	Tips  string `json:"tips"`
 }
 
-func GetDNSSettings(ctx *dto.Context) ([]*DNSItem, error) {
+func GetDNSSettings(ctx *context.Context) ([]*DNSItem, error) {
 	configData, err := ReadConfig()
 	if err != nil {
 		return nil, errors.Wrap(err)

@@ -7,11 +7,11 @@ import (
 	"io"
 	"net/http"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/i18n"
 	"pmail/models"
 	"pmail/session"
+	"pmail/utils/context"
 	"pmail/utils/password"
 )
 
@@ -20,7 +20,7 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-func Login(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {

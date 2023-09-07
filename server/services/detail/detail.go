@@ -6,13 +6,13 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/models"
+	"pmail/utils/context"
 	"strings"
 )
 
-func GetEmailDetail(ctx *dto.Context, id int, markRead bool) (*models.Email, error) {
+func GetEmailDetail(ctx *context.Context, id int, markRead bool) (*models.Email, error) {
 	// 获取邮件内容
 	var email models.Email
 	err := db.Instance.Get(&email, db.WithContext(ctx, "select * from email where id = ?"), id)

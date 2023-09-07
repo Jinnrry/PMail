@@ -16,7 +16,7 @@ CREATE table email
     attachments    json COMMENT '附件内容',
     spf_check      tinyint(1) DEFAULT 0 COMMENT '0未校验，1校验通过，2校验未通过',
     dkim_check     tinyint(1) DEFAULT 0 COMMENT '0未校验，1校验通过，2校验未通过',
-    status         tinyint(4) NOT NULL DEFAULT 0 COMMENT '0未发送，1已发送，2发送失败',
+    status         tinyint(4) NOT NULL DEFAULT 0 COMMENT '0未发送，1已发送，2发送失败，3删除',
     send_user_id   int unsigned NOT NULL DEFAULT 0 COMMENT '发件人用户id',
     is_read        tinyint(1) NOT NULL DEFAULT 0 COMMENT '未读0，已读1',
     error          text COMMENT '错误信息记录',

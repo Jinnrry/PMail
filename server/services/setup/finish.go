@@ -1,13 +1,13 @@
 package setup
 
 import (
-	"pmail/dto"
 	"pmail/signal"
+	"pmail/utils/context"
 	"pmail/utils/errors"
 )
 
 // Finish 标记初始化完成
-func Finish(ctx *dto.Context) error {
+func Finish(ctx *context.Context) error {
 	cfg, err := ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)

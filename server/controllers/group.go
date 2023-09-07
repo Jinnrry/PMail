@@ -11,14 +11,15 @@ import (
 	"pmail/i18n"
 	"pmail/services/group"
 	"pmail/utils/array"
+	"pmail/utils/context"
 )
 
-func GetUserGroupList(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func GetUserGroupList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	infos := group.GetGroupList(ctx)
 	response.NewSuccessResponse(infos).FPrint(w)
 }
 
-func GetUserGroup(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func GetUserGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 	retData := []*group.GroupItem{
 		{
@@ -50,7 +51,7 @@ type addGroupRequest struct {
 	ParentId int    `json:"parent_id"`
 }
 
-func AddGroup(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func AddGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	var reqData *addGroupRequest
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -61,7 +62,7 @@ func AddGroup(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 		log.WithContext(ctx).Errorf("%+v", err)
 	}
 
-	res, err := db.Instance.Exec(db.WithContext(ctx, "insert into `group` (name,parent_id,user_id) values (?,?,?)"), reqData.Name, reqData.ParentId, ctx.UserInfo.ID)
+	res, err := db.Instance.Exec(db.WithContext(ctx, "insert into `group` (name,parent_id,user_id) values (?,?,?)"), reqData.Name, reqData.ParentId, ctx.UserID)
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, "DBError", err.Error()).FPrint(w)
 		return
@@ -78,7 +79,7 @@ type delGroupRequest struct {
 	Id int `json:"id"`
 }
 
-func DelGroup(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func DelGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	var reqData *delGroupRequest
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"pmail/dto"
 	"pmail/models"
 	"pmail/utils/array"
+	"pmail/utils/context"
 	"pmail/utils/errors"
 )
 
@@ -17,7 +18,7 @@ type GroupItem struct {
 	Children []*GroupItem `json:"children"`
 }
 
-func DelGroup(ctx *dto.Context, groupId int) (bool, error) {
+func DelGroup(ctx *context.Context, groupId int) (bool, error) {
 	allGroupIds := getAllChildId(ctx, groupId)
 	allGroupIds = append(allGroupIds, groupId)
 
@@ -27,7 +28,7 @@ func DelGroup(ctx *dto.Context, groupId int) (bool, error) {
 		return false, errors.Wrap(err)
 	}
 
-	res, err := trans.Exec(db.WithContext(ctx, fmt.Sprintf("delete from `group` where id in (%s) and user_id =?", array.Join(allGroupIds, ","))), ctx.UserInfo.ID)
+	res, err := trans.Exec(db.WithContext(ctx, fmt.Sprintf("delete from `group` where id in (%s) and user_id =?", array.Join(allGroupIds, ","))), ctx.UserID)
 	if err != nil {
 		trans.Rollback()
 		return false, errors.Wrap(err)
@@ -53,10 +54,10 @@ type id struct {
 	Id int `db:"id"`
 }
 
-func getAllChildId(ctx *dto.Context, rootId int) []int {
+func getAllChildId(ctx *context.Context, rootId int) []int {
 	var ids []id
 	var ret []int
-	db.Instance.Select(&ids, db.WithContext(ctx, "select id from `group` where parent_id=? and user_id=?"), rootId, ctx.UserInfo.ID)
+	db.Instance.Select(&ids, db.WithContext(ctx, "select id from `group` where parent_id=? and user_id=?"), rootId, ctx.UserID)
 	for _, item := range ids {
 		ret = array.Merge(ret, getAllChildId(ctx, item.Id))
 		ret = append(ret, item.Id)
@@ -65,12 +66,12 @@ func getAllChildId(ctx *dto.Context, rootId int) []int {
 }
 
 // GetGroupInfoList 获取全部的分组
-func GetGroupInfoList(ctx *dto.Context) []*GroupItem {
+func GetGroupInfoList(ctx *context.Context) []*GroupItem {
 	return buildChildren(ctx, 0)
 }
 
 // MoveMailToGroup 将某封邮件移动到某个分组中
-func MoveMailToGroup(ctx *dto.Context, mailId []int, groupId int) bool {
+func MoveMailToGroup(ctx *context.Context, mailId []int, groupId int) bool {
 	res, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("update email set group_id=? where id in (%s)", array.Join(mailId, ","))), groupId)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL Error:%+v", err)
@@ -85,10 +86,10 @@ func MoveMailToGroup(ctx *dto.Context, mailId []int, groupId int) bool {
 	return rowNum > 0
 }
 
-func buildChildren(ctx *dto.Context, parentId int) []*GroupItem {
+func buildChildren(ctx *context.Context, parentId int) []*GroupItem {
 	var ret []*GroupItem
 	var rootGroup []*models.Group
-	err := db.Instance.Select(&rootGroup, db.WithContext(ctx, "select * from `group` where parent_id=? and user_id=?"), parentId, ctx.UserInfo.ID)
+	err := db.Instance.Select(&rootGroup, db.WithContext(ctx, "select * from `group` where parent_id=? and user_id=?"), parentId, ctx.UserID)
 
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL Error:%v", err)
@@ -107,8 +108,8 @@ func buildChildren(ctx *dto.Context, parentId int) []*GroupItem {
 
 }
 
-func GetGroupList(ctx *dto.Context) []*models.Group {
+func GetGroupList(ctx *context.Context) []*models.Group {
 	var ret []*models.Group
-	db.Instance.Select(&ret, db.WithContext(ctx, "select * from `group` where user_id=?"), ctx.UserInfo.ID)
+	db.Instance.Select(&ret, db.WithContext(ctx, "select * from `group` where user_id=?"), ctx.UserID)
 	return ret
 }

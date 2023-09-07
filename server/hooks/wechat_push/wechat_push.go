@@ -8,8 +8,8 @@ import (
 	"io"
 	"net/http"
 	"pmail/config"
-	"pmail/dto"
 	"pmail/dto/parsemail"
+	"pmail/utils/context"
 	"strings"
 	"time"
 )
@@ -28,11 +28,11 @@ type WeChatPushHook struct {
 	pushUser     string
 }
 
-func (w *WeChatPushHook) SendBefore(ctx *dto.Context, email *parsemail.Email) {
+func (w *WeChatPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 }
 
-func (w *WeChatPushHook) SendAfter(ctx *dto.Context, email *parsemail.Email, err map[string]error) {
+func (w *WeChatPushHook) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
 
 }
 
@@ -45,7 +45,13 @@ func (w *WeChatPushHook) ReceiveParseAfter(email *parsemail.Email) {
 		return
 	}
 
-	w.sendUserMsg(nil, w.pushUser, string(email.Text))
+	content := string(email.Text)
+
+	if content == "" {
+		content = email.Subject
+	}
+
+	w.sendUserMsg(nil, w.pushUser, content)
 }
 
 func (w *WeChatPushHook) getWxAccessToken() string {
@@ -80,11 +86,19 @@ type DataItem struct {
 	Color string `json:"color"`
 }
 
-func (w *WeChatPushHook) sendUserMsg(ctx *dto.Context, userId string, content string) {
+func (w *WeChatPushHook) sendUserMsg(ctx *context.Context, userId string, content string) {
+
+	url := config.Instance.WebDomain
+	if config.Instance.HttpsEnabled > 1 {
+		url = "http://" + url
+	} else {
+		url = "https://" + url
+	}
+
 	sendMsgReq, _ := json.Marshal(sendMsgRequest{
 		Touser:      userId,
 		Template_id: w.templateId,
-		Url:         "http://mail." + config.Instance.Domain,
+		Url:         url,
 		Data:        SendData{Content: DataItem{Value: content, Color: "#000000"}},
 	})
 
