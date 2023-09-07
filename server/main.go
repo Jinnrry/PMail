@@ -6,8 +6,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"pmail/config"
-	"pmail/dto"
+	"pmail/cron_server"
 	"pmail/res_init"
+	"pmail/utils/context"
 	"time"
 )
 
@@ -21,7 +22,7 @@ func (l *logFormatter) Format(entry *log.Entry) ([]byte, error) {
 	b.WriteString(fmt.Sprintf("[%s]", entry.Level.String()))
 	b.WriteString(fmt.Sprintf("[%s]", entry.Time.Format("2006-01-02 15:04:05")))
 	if entry.Context != nil {
-		b.WriteString(fmt.Sprintf("[%s]", entry.Context.(*dto.Context).GetValue(dto.LogID)))
+		b.WriteString(fmt.Sprintf("[%s]", entry.Context.(*context.Context).GetValue(context.LogID)))
 	}
 	b.WriteString(fmt.Sprintf("[%s:%d]", entry.Caller.File, entry.Caller.Line))
 	b.WriteString(entry.Message)
@@ -38,8 +39,6 @@ var (
 
 func main() {
 	// 设置日志格式为json格式
-	//log.SetFormatter(&log.JSONFormatter{})
-
 	log.SetFormatter(&logFormatter{})
 	log.SetReportCaller(true)
 
@@ -79,7 +78,7 @@ func main() {
 	log.Infoln("***************************************************")
 
 	// 定时任务启动
-	//go cron_server.Start()
+	go cron_server.Start()
 
 	// 核心服务启动
 	res_init.Init()

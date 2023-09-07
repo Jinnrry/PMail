@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-const HttpPort = 80
-
 // 这个服务是为了拦截http请求转发到https
 var httpServer *http.Server
 
@@ -24,6 +22,11 @@ func HttpStop() {
 
 func HttpStart() {
 	mux := http.NewServeMux()
+
+	HttpPort := 80
+	if config.Instance.HttpPort > 0 {
+		HttpPort = config.Instance.HttpPort
+	}
 
 	if config.Instance.HttpsEnabled != 2 {
 		mux.HandleFunc("/", controllers.Interceptor)
@@ -52,6 +55,10 @@ func HttpStart() {
 		mux.HandleFunc("/api/email/move", contextIterceptor(email.Move))
 		mux.HandleFunc("/api/email/send", contextIterceptor(email.Send))
 		mux.HandleFunc("/api/settings/modify_password", contextIterceptor(controllers.ModifyPassword))
+		mux.HandleFunc("/api/rule/get", contextIterceptor(controllers.GetRule))
+		mux.HandleFunc("/api/rule/add", contextIterceptor(controllers.UpsertRule))
+		mux.HandleFunc("/api/rule/update", contextIterceptor(controllers.UpsertRule))
+		mux.HandleFunc("/api/rule/del", contextIterceptor(controllers.DelRule))
 		mux.HandleFunc("/attachments/", contextIterceptor(controllers.GetAttachments))
 		mux.HandleFunc("/attachments/download/", contextIterceptor(controllers.Download))
 		httpServer = &http.Server{

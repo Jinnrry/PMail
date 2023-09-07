@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"pmail/config"
-	"pmail/dto"
 	"pmail/dto/parsemail"
+	"pmail/utils/context"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -19,11 +19,11 @@ type TelegramPushHook struct {
 	webDomain    string
 }
 
-func (w *TelegramPushHook) SendBefore(ctx *dto.Context, email *parsemail.Email) {
+func (w *TelegramPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 }
 
-func (w *TelegramPushHook) SendAfter(ctx *dto.Context, email *parsemail.Email, err map[string]error) {
+func (w *TelegramPushHook) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
 
 }
 
@@ -55,7 +55,7 @@ type InlineKeyboardButton struct {
 	URL  string `json:"url"`
 }
 
-func (w *TelegramPushHook) sendUserMsg(ctx *dto.Context, email *parsemail.Email) {
+func (w *TelegramPushHook) sendUserMsg(ctx *context.Context, email *parsemail.Email) {
 	url := w.webDomain
 	if w.httpsEnabled > 1 {
 		url = "http://" + url

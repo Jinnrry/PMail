@@ -8,8 +8,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/textproto"
-	"pmail/dto"
 	"pmail/utils/array"
+	"pmail/utils/context"
 	"regexp"
 	"strings"
 	"time"
@@ -42,6 +42,9 @@ type Email struct {
 	Attachments []*Attachment
 	ReadReceipt []string
 	Date        string
+	IsRead      int
+	Status      int // 0未发送，1已发送，2发送失败，3删除
+	GroupId     int // 分组id
 }
 
 func NewEmailFromReader(r io.Reader) *Email {
@@ -166,7 +169,85 @@ func buildUsers(str []string) []*User {
 	return ret
 }
 
-func (e *Email) BuildBytes(ctx *dto.Context) []byte {
+func (e *Email) ForwardBuildBytes(ctx *context.Context, forwardAddress string) []byte {
+	var b bytes.Buffer
+
+	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
+	to := []*mail.Address{
+		{
+			Address: forwardAddress,
+		},
+	}
+
+	// Create our mail header
+	var h mail.Header
+	h.SetDate(time.Now())
+	h.SetAddressList("From", from)
+	h.SetAddressList("To", to)
+	h.SetText("Subject", e.Subject)
+	if len(e.Cc) != 0 {
+		cc := []*mail.Address{}
+		for _, user := range e.Cc {
+			cc = append(cc, &mail.Address{
+				Name:    user.Name,
+				Address: user.EmailAddress,
+			})
+		}
+		h.SetAddressList("Cc", cc)
+	}
+
+	// Create a new mail writer
+	mw, err := mail.CreateWriter(&b, h)
+	if err != nil {
+		log.WithContext(ctx).Fatal(err)
+	}
+
+	// Create a text part
+	tw, err := mw.CreateInline()
+	if err != nil {
+		log.WithContext(ctx).Fatal(err)
+	}
+	var th mail.InlineHeader
+	th.Set("Content-Type", "text/plain")
+	w, err := tw.CreatePart(th)
+	if err != nil {
+		log.Fatal(err)
+	}
+	io.WriteString(w, string(e.Text))
+	w.Close()
+
+	var html mail.InlineHeader
+	html.Set("Content-Type", "text/html")
+	w, err = tw.CreatePart(html)
+	if err != nil {
+		log.Fatal(err)
+	}
+	io.WriteString(w, string(e.HTML))
+	w.Close()
+
+	tw.Close()
+
+	// Create an attachment
+	for _, attachment := range e.Attachments {
+		var ah mail.AttachmentHeader
+		ah.Set("Content-Type", attachment.ContentType)
+		ah.SetFilename(attachment.Filename)
+		w, err = mw.CreateAttachment(ah)
+		if err != nil {
+			log.WithContext(ctx).Fatal(err)
+			continue
+		}
+		w.Write(attachment.Content)
+		w.Close()
+	}
+
+	mw.Close()
+
+	// dkim 签名后返回
+	return instance.Sign(b.String())
+}
+
+func (e *Email) BuildBytes(ctx *context.Context) []byte {
 	var b bytes.Buffer
 
 	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}

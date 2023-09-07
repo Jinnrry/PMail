@@ -30,7 +30,6 @@ RUN apk add --no-cache tzdata \
 
 
 COPY --from=serverbuild /work/pmail .
-COPY server/config/dkim ./config/dkim/
-COPY server/config/config.json ./config/
+
 
 CMD /work/pmail

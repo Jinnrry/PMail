@@ -5,16 +5,16 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/del_email"
+	"pmail/utils/context"
 )
 
 type emailDeleteRequest struct {
 	IDs []int `json:"ids"`
 }
 
-func EmailDelete(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func EmailDelete(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.WithContext(ctx).Errorf("%+v", err)

@@ -23,7 +23,7 @@ type Email struct {
 	Attachments  string         `db:"attachments" json:"attachments"`
 	SPFCheck     int8           `db:"spf_check" json:"spf_check"`
 	DKIMCheck    int8           `db:"dkim_check" json:"dkim_check"`
-	Status       int8           `db:"status" json:"status"`
+	Status       int8           `db:"status" json:"status"` // 0未发送，1已发送，2发送失败，3删除
 	CronSendTime time.Time      `db:"cron_send_time" json:"cron_send_time"`
 	UpdateTime   time.Time      `db:"update_time" json:"update_time"`
 	SendUserID   int            `db:"send_user_id" json:"send_user_id"`

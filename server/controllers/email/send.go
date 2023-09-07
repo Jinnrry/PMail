@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"pmail/config"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/dto/response"
 	"pmail/hooks"
 	"pmail/i18n"
-	"pmail/smtp_server"
 	"pmail/utils/async"
+	"pmail/utils/context"
+	"pmail/utils/send"
 	"strings"
 	"time"
 )
@@ -43,7 +43,7 @@ type attachment struct {
 	Data string `json:"data"`
 }
 
-func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.WithContext(ctx).Errorf("%+v", err)
@@ -157,7 +157,7 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 		1,
 		1,
 		time.Now(),
-		ctx.UserInfo.ID,
+		ctx.UserID,
 		"",
 	)
 	emailId, _ := sqlRes.LastInsertId()
@@ -170,7 +170,7 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 
 	async.New(ctx).Process(func(p any) {
 		errMsg := ""
-		err, sendErr := smtp_server.Send(ctx, e)
+		err, sendErr := send.Send(ctx, e)
 
 		as2 := async.New(ctx)
 		for _, hook := range hooks.HookList {

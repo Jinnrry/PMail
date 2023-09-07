@@ -5,10 +5,10 @@ import (
 	"io"
 	"net/http"
 	"pmail/config"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/setup"
 	"pmail/services/setup/ssl"
+	"pmail/utils/context"
 	"strings"
 )
 
@@ -23,7 +23,7 @@ func AcmeChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Setup(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		response.NewSuccessResponse("").FPrint(w)

@@ -32,6 +32,14 @@
                             <span v-if="!scope.row.is_read">
                                 {{ lang.new }}
                             </span>
+                            <span style="font-weight: 900;color: #FF0000;" v-if="scope.row.dangerous">
+                                <el-tooltip effect="dark" 
+                                :content="lang.dangerous"
+                                    placement="top-start">
+                                    !
+                                </el-tooltip>
+                                
+                            </span>
                         </div>
                     </template>
                 </el-table-column>

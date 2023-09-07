@@ -4,7 +4,7 @@ import (
 	"errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"pmail/dto"
+	"pmail/utils/context"
 	"runtime/debug"
 	"sync"
 )
@@ -14,10 +14,10 @@ type Callback func(params any)
 type Async struct {
 	wg        *sync.WaitGroup
 	lastError error
-	ctx       *dto.Context
+	ctx       *context.Context
 }
 
-func New(ctx *dto.Context) *Async {
+func New(ctx *context.Context) *Async {
 	return &Async{
 		ctx: ctx,
 	}

@@ -3,14 +3,14 @@ package del_email
 import (
 	"fmt"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/models"
 	"pmail/services/auth"
 	"pmail/utils/array"
+	"pmail/utils/context"
 	"pmail/utils/errors"
 )
 
-func DelEmail(ctx *dto.Context, ids []int) error {
+func DelEmail(ctx *context.Context, ids []int) error {
 	var emails []*models.Email
 
 	db.Instance.Select(&emails, db.WithContext(ctx, fmt.Sprintf("select * from email where id in (%s)", array.Join(ids, ","))))
@@ -23,7 +23,8 @@ func DelEmail(ctx *dto.Context, ids []int) error {
 		}
 	}
 
-	_, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("delete from email where id in (%s)", array.Join(ids, ","))))
+	//_, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("delete from email where id in (%s)", array.Join(ids, ","))))
+	_, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("update email set status = 3 where id in (%s)", array.Join(ids, ","))))
 	if err != nil {
 		return errors.Wrap(err)
 	}
