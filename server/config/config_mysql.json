@@ -1,0 +1,22 @@
+{
+  "logLevel": "info",
+  "domain": "domain.com",
+  "webDomain": "mail.domain.com",
+  "dkimPrivateKeyPath": "config/dkim/dkim.priv",
+  "sslType": "0",
+  "SSLPrivateKeyPath": "config/ssl/private.key",
+  "SSLPublicKeyPath": "config/ssl/public.crt",
+  "dbDSN": "root:root@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local",
+  "dbType": "mysql",
+  "spamFilterLevel": 2,
+  "httpPort": 80,
+  "httpsPort": 443,
+  "weChatPushAppId": "",
+  "weChatPushSecret": "",
+  "weChatPushTemplateId": "",
+  "weChatPushUserId": "",
+  "tgChatId": "",
+  "tgBotToken": "",
+  "isInit": true,
+  "httpsEnabled": 2
+}

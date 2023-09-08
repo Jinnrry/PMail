@@ -8,10 +8,18 @@
                 <Setting style="color:#FFFFFF" />
             </el-icon>
         </div>
-        <el-drawer v-model="openSettings" :title="lang.settings">
-            <el-tabs tab-position="left" >
+        <el-drawer v-model="openSettings" size="80%" :title="lang.settings">
+            <el-tabs tab-position="left">
                 <el-tab-pane :label="lang.security">
-                    <SecuritySettings/>
+                    <SecuritySettings />
+                </el-tab-pane>
+
+                <el-tab-pane :label="lang.group_settings">
+                    <GroupSettings />
+                </el-tab-pane>
+
+                <el-tab-pane :label="lang.rule_setting">
+                    <RuleSettings />
                 </el-tab-pane>
             </el-tabs>
         </el-drawer>
@@ -25,7 +33,8 @@ import { ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import SecuritySettings from '@/components/SecuritySettings.vue'
 import lang from '../i18n/i18n';
-
+import GroupSettings from './GroupSettings.vue';
+import RuleSettings from './RuleSettings.vue';
 
 const openSettings = ref(false)
 const settings = function () {

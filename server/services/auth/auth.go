@@ -10,16 +10,16 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/models"
+	"pmail/utils/context"
 	"strings"
 )
 
 // HasAuth 检查当前用户是否有某个邮件的auth
-func HasAuth(ctx *dto.Context, email *models.Email) bool {
+func HasAuth(ctx *context.Context, email *models.Email) bool {
 	// 获取当前用户的auth
 	var auth []models.UserAuth
-	err := db.Instance.Select(&auth, db.WithContext(ctx, "select * from user_auth where user_id = ?"), ctx.UserInfo.ID)
+	err := db.Instance.Select(&auth, db.WithContext(ctx, "select * from user_auth where user_id = ?"), ctx.UserID)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		return false
@@ -30,7 +30,7 @@ func HasAuth(ctx *dto.Context, email *models.Email) bool {
 		if userAuth.EmailAccount == "*" {
 			hasAuth = true
 			break
-		} else if strings.Contains(email.Bcc, ctx.UserInfo.Account) || strings.Contains(email.Cc, ctx.UserInfo.Account) || strings.Contains(email.To, ctx.UserInfo.Account) {
+		} else if strings.Contains(email.Bcc, ctx.UserAccount) || strings.Contains(email.Cc, ctx.UserAccount) || strings.Contains(email.To, ctx.UserAccount) {
 			hasAuth = true
 			break
 		}

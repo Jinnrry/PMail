@@ -4,17 +4,41 @@
             <div id="action">
                 <RouterLink to="/editer">+{{ lang.compose }}</RouterLink>
             </div>
-            <!-- <div id="action">全部标记为已读</div> -->
         </div>
         <div id="title">{{ groupStore.name }}</div>
+        <div id="action">
+            <el-button @click="del" size="small">{{ lang.del_btn }}</el-button>
+            <el-button @click="markRead" size="small">{{ lang.read_btn }}</el-button>
+            <el-dropdown style="margin-left: 12px;">
+                <el-button size="small">
+                    {{ lang.move_btn }}
+                    <el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item @click="move(group.id)" v-for="group in groupList">{{ group.name
+                        }}</el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+        </div>
         <div id="table">
-            <el-table :data="data" :show-header="true" :border="false" @row-click="rowClick" :row-style="rowStyle">
+            <el-table ref="taskTableDataRef" @selection-change="selectionLineChange" :data="data" :show-header="true"
+                :border="false" @row-click="rowClick" :row-style="rowStyle">
                 <el-table-column type="selection" width="30" />
                 <el-table-column prop="title" label="" width="50">
                     <template #default="scope">
                         <div>
                             <span v-if="!scope.row.is_read">
                                 {{ lang.new }}
+                            </span>
+                            <span style="font-weight: 900;color: #FF0000;" v-if="scope.row.dangerous">
+                                <el-tooltip effect="dark" 
+                                :content="lang.dangerous"
+                                    placement="top-start">
+                                    !
+                                </el-tooltip>
+                                
                             </span>
                         </div>
                     </template>
@@ -49,7 +73,7 @@
             </el-table>
         </div>
         <div id="pagination">
-            <el-pagination background layout="prev, pager, next" :page-count="totalPage" />
+            <el-pagination background layout="prev, pager, next" :page-count="totalPage" @current-change="pageChange" />
         </div>
     </div>
 </template>
@@ -58,19 +82,18 @@
 
 <script setup>
 import $http from "../http/http";
-
+import { ArrowDown } from '@element-plus/icons-vue'
 import { RouterLink } from 'vue-router'
 import { reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import router from "@/router";  //根路由对象
 import useGroupStore from '../stores/group'
 import lang from '../i18n/i18n';
 
 const groupStore = useGroupStore()
 
-const route = useRoute()
+const groupList = ref([])
 
-
+const taskTableDataRef = ref(null)
 
 let tag = groupStore.tag;
 
@@ -96,17 +119,131 @@ watch(groupStore, async (newV, oldV) => {
 const data = ref([])
 const totalPage = ref(0)
 
-$http.post("/api/email/list", { tag: tag, page_size: 10 }).then(res => {
-    data.value = res.data.list
-    totalPage.value = res.data.total_page
-})
+const updateList = function () {
+    $http.post("/api/email/list", { tag: tag, page_size: 10 }).then(res => {
+        data.value = res.data.list
+        totalPage.value = res.data.total_page
+    })
+}
+
+const updateGroupList = function () {
+    $http.post("/api/group/list").then(res => {
+        groupList.value = res.data
+    })
+}
+
+updateList()
+updateGroupList()
 
 const rowClick = function (row, column, event) {
     router.push("/detail/" + row.id)
 }
 
+const markRead = function () {
+    let rows = taskTableDataRef.value?.getSelectionRows()
+    let ids = []
+    rows.forEach(element => {
+        ids.push(element.id)
+    });
+
+    $http.post("/api/email/read", { "ids": ids }).then(res => {
+        if (res.errorNo == 0) {
+            updateList()
+        } else {
+            ElMessage({
+                type: 'error',
+                message: res.errorMsg,
+            })
+        }
+    })
+}
+
+
+const move = function (group_id) {
+    let rows = taskTableDataRef.value?.getSelectionRows()
+    let ids = []
+    rows.forEach(element => {
+        ids.push(element.id)
+    });
+
+    ElMessageBox.confirm(
+        lang.move_email_confirm,
+        'Warning',
+        {
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            type: 'warning',
+        }
+    )
+        .then(() => {
+            $http.post("/api/email/move", { "group_id": group_id, "ids": ids }).then(res => {
+                if (res.errorNo == 0) {
+                    updateList()
+                    ElMessage({
+                        type: 'success',
+                        message: 'Move completed',
+                    })
+                } else {
+                    ElMessage({
+                        type: 'error',
+                        message: res.errorMsg,
+                    })
+                }
+            })
+
+
+
+        })
+}
+
+
+
+const del = function () {
+    let rows = taskTableDataRef.value?.getSelectionRows()
+    let ids = []
+    rows.forEach(element => {
+        ids.push(element.id)
+    });
+
+    ElMessageBox.confirm(
+        lang.del_email_confirm,
+        'Warning',
+        {
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            type: 'warning',
+        }
+    )
+        .then(() => {
+            $http.post("/api/email/del", { "ids": ids }).then(res => {
+                if (res.errorNo == 0) {
+                    updateList()
+                    ElMessage({
+                        type: 'success',
+                        message: 'Delete completed',
+                    })
+                } else {
+                    ElMessage({
+                        type: 'error',
+                        message: res.errorMsg,
+                    })
+                }
+            })
+
+
+
+        })
+}
+
+
 const rowStyle = function ({ row, rowIndwx }) {
     return { 'cursor': 'pointer' }
+}
+
+const pageChange = function (p) {
+    $http.post("/api/email/list", { tag: tag, page_size: 10, current_page: p }).then(res => {
+        data.value = res.data.list
+    })
 }
 
 </script>
@@ -114,11 +251,8 @@ const rowStyle = function ({ row, rowIndwx }) {
 
 <style scoped>
 #action {
-    text-align: left;
-    font-size: 20px;
-    line-height: 40px;
-    padding-left: 10px;
-    margin-right: 5px;
+    display: flex;
+    flex-direction: row;
 }
 
 

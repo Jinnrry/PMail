@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/spf13/cast"
 	"net/http"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/attachments"
+	"pmail/utils/context"
 	"strings"
 )
 
-func GetAttachments(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func GetAttachments(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	urlInfos := strings.Split(req.RequestURI, "/")
 	if len(urlInfos) != 4 {
 		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)
@@ -29,7 +29,7 @@ func GetAttachments(ctx *dto.Context, w http.ResponseWriter, req *http.Request) 
 	w.Write(content)
 }
 
-func Download(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func Download(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	urlInfos := strings.Split(req.RequestURI, "/")
 	if len(urlInfos) != 5 {
 		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)

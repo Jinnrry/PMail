@@ -6,19 +6,20 @@ import (
 	"pmail/db"
 	"pmail/dto"
 	"pmail/models"
+	"pmail/utils/context"
 )
 
-func GetEmailList(ctx *dto.Context, tag string, keyword string, offset, limit int) (emailList []*models.Email, total int) {
+func GetEmailList(ctx *context.Context, tag string, keyword string, offset, limit int) (emailList []*models.Email, total int) {
 
 	querySQL, queryParams := genSQL(ctx, false, tag, keyword, offset, limit)
 	counterSQL, counterParams := genSQL(ctx, true, tag, keyword, offset, limit)
 
-	err := db.Instance.Select(&emailList, querySQL, queryParams...)
+	err := db.Instance.Select(&emailList, db.WithContext(ctx, querySQL), queryParams...)
 	if err != nil {
 		log.Errorf("SQL ERROR: %s ,Error:%s", querySQL, err)
 	}
 
-	err = db.Instance.Get(&total, counterSQL, counterParams...)
+	err = db.Instance.Get(&total, db.WithContext(ctx, counterSQL), counterParams...)
 	if err != nil {
 		log.Errorf("SQL ERROR: %s ,Error:%s", querySQL, err)
 	}
@@ -26,7 +27,7 @@ func GetEmailList(ctx *dto.Context, tag string, keyword string, offset, limit in
 	return
 }
 
-func genSQL(ctx *dto.Context, counter bool, tag, keyword string, offset, limit int) (string, []any) {
+func genSQL(ctx *context.Context, counter bool, tag, keyword string, offset, limit int) (string, []any) {
 
 	sql := "select * from email where 1=1 "
 	if counter {
@@ -46,6 +47,13 @@ func genSQL(ctx *dto.Context, counter bool, tag, keyword string, offset, limit i
 	if tagInfo.Status != -1 {
 		sql += " and status =? "
 		sqlParams = append(sqlParams, tagInfo.Status)
+	} else {
+		sql += " and status != 3"
+	}
+
+	if tagInfo.GroupId != -1 {
+		sql += " and group_id=? "
+		sqlParams = append(sqlParams, tagInfo.GroupId)
 	}
 
 	if keyword != "" {
@@ -53,7 +61,7 @@ func genSQL(ctx *dto.Context, counter bool, tag, keyword string, offset, limit i
 		sqlParams = append(sqlParams, "%"+keyword+"%", "%"+keyword+"%")
 	}
 
-	sql += " limit ? offset ?"
+	sql += " order by id desc limit ? offset ?"
 	sqlParams = append(sqlParams, limit, offset)
 
 	return sql, sqlParams

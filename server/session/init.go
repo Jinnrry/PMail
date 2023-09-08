@@ -14,7 +14,7 @@ var Instance *scs.SessionManager
 
 func Init() {
 	Instance = scs.New()
-	Instance.Lifetime = 24 * time.Hour
+	Instance.Lifetime = 7 * 24 * time.Hour
 	// 使用db存储session数据，目前为了架构简单，
 	// 暂不引入redis存储，如果日后性能存在瓶颈，可以将session迁移到redis
 	if config.Instance.DbType == "mysql" {

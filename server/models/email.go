@@ -9,6 +9,7 @@ import (
 type Email struct {
 	Id           int            `db:"id" json:"id"`
 	Type         int8           `db:"type" json:"type"`
+	GroupId      int            `db:"group_id" json:"group_id"`
 	Subject      string         `db:"subject" json:"subject"`
 	ReplyTo      string         `db:"reply_to" json:"reply_to"`
 	FromName     string         `db:"from_name" json:"from_name"`
@@ -22,7 +23,7 @@ type Email struct {
 	Attachments  string         `db:"attachments" json:"attachments"`
 	SPFCheck     int8           `db:"spf_check" json:"spf_check"`
 	DKIMCheck    int8           `db:"dkim_check" json:"dkim_check"`
-	Status       int8           `db:"status" json:"status"`
+	Status       int8           `db:"status" json:"status"` // 0未发送，1已发送，2发送失败，3删除
 	CronSendTime time.Time      `db:"cron_send_time" json:"cron_send_time"`
 	UpdateTime   time.Time      `db:"update_time" json:"update_time"`
 	SendUserID   int            `db:"send_user_id" json:"send_user_id"`

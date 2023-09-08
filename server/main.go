@@ -7,8 +7,8 @@ import (
 	"os"
 	"pmail/config"
 	"pmail/cron_server"
-	"pmail/dto"
 	"pmail/res_init"
+	"pmail/utils/context"
 	"time"
 )
 
@@ -22,7 +22,7 @@ func (l *logFormatter) Format(entry *log.Entry) ([]byte, error) {
 	b.WriteString(fmt.Sprintf("[%s]", entry.Level.String()))
 	b.WriteString(fmt.Sprintf("[%s]", entry.Time.Format("2006-01-02 15:04:05")))
 	if entry.Context != nil {
-		b.WriteString(fmt.Sprintf("[%s]", entry.Context.(*dto.Context).GetValue(dto.LogID)))
+		b.WriteString(fmt.Sprintf("[%s]", entry.Context.(*context.Context).GetValue(context.LogID)))
 	}
 	b.WriteString(fmt.Sprintf("[%s:%d]", entry.Caller.File, entry.Caller.Line))
 	b.WriteString(entry.Message)
@@ -39,8 +39,6 @@ var (
 
 func main() {
 	// 设置日志格式为json格式
-	//log.SetFormatter(&log.JSONFormatter{})
-
 	log.SetFormatter(&logFormatter{})
 	log.SetReportCaller(true)
 
@@ -53,18 +51,22 @@ func main() {
 
 	config.Init()
 
-	switch config.Instance.LogLevel {
-	case "":
-		log.SetLevel(log.InfoLevel)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	default:
+	if config.Instance != nil {
+		switch config.Instance.LogLevel {
+		case "":
+			log.SetLevel(log.InfoLevel)
+		case "debug":
+			log.SetLevel(log.DebugLevel)
+		case "info":
+			log.SetLevel(log.InfoLevel)
+		case "warn":
+			log.SetLevel(log.WarnLevel)
+		case "error":
+			log.SetLevel(log.ErrorLevel)
+		default:
+			log.SetLevel(log.InfoLevel)
+		}
+	} else {
 		log.SetLevel(log.InfoLevel)
 	}
 

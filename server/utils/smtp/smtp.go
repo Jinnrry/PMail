@@ -15,6 +15,8 @@
 // Some external packages provide more functionality. See:
 //
 //	https://godoc.org/?q=smtp
+//
+// 在go原始SMTP协议的基础上修复了TLS验证错误、支持了SMTPS协议
 package smtp
 
 import (
@@ -26,7 +28,6 @@ import (
 	"net"
 	"net/smtp"
 	"net/textproto"
-	"pmail/config"
 	"strings"
 )
 
@@ -61,6 +62,22 @@ func Dial(addr string) (*Client, error) {
 	return NewClient(conn, host)
 }
 
+// with tls
+func DialTls(addr, domain string) (*Client, error) {
+	// TLS config
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         domain,
+	}
+
+	conn, err := tls.Dial("tcp", addr, tlsconfig)
+	if err != nil {
+		return nil, err
+	}
+	host, _, _ := net.SplitHostPort(addr)
+	return NewClient(conn, host)
+}
+
 // NewClient returns a new Client using an existing connection and host as a
 // server name to be used when authenticating.
 func NewClient(conn net.Conn, host string) (*Client, error) {
@@ -70,7 +87,7 @@ func NewClient(conn net.Conn, host string) (*Client, error) {
 		text.Close()
 		return nil, err
 	}
-	c := &Client{Text: text, conn: conn, serverName: host, localName: config.Instance.Domain}
+	c := &Client{Text: text, conn: conn, serverName: host, localName: "jinnrry.com"}
 	_, c.tls = conn.(*tls.Conn)
 	return c, nil
 }
@@ -306,7 +323,53 @@ func (c *Client) Data() (io.WriteCloser, error) {
 	return &dataCloser{c, c.Text.DotWriter()}, nil
 }
 
-var testHookStartTLS func(*tls.Config) // nil, except for tests
+func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, to []string, msg []byte) error {
+	if err := validateLine(from); err != nil {
+		return err
+	}
+	for _, recp := range to {
+		if err := validateLine(recp); err != nil {
+			return err
+		}
+	}
+	c, err := DialTls(addr, domain)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if err = c.hello(); err != nil {
+		return err
+	}
+	if a != nil && c.ext != nil {
+		if _, ok := c.ext["AUTH"]; !ok {
+			return errors.New("smtp: server doesn't support AUTH")
+		}
+		if err = c.Auth(a); err != nil {
+			return err
+		}
+	}
+	if err = c.Mail(from); err != nil {
+		return err
+	}
+	for _, addr := range to {
+		if err = c.Rcpt(addr); err != nil {
+			return err
+		}
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(msg)
+	if err != nil {
+		return err
+	}
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	return c.Quit()
+}
 
 // SendMail connects to the server at addr, switches to TLS if
 // possible, authenticates with the optional mechanism a if possible,

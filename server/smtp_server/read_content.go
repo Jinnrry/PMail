@@ -8,9 +8,11 @@ import (
 	"io"
 	"net"
 	"net/netip"
+	"pmail/config"
 	"pmail/db"
 	"pmail/dto/parsemail"
 	"pmail/hooks"
+	"pmail/services/rule"
 	"pmail/utils/async"
 	"strings"
 	"time"
@@ -23,14 +25,16 @@ func (s *Session) Data(r io.Reader) error {
 		return err
 	}
 
+	as1 := async.New(nil)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
 		}
-		async.New(nil).Process(func() {
-			hook.ReceiveParseBefore(emailData)
-		})
+		as1.WaitProcess(func(hk any) {
+			hk.(hooks.EmailHook).ReceiveParseBefore(emailData)
+		}, hook)
 	}
+	as1.Wait()
 
 	log.Infof("邮件原始内容: %s", emailData)
 
@@ -55,16 +59,41 @@ func (s *Session) Data(r io.Reader) error {
 		spfV = 1
 	}
 
+	// 垃圾过滤
+	if config.Instance.SpamFilterLevel == 1 && !SPFStatus && !dkimStatus {
+		log.Infoln("垃圾邮件，拒信")
+		return nil
+	}
+
+	if config.Instance.SpamFilterLevel == 2 && !SPFStatus {
+		log.Infoln("垃圾邮件，拒信")
+		return nil
+	}
+
+	as2 := async.New(nil)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
 		}
-		async.New(nil).Process(func() {
-			hook.ReceiveParseAfter(email)
-		})
+		as2.WaitProcess(func(hk any) {
+			hk.(hooks.EmailHook).ReceiveParseAfter(email)
+		}, hook)
+	}
+	as2.Wait()
+
+	// 执行邮件规则
+	rs := rule.GetAllRules(nil)
+	for _, r := range rs {
+		if rule.MatchRule(nil, r, email) {
+			rule.DoRule(nil, r, email)
+		}
 	}
 
-	sql := "INSERT INTO email (send_date, subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	if email == nil {
+		return nil
+	}
+
+	sql := "INSERT INTO email (send_date, subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,is_read,status,group_id) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	_, err = db.Instance.Exec(sql,
 		email.Date,
 		email.Subject,
@@ -80,7 +109,11 @@ func (s *Session) Data(r io.Reader) error {
 		json2string(email.Attachments),
 		spfV,
 		dkimV,
-		time.Now())
+		time.Now(),
+		email.IsRead,
+		email.Status,
+		email.GroupId,
+	)
 
 	if err != nil {
 		log.Println("mysql insert error:", err.Error())

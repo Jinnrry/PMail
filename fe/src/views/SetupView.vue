@@ -28,7 +28,7 @@
             <div class="form" style="width: 400px;">
                 <el-form label-width="120px">
                     <el-form-item :label="lang.type">
-                        <el-select :placeholder="lang.db_select_ph" v-model="dbSettings.type">
+                        <el-select :placeholder="lang.db_select_ph" v-model="dbSettings.type" @change="dbSettings.dsn=''">
                             <el-option label="MySQL" value="mysql" />
                             <el-option label="SQLite3" value="sqlite" />
                         </el-select>
@@ -40,7 +40,7 @@
                     </el-form-item>
 
                     <el-form-item :label="lang.sqlite_db_path" v-if="dbSettings.type == 'sqlite'">
-                        <el-input v-model="dbSettings.dsn" placeholder="./pmail.db"></el-input>
+                        <el-input v-model="dbSettings.dsn" placeholder="./config/pmail.db"></el-input>
                     </el-form-item>
                 </el-form>
             </div>
@@ -170,7 +170,7 @@ const adminSettings = reactive({
 
 const dbSettings = reactive({
     "type": "sqlite",
-    "dsn": "./pmail.db",
+    "dsn": "./config/pmail.db",
     "lable": ""
 })
 

@@ -1,8 +1,7 @@
-package dto
+package context
 
 import (
 	"context"
-	"pmail/models"
 )
 
 const (
@@ -11,9 +10,11 @@ const (
 
 type Context struct {
 	context.Context
-	UserInfo *models.User
-	values   map[string]any
-	Lang     string
+	UserID      int
+	UserAccount string
+	UserName    string
+	values      map[string]any
+	Lang        string
 }
 
 func (c *Context) SetValue(key string, value any) {

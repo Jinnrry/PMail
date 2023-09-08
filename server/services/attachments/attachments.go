@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/models"
 	"pmail/services/auth"
+	"pmail/utils/context"
 )
 
-func GetAttachments(ctx *dto.Context, emailId int, cid string) (string, []byte) {
+func GetAttachments(ctx *context.Context, emailId int, cid string) (string, []byte) {
 
 	// 获取邮件内容
 	var email models.Email
@@ -35,7 +35,7 @@ func GetAttachments(ctx *dto.Context, emailId int, cid string) (string, []byte) 
 	return "", nil
 }
 
-func GetAttachmentsByIndex(ctx *dto.Context, emailId int, index int) (string, []byte) {
+func GetAttachmentsByIndex(ctx *context.Context, emailId int, index int) (string, []byte) {
 
 	// 获取邮件内容
 	var email models.Email

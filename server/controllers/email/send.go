@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"pmail/config"
 	"pmail/db"
-	"pmail/dto"
 	"pmail/dto/parsemail"
 	"pmail/dto/response"
 	"pmail/hooks"
 	"pmail/i18n"
-	"pmail/smtp_server"
 	"pmail/utils/async"
+	"pmail/utils/context"
+	"pmail/utils/send"
 	"strings"
 	"time"
 )
@@ -43,7 +43,7 @@ type attachment struct {
 	Data string `json:"data"`
 }
 
-func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.WithContext(ctx).Errorf("%+v", err)
@@ -128,14 +128,16 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 
 	}
 
+	as := async.New(ctx)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
 		}
-		async.New(ctx).Process(func() {
-			hook.SendBefore(ctx, e)
-		})
+		as.WaitProcess(func(hk any) {
+			hk.(hooks.EmailHook).SendBefore(ctx, e)
+		}, hook)
 	}
+	as.Wait()
 
 	// 邮件落库
 	sql := "INSERT INTO email (type,subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,send_user_id,error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -155,7 +157,7 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 		1,
 		1,
 		time.Now(),
-		ctx.UserInfo.ID,
+		ctx.UserID,
 		"",
 	)
 	emailId, _ := sqlRes.LastInsertId()
@@ -166,18 +168,20 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	async.New(ctx).Process(func() {
+	async.New(ctx).Process(func(p any) {
 		errMsg := ""
-		err, sendErr := smtp_server.Send(ctx, e)
+		err, sendErr := send.Send(ctx, e)
 
+		as2 := async.New(ctx)
 		for _, hook := range hooks.HookList {
 			if hook == nil {
 				continue
 			}
-			async.New(ctx).Process(func() {
-				hook.SendAfter(ctx, e, sendErr)
-			})
+			as2.WaitProcess(func(hk any) {
+				hk.(hooks.EmailHook).SendAfter(ctx, e, sendErr)
+			}, hook)
 		}
+		as2.Wait()
 
 		if err != nil {
 			errMsg = err.Error()
@@ -192,7 +196,7 @@ func Send(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-	})
+	}, nil)
 
 	response.NewSuccessResponse(i18n.GetText(ctx.Lang, "succ")).FPrint(w)
 }

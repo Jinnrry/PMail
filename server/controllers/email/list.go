@@ -7,9 +7,9 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/list"
+	"pmail/utils/context"
 )
 
 type emailListResponse struct {
@@ -19,12 +19,13 @@ type emailListResponse struct {
 }
 
 type emilItem struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	Desc     string `json:"desc"`
-	Datetime string `json:"datetime"`
-	IsRead   bool   `json:"is_read"`
-	Sender   User   `json:"sender"`
+	ID        int    `json:"id"`
+	Title     string `json:"title"`
+	Desc      string `json:"desc"`
+	Datetime  string `json:"datetime"`
+	IsRead    bool   `json:"is_read"`
+	Sender    User   `json:"sender"`
+	Dangerous bool   `json:"dangerous"`
 }
 
 type User struct {
@@ -39,7 +40,7 @@ type emailRequest struct {
 	PageSize    int    `json:"page_size"`
 }
 
-func EmailList(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
+func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	var lst []*emilItem
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -67,12 +68,13 @@ func EmailList(ctx *dto.Context, w http.ResponseWriter, req *http.Request) {
 		_ = json.Unmarshal([]byte(email.Sender), &sender)
 
 		lst = append(lst, &emilItem{
-			ID:       email.Id,
-			Title:    email.Subject,
-			Desc:     email.Text.String,
-			Datetime: email.SendDate.Format("2006-01-02 15:04:05"),
-			IsRead:   email.IsRead == 1,
-			Sender:   sender,
+			ID:        email.Id,
+			Title:     email.Subject,
+			Desc:      email.Text.String,
+			Datetime:  email.SendDate.Format("2006-01-02 15:04:05"),
+			IsRead:    email.IsRead == 1,
+			Sender:    sender,
+			Dangerous: email.SPFCheck == 0 && email.DKIMCheck == 0,
 		})
 	}
 

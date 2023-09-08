@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"pmail/config"
 	"pmail/controllers"
 	"time"
 )
@@ -24,6 +25,11 @@ func SetupStart() {
 	mux.HandleFunc("/api/", contextIterceptor(controllers.Setup))
 	// 挑战请求类似这样 /.well-known/acme-challenge/QPyMAyaWw9s5JvV1oruyqWHG7OqkHMJEHPoUz2046KM
 	mux.HandleFunc("/.well-known/", controllers.AcmeChallenge)
+
+	HttpPort := 80
+	if config.Instance != nil && config.Instance.HttpPort > 0 {
+		HttpPort = config.Instance.HttpPort
+	}
 
 	setupServer = &http.Server{
 		Addr:         fmt.Sprintf(":%d", HttpPort),

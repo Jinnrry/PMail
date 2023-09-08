@@ -10,7 +10,7 @@ import (
 
 func Start() {
 	for {
-		if config.Instance.IsInit {
+		if config.Instance != nil && config.Instance.IsInit {
 			days, err := ssl.CheckSSLCrtInfo()
 			if days < 30 || err != nil {
 				if err != nil {

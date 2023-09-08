@@ -1,16 +1,22 @@
 {
-  "logLevel": "debug",
+  "logLevel": "info",
   "domain": "domain.com",
   "webDomain": "mail.domain.com",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",
   "sslType": "0",
   "SSLPrivateKeyPath": "config/ssl/private.key",
   "SSLPublicKeyPath": "config/ssl/public.crt",
-  "dbDSN": "./pmail.db",
+  "dbDSN": "./config/pmail.db",
   "dbType": "sqlite",
+  "spamFilterLevel": 2,
+  "httpPort": 80,
+  "httpsPort": 443,
   "weChatPushAppId": "",
   "weChatPushSecret": "",
   "weChatPushTemplateId": "",
   "weChatPushUserId": "",
-  "isInit": false
+  "tgChatId": "",
+  "tgBotToken": "",
+  "isInit": true,
+  "httpsEnabled": 2
 }

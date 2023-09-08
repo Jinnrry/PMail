@@ -11,7 +11,7 @@ import (
 var IsInit bool
 
 type Config struct {
-	LogLevel             string            `json:"logLevel"`
+	LogLevel             string            `json:"logLevel"` // 日志级别
 	Domain               string            `json:"domain"`
 	WebDomain            string            `json:"webDomain"`
 	DkimPrivateKeyPath   string            `json:"dkimPrivateKeyPath"`
@@ -20,10 +20,16 @@ type Config struct {
 	SSLPublicKeyPath     string            `json:"SSLPublicKeyPath"`
 	DbDSN                string            `json:"dbDSN"`
 	DbType               string            `json:"dbType"`
+	HttpsEnabled         int               `json:"httpsEnabled"`    //后台页面是否启用https，0默认（启用），1启用，2不启用
+	SpamFilterLevel      int               `json:"spamFilterLevel"` //垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时过滤，2 spf校验不通过时过滤
+	HttpPort             int               `json:"httpPort"`        //http服务端口设置，默认80
+	HttpsPort            int               `json:"httpsPort"`       //https服务端口，默认443
 	WeChatPushAppId      string            `json:"weChatPushAppId"`
 	WeChatPushSecret     string            `json:"weChatPushSecret"`
 	WeChatPushTemplateId string            `json:"weChatPushTemplateId"`
 	WeChatPushUserId     string            `json:"weChatPushUserId"`
+	TgBotToken           string            `json:"tgBotToken"`
+	TgChatId             string            `json:"tgChatId"`
 	IsInit               bool              `json:"isInit"`
 	Tables               map[string]string `json:"-"`
 	TablesInitData       map[string]string `json:"-"`
@@ -32,7 +38,7 @@ type Config struct {
 //go:embed tables/*
 var tableConfig embed.FS
 
-const Version = "2.0.0"
+const Version = "2.2.0"
 
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"
