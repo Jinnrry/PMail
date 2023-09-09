@@ -14,18 +14,24 @@ import (
 	"pmail/hooks"
 	"pmail/services/rule"
 	"pmail/utils/async"
+	"pmail/utils/context"
+	"pmail/utils/id"
 	"strings"
 	"time"
 )
 
 func (s *Session) Data(r io.Reader) error {
+	ctx := &context.Context{}
+	ctx.SetValue(context.LogID, id.GenLogID())
+	log.WithContext(ctx).Debugf("收到邮件")
+
 	emailData, err := io.ReadAll(r)
 	if err != nil {
-		log.Error("邮件内容无法读取", err)
+		log.WithContext(ctx).Error("邮件内容无法读取", err)
 		return err
 	}
 
-	as1 := async.New(nil)
+	as1 := async.New(ctx)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
@@ -36,7 +42,7 @@ func (s *Session) Data(r io.Reader) error {
 	}
 	as1.Wait()
 
-	log.Infof("邮件原始内容: %s", emailData)
+	log.WithContext(ctx).Infof("邮件原始内容: %s", emailData)
 
 	var dkimStatus, SPFStatus bool
 
@@ -46,7 +52,7 @@ func (s *Session) Data(r io.Reader) error {
 	email := parsemail.NewEmailFromReader(bytes.NewReader(emailData))
 
 	if err != nil {
-		log.Fatalf("邮件内容解析失败！ Error : %v \n", err)
+		log.WithContext(ctx).Errorf("邮件内容解析失败！ Error : %v \n", err)
 	}
 
 	SPFStatus = spfCheck(s.RemoteAddress.String(), email.Sender, email.Sender.EmailAddress)
@@ -61,16 +67,17 @@ func (s *Session) Data(r io.Reader) error {
 
 	// 垃圾过滤
 	if config.Instance.SpamFilterLevel == 1 && !SPFStatus && !dkimStatus {
-		log.Infoln("垃圾邮件，拒信")
+		log.WithContext(ctx).Infoln("垃圾邮件，拒信")
 		return nil
 	}
 
 	if config.Instance.SpamFilterLevel == 2 && !SPFStatus {
-		log.Infoln("垃圾邮件，拒信")
+		log.WithContext(ctx).Infoln("垃圾邮件，拒信")
 		return nil
 	}
+	log.WithContext(ctx).Debugf("开始执行插件！")
 
-	as2 := async.New(nil)
+	as2 := async.New(ctx)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
@@ -81,13 +88,15 @@ func (s *Session) Data(r io.Reader) error {
 	}
 	as2.Wait()
 
+	log.WithContext(ctx).Debugf("开始执行邮件规则！")
 	// 执行邮件规则
-	rs := rule.GetAllRules(nil)
+	rs := rule.GetAllRules(ctx)
 	for _, r := range rs {
-		if rule.MatchRule(nil, r, email) {
-			rule.DoRule(nil, r, email)
+		if rule.MatchRule(ctx, r, email) {
+			rule.DoRule(ctx, r, email)
 		}
 	}
+	log.WithContext(ctx).Debugf("开始入库！")
 
 	if email == nil {
 		return nil
@@ -116,7 +125,7 @@ func (s *Session) Data(r io.Reader) error {
 	)
 
 	if err != nil {
-		log.Println("mysql insert error:", err.Error())
+		log.WithContext(ctx).Println("mysql insert error:", err.Error())
 	}
 
 	return nil

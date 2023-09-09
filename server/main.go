@@ -22,7 +22,10 @@ func (l *logFormatter) Format(entry *log.Entry) ([]byte, error) {
 	b.WriteString(fmt.Sprintf("[%s]", entry.Level.String()))
 	b.WriteString(fmt.Sprintf("[%s]", entry.Time.Format("2006-01-02 15:04:05")))
 	if entry.Context != nil {
-		b.WriteString(fmt.Sprintf("[%s]", entry.Context.(*context.Context).GetValue(context.LogID)))
+		ctx := entry.Context.(*context.Context)
+		if ctx != nil {
+			b.WriteString(fmt.Sprintf("[%s]", ctx.GetValue(context.LogID)))
+		}
 	}
 	b.WriteString(fmt.Sprintf("[%s:%d]", entry.Caller.File, entry.Caller.Line))
 	b.WriteString(entry.Message)

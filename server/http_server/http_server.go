@@ -33,8 +33,8 @@ func HttpStart() {
 		httpServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpPort),
 			Handler:      mux,
-			ReadTimeout:  time.Second * 60,
-			WriteTimeout: time.Second * 60,
+			ReadTimeout:  time.Second * 90,
+			WriteTimeout: time.Second * 90,
 		}
 	} else {
 		fe, err := fs.Sub(local, "dist")
@@ -64,8 +64,8 @@ func HttpStart() {
 		httpServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpPort),
 			Handler:      session.Instance.LoadAndSave(mux),
-			ReadTimeout:  time.Second * 60,
-			WriteTimeout: time.Second * 60,
+			ReadTimeout:  time.Second * 90,
+			WriteTimeout: time.Second * 90,
 		}
 	}
 

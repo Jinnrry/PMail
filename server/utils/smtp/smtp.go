@@ -29,6 +29,7 @@ import (
 	"net/smtp"
 	"net/textproto"
 	"strings"
+	"time"
 )
 
 // A Client represents a client connection to an SMTP server.
@@ -54,7 +55,7 @@ type Client struct {
 // Dial returns a new Client connected to an SMTP server at addr.
 // The addr must include a port, as in "mail.example.com:smtp".
 func Dial(addr string) (*Client, error) {
-	conn, err := net.Dial("tcp", addr)
+	conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func DialTls(addr, domain string) (*Client, error) {
 		ServerName:         domain,
 	}
 
-	conn, err := tls.Dial("tcp", addr, tlsconfig)
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 2 * time.Second}, "tcp", addr, tlsconfig)
 	if err != nil {
 		return nil, err
 	}

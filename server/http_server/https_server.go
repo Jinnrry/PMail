@@ -1,19 +1,14 @@
 package http_server
 
 import (
-	"bytes"
 	"embed"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io/fs"
 	olog "log"
-	"math/rand"
-	"net"
 	"net/http"
-	"os"
 	"pmail/config"
 	"pmail/controllers"
 	"pmail/controllers/email"
@@ -22,6 +17,7 @@ import (
 	"pmail/models"
 	"pmail/session"
 	"pmail/utils/context"
+	"pmail/utils/id"
 	"time"
 )
 
@@ -80,8 +76,8 @@ func HttpsStart() {
 		httpsServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpsPort),
 			Handler:      session.Instance.LoadAndSave(mux),
-			ReadTimeout:  time.Second * 60,
-			WriteTimeout: time.Second * 60,
+			ReadTimeout:  time.Second * 90,
+			WriteTimeout: time.Second * 90,
 			ErrorLog:     nullLog,
 		}
 		err = httpsServer.ListenAndServeTLS("config/ssl/public.crt", "config/ssl/private.key")
@@ -97,27 +93,6 @@ func HttpsStop() {
 	}
 }
 
-func genLogID() string {
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
-	if ip == "" {
-		ip = getLocalIP()
-	}
-	now := time.Now()
-	timestamp := uint32(now.Unix())
-	timeNano := now.UnixNano()
-	pid := os.Getpid()
-	b := bytes.Buffer{}
-
-	b.WriteString(hex.EncodeToString(net.ParseIP(ip).To4()))
-	b.WriteString(fmt.Sprintf("%x", timestamp&0xffffffff))
-	b.WriteString(fmt.Sprintf("%04x", timeNano&0xffff))
-	b.WriteString(fmt.Sprintf("%04x", pid&0xffff))
-	b.WriteString(fmt.Sprintf("%06x", r.Int31n(1<<24)))
-	b.WriteString("b0")
-
-	return b.String()
-}
-
 // 注入context
 func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +102,7 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 
 		ctx := &context.Context{}
 		ctx.Context = r.Context()
-		ctx.SetValue(context.LogID, genLogID())
+		ctx.SetValue(context.LogID, id.GenLogID())
 		lang := r.Header.Get("Lang")
 		if lang == "" {
 			lang = "en"

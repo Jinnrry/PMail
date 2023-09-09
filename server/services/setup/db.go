@@ -20,7 +20,7 @@ func GetDatabaseSettings(ctx *context.Context) (string, string, error) {
 	}
 
 	if configData.DbType == "" && configData.DbDSN == "" {
-		return config.DBTypeSQLite, "./pmail.db", nil
+		return config.DBTypeSQLite, "./config/pmail.db", nil
 	}
 
 	return configData.DbType, configData.DbDSN, nil

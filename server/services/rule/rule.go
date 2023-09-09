@@ -17,7 +17,7 @@ import (
 func GetAllRules(ctx *context.Context) []*dto.Rule {
 	var res []*models.Rule
 	var err error
-	if ctx == nil {
+	if ctx == nil || ctx.UserID == 0 {
 		err = db.Instance.Select(&res, "select * from rule order by sort desc")
 	} else {
 		err = db.Instance.Select(&res, db.WithContext(ctx, "select * from rule where user_id=? order by sort desc"), ctx.UserID)
@@ -60,6 +60,8 @@ func MatchRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) boo
 }
 
 func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
+	log.WithContext(ctx).Debugf("执行规则:%s", rule.Name)
+
 	switch rule.Action {
 	case dto.READ:
 		email.IsRead = 1
@@ -70,8 +72,7 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
 			log.WithContext(ctx).Errorf("Forward Error! loop forwarding!")
 			return
 		}
-
-		err := send.Forward(nil, email, rule.Params)
+		err := send.Forward(ctx, email, rule.Params)
 		if err != nil {
 			log.WithContext(ctx).Errorf("Forward Error:%v", err)
 		}
