@@ -11,7 +11,7 @@ CREATE table email
     bcc            json COMMENT '抄送',
     cc             json COMMENT '抄送',
     `text`         text COMMENT '邮件文本内容',
-    html           text COMMENT 'html格式内容',
+    html mediumtext COMMENT 'html格式内容',
     sender         json COMMENT '发件人',
     attachments    json COMMENT '附件内容',
     spf_check      tinyint(1) DEFAULT 0 COMMENT '0未校验，1校验通过，2校验未通过',
