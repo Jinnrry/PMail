@@ -1,9 +1,9 @@
 name: Docker Image CI
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
