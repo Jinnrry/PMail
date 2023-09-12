@@ -13,10 +13,7 @@ jobs:
     strategy:
       matrix:
         goos: [windows,  linux, darwin]
-        goarch: [amd64, arm64, 386]
-        exclude:
-          - goos: darwin
-            goarch: 386
+        goarch: [amd64, arm64]
     runs-on: ubuntu-latest
     env: 
         CGO_ENABLED: 0 
