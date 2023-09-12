@@ -18,6 +18,10 @@ jobs:
           - goos: darwin
             goarch: 386
     runs-on: ubuntu-latest
+    env: 
+        CGO_ENABLED: 0 
+        GOOS: ${{ matrix.goos }} 
+        GOARCH: ${{ matrix.goarch }} 
     steps:
       - name: Get version
         id: get_version
@@ -40,7 +44,7 @@ jobs:
       - name: BE Build
         run: |
             cd server && cp -rf ../fe/dist http_server
-            CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o ${{ env.FILENAME }}  main.go
+            go build -ldflags "-s -w -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o ${{ env.FILENAME }}  main.go
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v3
         with:
