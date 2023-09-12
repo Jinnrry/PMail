@@ -1,44 +1,55 @@
-name: Docker Image CI
+name: Build and Release
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
+  release:
+    types: [published]
 
-env:
-  REGISTRY: ghcr.io
-
+      
 jobs:
-  build-and-push-image:
-    runs-on: ubuntu-latest
+  build:
     permissions:
-      contents: read
-      packages: write
+      contents: write
+    strategy:
+      matrix:
+        goos: [windows,  linux, darwin]
+        goarch: [amd64, arm64, 386]
+        exclude:
+          - goos: darwin
+            goarch: 386
+    runs-on: ubuntu-latest
     steps:
       - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> ${GITHUB_ENV}
-
-      - uses: actions/checkout@v3
-
-      - name: set lower case repository name
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@v4.0.0
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.8.1
+      - name: Install Dependencies
+        run: npm install --global yarn
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.1.0
+      - name: Gen output name
+        run: echo "FILENAME=t_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+      - name: Rename Windows File
+        if: matrix.goos == 'windows'
+        run: echo "FILENAME=t_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
+      - name: FE Build
+        run: cd fe && yarn && yarn build
+      - name: BE Build
         run: |
-          echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
-        env:
-          REPOSITORY: '${{ github.repository }}'
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2.1.0
+            cd server && cp -rf ../fe/dist http_server
+            CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o ${{ env.FILENAME }}  main.go
+      - name: Upload files to Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v4
+          name: ${{ env.FILENAME }}
+          path: ./output/${{ env.FILENAME }}
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:${{ env.VERSION }}
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}:latest
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./output/${{ env.FILENAME }}
+          tag: ${{ github.ref }}
+          file_glob: true
