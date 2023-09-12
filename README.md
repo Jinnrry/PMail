@@ -55,6 +55,9 @@ Or
 
 `docker run -p 25:25 -p 80:80 -p 443:443 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
+> [!IMPORTANT]
+> If your server has a firewall turned on, you need to open ports 25, 80, and 443.
+
 ## 3、Configuration
 
 Open `http://127.0.0.1` in your browser or use your server's public IP to visit, then follow the instructions to
