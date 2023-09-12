@@ -32,10 +32,10 @@ jobs:
       - name: Setup Go environment
         uses: actions/setup-go@v4.1.0
       - name: Gen output name
-        run: echo "FILENAME=t_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+        run: echo "FILENAME=pmail_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
       - name: Rename Windows File
         if: matrix.goos == 'windows'
-        run: echo "FILENAME=t_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
+        run: echo "FILENAME=pmail_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
       - name: FE Build
         run: cd fe && yarn && yarn build
       - name: BE Build
