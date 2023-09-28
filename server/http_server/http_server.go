@@ -42,6 +42,8 @@ func HttpStart() {
 			panic(err)
 		}
 		mux.Handle("/", http.FileServer(http.FS(fe)))
+		// 挑战请求类似这样 /.well-known/acme-challenge/QPyMAyaWw9s5JvV1oruyqWHG7OqkHMJEHPoUz2046KM
+		mux.HandleFunc("/.well-known/", controllers.AcmeChallenge)
 		mux.HandleFunc("/api/ping", contextIterceptor(controllers.Ping))
 		mux.HandleFunc("/api/login", contextIterceptor(controllers.Login))
 		mux.HandleFunc("/api/group", contextIterceptor(controllers.GetUserGroup))
