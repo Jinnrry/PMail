@@ -17,8 +17,11 @@ jobs:
     steps:
       - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> ${GITHUB_ENV}
-
+        run: |
+          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> ${GITHUB_ENV}
+          echo "${GITHUB_REF/refs\/tags\//}"
+          echo "${GITHUB_REF#refs/*/}"
+          echo "${GITHUB_REF}"
       - uses: actions/checkout@v3
 
       - name: set lower case repository name
