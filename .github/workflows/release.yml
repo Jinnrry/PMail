@@ -22,7 +22,9 @@ jobs:
     steps:
       - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "${GITHUB_REF}"
       - name: Checkout
         uses: actions/checkout@v4.0.0
       - name: Setup Node.js environment
