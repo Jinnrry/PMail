@@ -59,6 +59,9 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 `docker run -p 25:25 -p 80:80 -p 443:443 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
+> [!IMPORTANT]
+> 如果你服务器开启了防火墙，你需要放行25、80、443这三个端口
+
 ## 3、配置
 
 浏览器打开 `http://127.0.0.1` 或者是用你服务器公网IP访问，然后按提示配置
