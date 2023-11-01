@@ -72,9 +72,8 @@ func HttpsStart() {
 		HttpsPort = config.Instance.HttpsPort
 	}
 
-	log.Infof("Https Server Start On Port :%d", HttpsPort)
-
 	if config.Instance.HttpsEnabled != 2 {
+		log.Infof("Https Server Start On Port :%d", HttpsPort)
 		httpsServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpsPort),
 			Handler:      session.Instance.LoadAndSave(mux),

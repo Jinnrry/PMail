@@ -2,6 +2,7 @@ package http_server
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"net/http"
 	"pmail/config"
@@ -29,7 +30,7 @@ func SetupStart() {
 	if config.Instance != nil && config.Instance.HttpPort > 0 {
 		HttpPort = config.Instance.HttpPort
 	}
-
+	log.Infof("HttpServer Start On Port :%d", HttpPort)
 	setupServer = &http.Server{
 		Addr:         fmt.Sprintf(":%d", HttpPort),
 		Handler:      mux,
