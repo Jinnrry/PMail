@@ -29,8 +29,6 @@ func HttpStart() {
 		HttpPort = config.Instance.HttpPort
 	}
 
-	log.Infof("HttpServer Start On Port :%d", HttpPort)
-
 	if config.Instance.HttpsEnabled != 2 {
 		mux.HandleFunc("/", controllers.Interceptor)
 		httpServer = &http.Server{
@@ -66,6 +64,7 @@ func HttpStart() {
 		mux.HandleFunc("/api/rule/del", contextIterceptor(controllers.DelRule))
 		mux.HandleFunc("/attachments/", contextIterceptor(controllers.GetAttachments))
 		mux.HandleFunc("/attachments/download/", contextIterceptor(controllers.Download))
+		log.Infof("HttpServer Start On Port :%d", HttpPort)
 		httpServer = &http.Server{
 			Addr:         fmt.Sprintf(":%d", HttpPort),
 			Handler:      session.Instance.LoadAndSave(mux),

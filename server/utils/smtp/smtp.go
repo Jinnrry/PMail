@@ -28,6 +28,7 @@ import (
 	"net"
 	"net/smtp"
 	"net/textproto"
+	"pmail/config"
 	"strings"
 	"time"
 )
@@ -88,7 +89,12 @@ func NewClient(conn net.Conn, host string) (*Client, error) {
 		text.Close()
 		return nil, err
 	}
-	c := &Client{Text: text, conn: conn, serverName: host, localName: "jinnrry.com"}
+	localName := "domain.com"
+	if config.Instance != nil && config.Instance.Domain != "" {
+		localName = config.Instance.Domain
+	}
+
+	c := &Client{Text: text, conn: conn, serverName: host, localName: localName}
 	_, c.tls = conn.(*tls.Conn)
 	return c, nil
 }
