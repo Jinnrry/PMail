@@ -2,6 +2,7 @@ package http_server
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"net/http"
 	"pmail/config"
@@ -27,6 +28,8 @@ func HttpStart() {
 	if config.Instance.HttpPort > 0 {
 		HttpPort = config.Instance.HttpPort
 	}
+
+	log.Infof("HttpServer Start On Port :%d", HttpPort)
 
 	if config.Instance.HttpsEnabled != 2 {
 		mux.HandleFunc("/", controllers.Interceptor)

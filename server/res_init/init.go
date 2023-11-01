@@ -1,6 +1,7 @@
 package res_init
 
 import (
+	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"pmail/config"
@@ -39,6 +40,10 @@ func Init() {
 		// http server start
 		go http_server.HttpsStart()
 		go http_server.HttpStart()
+
+		configStr, _ := json.Marshal(config.Instance)
+		log.Warnf("Config File Info:  %s", configStr)
+
 		<-signal.RestartChan
 		log.Infof("Server Restart!")
 		smtp_server.Stop()

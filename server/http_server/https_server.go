@@ -34,7 +34,6 @@ func (w *nullWrite) Write(p []byte) (int, error) {
 }
 
 func HttpsStart() {
-	log.Infof("Http Server Start")
 
 	mux := http.NewServeMux()
 
@@ -72,6 +71,8 @@ func HttpsStart() {
 	if config.Instance.HttpsPort > 0 {
 		HttpsPort = config.Instance.HttpsPort
 	}
+
+	log.Infof("Https Server Start On Port :%d", HttpsPort)
 
 	if config.Instance.HttpsEnabled != 2 {
 		httpsServer = &http.Server{
