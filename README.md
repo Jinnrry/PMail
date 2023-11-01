@@ -4,6 +4,8 @@
 
 ## [中文文档](./README_CN.md)
 
+I'm Chinese and I'm not good at English, so I apologise for my translation.
+
 ## Introduction
 
 PMail is a personal email server that pursues a minimal deployment process and extreme resource consumption. It runs on
