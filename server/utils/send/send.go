@@ -128,7 +128,7 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 
 func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 
-	b := e.BuildBytes(ctx)
+	b := e.BuildBytes(ctx, true)
 
 	var to []*parsemail.User
 	to = append(append(append(to, e.To...), e.Cc...), e.Bcc...)

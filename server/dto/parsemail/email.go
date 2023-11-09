@@ -16,8 +16,8 @@ import (
 )
 
 type User struct {
-	EmailAddress string
-	Name         string
+	EmailAddress string `json:"EmailAddress"`
+	Name         string `json:"Name"`
 }
 
 type Attachment struct {
@@ -247,7 +247,47 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, forwardAddress string) [
 	return instance.Sign(b.String())
 }
 
-func (e *Email) BuildBytes(ctx *context.Context) []byte {
+func (e *Email) BuilderHeaders(ctx *context.Context) []byte {
+	var b bytes.Buffer
+
+	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
+	to := []*mail.Address{}
+	for _, user := range e.To {
+		to = append(to, &mail.Address{
+			Name:    user.Name,
+			Address: user.EmailAddress,
+		})
+	}
+
+	// Create our mail header
+	var h mail.Header
+	h.SetDate(time.Now())
+	h.SetAddressList("From", from)
+	h.SetAddressList("To", to)
+	h.SetText("Subject", e.Subject)
+	if len(e.Cc) != 0 {
+		cc := []*mail.Address{}
+		for _, user := range e.Cc {
+			cc = append(cc, &mail.Address{
+				Name:    user.Name,
+				Address: user.EmailAddress,
+			})
+		}
+		h.SetAddressList("Cc", cc)
+	}
+
+	// Create a new mail writer
+	mw, err := mail.CreateWriter(&b, h)
+	if err != nil {
+		log.WithContext(ctx).Fatal(err)
+	}
+
+	mw.Close()
+
+	return b.Bytes()
+}
+
+func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	var b bytes.Buffer
 
 	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
@@ -323,6 +363,9 @@ func (e *Email) BuildBytes(ctx *context.Context) []byte {
 
 	mw.Close()
 
-	// dkim 签名后返回
-	return instance.Sign(b.String())
+	if dkim {
+		// dkim 签名后返回
+		return instance.Sign(b.String())
+	}
+	return b.Bytes()
 }

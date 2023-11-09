@@ -1,6 +1,8 @@
 package parsemail
 
 import (
+	"fmt"
+	"pmail/config"
 	"testing"
 )
 
@@ -40,4 +42,13 @@ func Test_buildUser(t *testing.T) {
 	if u.Name != "Jinnrry N" {
 		t.Error("error")
 	}
+}
+
+func TestEmail_BuilderHeaders(t *testing.T) {
+	config.Init()
+	Init()
+	e := Email{
+		From: buildUser("Jinnrry N <jiangwei1995910@gmail.com>"),
+	}
+	fmt.Println(string(e.BuilderHeaders(nil)))
 }

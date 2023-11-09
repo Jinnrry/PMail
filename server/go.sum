@@ -1,3 +1,13 @@
+github.com/Jinnrry/gopop v0.0.0-20231109082454-dbfe64f12f23 h1:8EipsGnMHqE2uHcb7h1bWPk+Fyropo1tOsqach72s7k=
+github.com/Jinnrry/gopop v0.0.0-20231109082454-dbfe64f12f23/go.mod h1:xcI6e+jbXWN+T8EWOJtHbAku6pzNqyCHaFvzdeL1r2o=
+github.com/Jinnrry/gopop v0.0.0-20231109090543-1be853ddd42f h1:Hx4PvKX1pv4fkaUkQ730/sTNlkiU296K2OskzmoG49k=
+github.com/Jinnrry/gopop v0.0.0-20231109090543-1be853ddd42f/go.mod h1:xcI6e+jbXWN+T8EWOJtHbAku6pzNqyCHaFvzdeL1r2o=
+github.com/Jinnrry/gopop v0.0.0-20231109090625-7854338d798d h1:NgY+RB1q50i6vjvD9fboS2hnlFnkI7iXdBwfsX4rgRw=
+github.com/Jinnrry/gopop v0.0.0-20231109090625-7854338d798d/go.mod h1:xcI6e+jbXWN+T8EWOJtHbAku6pzNqyCHaFvzdeL1r2o=
+github.com/Jinnrry/gopop v0.0.0-20231109111809-633359de6de1 h1:K2qHwBniOX3Tcl1Fp2H8wx6jpyTolG2BkCrl4eJjwP4=
+github.com/Jinnrry/gopop v0.0.0-20231109111809-633359de6de1/go.mod h1:xcI6e+jbXWN+T8EWOJtHbAku6pzNqyCHaFvzdeL1r2o=
+github.com/Jinnrry/gopop v0.0.0-20231109113124-29947e68ddf7 h1:GFm3jyFtb+AsVodnQ4cE80J3d05EpnpxxZkFiiAJqJ4=
+github.com/Jinnrry/gopop v0.0.0-20231109113124-29947e68ddf7/go.mod h1:xcI6e+jbXWN+T8EWOJtHbAku6pzNqyCHaFvzdeL1r2o=
 github.com/Jinnrry/scs/sqlite3store v0.0.0-20230803080525-914f01e0d379 h1:i6LB/3lgkRDupe3owyNXtH8dtQrdaReCLeAZKrWcqAE=
 github.com/Jinnrry/scs/sqlite3store v0.0.0-20230803080525-914f01e0d379/go.mod h1:Iyk7S76cxGaiEX/mSYmTZzYehp4KfyylcLaV3OnToss=
 github.com/alexedwards/scs/mysqlstore v0.0.0-20230327161757-10d4299e3b24 h1:1jXpX7IE/zuf9FZQJpqZNepXqW8mq6NLzplHDCA43HY=

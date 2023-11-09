@@ -35,6 +35,10 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 默认情况下，会为web后台也生成ssl证书，让后台使用https访问，如果你有自己的网关层，不需要https的话，在配置文件中将`httpsEnabled`
 设置为`2`，这样管理后台就不会使用https协议。（ 注意：即使你不需要https，也请保证ssl证书文件路径正确，http协议虽然不使用证书了，但是smtp协议还需要证书）
 
+### 5、邮件客户端支持
+
+只要支持pop3、smtp协议的邮件客户端均可使用
+
 ## 其他
 
 ### 不足
@@ -57,7 +61,7 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 或者
 
-`docker run -p 25:25 -p 80:80 -p 443:443 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
+`docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
 > [!IMPORTANT]
 > 如果你服务器开启了防火墙，你需要放行25、80、443这三个端口
@@ -104,6 +108,16 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "isInit": true // 为false的时候会进入安装引导流程 
 }
 ```
+
+# 第三方邮件客户端配置
+
+POP3地址： [你的域名]
+
+POP3端口： 110
+
+SMTP地址： smtp.[你的域名]
+
+SMTP端口： 25
 
 # 参与开发
 
