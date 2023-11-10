@@ -13,6 +13,7 @@ import (
 	"pmail/utils/errors"
 	"pmail/utils/id"
 	"pmail/utils/password"
+	"strings"
 )
 
 type action struct {
@@ -23,6 +24,11 @@ func (a action) User(ctx *gopop.Data, username string) error {
 		tc := &context.Context{}
 		tc.SetValue(context.LogID, id.GenLogID())
 		ctx.Ctx = tc
+	}
+
+	infos := strings.Split(username, "@")
+	if len(infos) > 1 {
+		username = infos[0]
 	}
 
 	log.WithContext(ctx.Ctx).Debugf("POP3 User %s", username)
@@ -38,7 +44,7 @@ func (a action) Pass(ctx *gopop.Data, pwd string) error {
 		ctx.Ctx = tc
 	}
 
-	log.WithContext(ctx.Ctx).Debugf("POP3 PASS %s", pwd)
+	log.WithContext(ctx.Ctx).Debugf("POP3 PASS %s , User:%s", pwd, ctx.User)
 
 	var user models.User
 
@@ -67,6 +73,11 @@ func (a action) Apop(ctx *gopop.Data, username, digest string) error {
 		tc := &context.Context{}
 		tc.SetValue(context.LogID, id.GenLogID())
 		ctx.Ctx = tc
+	}
+
+	infos := strings.Split(username, "@")
+	if len(infos) > 1 {
+		username = infos[0]
 	}
 
 	log.WithContext(ctx.Ctx).Debugf("POP3 APOP %s %s", username, digest)
