@@ -20,6 +20,15 @@ type User struct {
 	Name         string `json:"Name"`
 }
 
+func (u User) GetDomain() string {
+	infos := strings.Split(u.EmailAddress, "@")
+	if len(infos) > 2 {
+		return infos[1]
+	}
+
+	return ""
+}
+
 type Attachment struct {
 	Filename    string
 	ContentType string
@@ -47,15 +56,24 @@ type Email struct {
 	GroupId     int // 分组id
 }
 
-func NewEmailFromReader(r io.Reader) *Email {
+func NewEmailFromReader(from string, to []string, r io.Reader) *Email {
 	ret := &Email{}
 	m, err := message.Read(r)
 	if err != nil {
 		log.Errorf("email解析错误！ Error %+v", err)
 	}
+	if from != "" {
+		ret.From = buildUser(from)
+	} else {
+		ret.From = buildUser(m.Header.Get("From"))
+	}
 
-	ret.From = buildUser(m.Header.Get("From"))
-	ret.To = buildUsers(m.Header.Values("To"))
+	if len(to) > 0 {
+		ret.To = buildUsers(to)
+	} else {
+		ret.To = buildUsers(m.Header.Values("To"))
+	}
+
 	ret.Cc = buildUsers(m.Header.Values("Cc"))
 	ret.ReplyTo = buildUsers(m.Header.Values("ReplyTo"))
 	ret.Sender = buildUser(m.Header.Get("Sender"))

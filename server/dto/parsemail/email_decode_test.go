@@ -13,7 +13,7 @@ func TestDecodeEmailContentFromTxt(t *testing.T) {
 
 	r := strings.NewReader(string(c))
 
-	email := NewEmailFromReader(r)
+	email := NewEmailFromReader(nil, r)
 
 	fmt.Println(email)
 }
@@ -24,7 +24,7 @@ func TestDecodeEmailContentFromTxt3(t *testing.T) {
 
 	r := strings.NewReader(string(c))
 
-	email := NewEmailFromReader(r)
+	email := NewEmailFromReader(nil, r)
 
 	fmt.Println(email)
 }
@@ -34,7 +34,7 @@ func TestDecodeEmailContentFromTxt2(t *testing.T) {
 
 	r := strings.NewReader(string(c))
 
-	email := NewEmailFromReader(r)
+	email := NewEmailFromReader(nil, r)
 
 	fmt.Println(email)
 

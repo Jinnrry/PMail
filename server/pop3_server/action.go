@@ -25,6 +25,8 @@ func (a action) User(ctx *gopop.Data, username string) error {
 		ctx.Ctx = tc
 	}
 
+	log.WithContext(ctx.Ctx).Debugf("POP3 User %s", username)
+
 	ctx.User = username
 	return nil
 }
@@ -35,6 +37,8 @@ func (a action) Pass(ctx *gopop.Data, pwd string) error {
 		tc.SetValue(context.LogID, id.GenLogID())
 		ctx.Ctx = tc
 	}
+
+	log.WithContext(ctx.Ctx).Debugf("POP3 PASS %s", pwd)
 
 	var user models.User
 
@@ -65,6 +69,8 @@ func (a action) Apop(ctx *gopop.Data, username, digest string) error {
 		ctx.Ctx = tc
 	}
 
+	log.WithContext(ctx.Ctx).Debugf("POP3 APOP %s %s", username, digest)
+
 	var user models.User
 
 	err := db.Instance.Get(&user, db.WithContext(ctx.Ctx.(*context.Context), "select * from user where account =? "), username)
@@ -93,18 +99,23 @@ type statInfo struct {
 }
 
 func (a action) Stat(ctx *gopop.Data) (msgNum, msgSize int64, err error) {
+
 	var si statInfo
 	err = db.Instance.Get(&si, db.WithContext(ctx.Ctx.(*context.Context), "select count(1) as `num`, sum(length(text)+length(html)) as `size` from email"))
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(ctx.Ctx.(*context.Context)).Errorf("%+v", err)
 		err = nil
+		log.WithContext(ctx.Ctx).Debugf("POP3 STAT RETURT :0,0")
 		return 0, 0, nil
 	}
+	log.WithContext(ctx.Ctx).Debugf("POP3 STAT RETURT : %d,%d", si.Num, si.Size)
 
 	return si.Num, si.Size, nil
 }
 
 func (a action) Uidl(ctx *gopop.Data, id int64) (string, error) {
+	log.WithContext(ctx.Ctx).Debugf("POP3 Uidl RETURT : %d", id)
+
 	return cast.ToString(id), nil
 }
 

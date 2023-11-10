@@ -13,6 +13,7 @@ var IsInit bool
 type Config struct {
 	LogLevel             string            `json:"logLevel"` // 日志级别
 	Domain               string            `json:"domain"`
+	Domains              []string          `json:"domains"` //多域名设置，把所有收信域名都填进去
 	WebDomain            string            `json:"webDomain"`
 	DkimPrivateKeyPath   string            `json:"dkimPrivateKeyPath"`
 	SSLType              string            `json:"sslType"` // 0表示自动生成证书，1表示用户上传证书
@@ -69,6 +70,10 @@ func Init() {
 	err = json.Unmarshal(cfgData, &Instance)
 	if err != nil {
 		return
+	}
+
+	if len(Instance.Domains) == 0 && Instance.Domain != "" {
+		Instance.Domains = []string{Instance.Domain}
 	}
 
 	// 读取表设置
