@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	oc "context"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"log/slog"
 	"os"
 	"pmail/config"
 	"pmail/cron_server"
@@ -40,6 +42,25 @@ var (
 	goVersion string
 )
 
+type logHandler struct {
+	slog.Handler
+	logLevel slog.Level
+}
+
+func newSLogger(level slog.Level) *slog.Logger {
+	handler := &logHandler{
+		// handler 使用 slog 默认的 Handler
+		slog.Default().Handler(),
+		level,
+	}
+
+	return slog.New(handler)
+}
+
+func (dh *logHandler) Enabled(ctx oc.Context, l slog.Level) bool {
+	return l >= dh.logLevel
+}
+
 func main() {
 	// 设置日志格式为json格式
 	log.SetFormatter(&logFormatter{})
@@ -59,12 +80,15 @@ func main() {
 		case "":
 			log.SetLevel(log.InfoLevel)
 		case "debug":
+			slog.SetDefault(newSLogger(slog.LevelDebug))
 			log.SetLevel(log.DebugLevel)
 		case "info":
 			log.SetLevel(log.InfoLevel)
 		case "warn":
+			slog.SetDefault(newSLogger(slog.LevelWarn))
 			log.SetLevel(log.WarnLevel)
 		case "error":
+			slog.SetDefault(newSLogger(slog.LevelError))
 			log.SetLevel(log.ErrorLevel)
 		default:
 			log.SetLevel(log.InfoLevel)

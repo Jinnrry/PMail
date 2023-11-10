@@ -23,7 +23,7 @@ require (
 replace github.com/alexedwards/scs/sqlite3store v0.0.0-20230327161757-10d4299e3b24 => github.com/Jinnrry/scs/sqlite3store v0.0.0-20230803080525-914f01e0d379
 
 require (
-	github.com/Jinnrry/gopop v0.0.0-20231109113124-29947e68ddf7 // indirect
+	github.com/Jinnrry/gopop v0.0.0-20231110034408-2df37b20353b // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
