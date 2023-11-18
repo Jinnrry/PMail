@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"pmail/dto/parsemail"
 	"time"
 )
 
@@ -38,6 +39,42 @@ type attachments struct {
 	ContentType string
 	Index       int
 	//Content     []byte
+}
+
+func (d Email) GetTos() []*parsemail.User {
+	var ret []*parsemail.User
+	json.Unmarshal([]byte(d.To), &ret)
+	return ret
+}
+
+func (d Email) GetReplyTo() []*parsemail.User {
+	var ret []*parsemail.User
+	json.Unmarshal([]byte(d.ReplyTo), &ret)
+	return ret
+}
+
+func (d Email) GetSender() *parsemail.User {
+	var ret *parsemail.User
+	json.Unmarshal([]byte(d.Sender), &ret)
+	return ret
+}
+
+func (d Email) GetBcc() []*parsemail.User {
+	var ret []*parsemail.User
+	json.Unmarshal([]byte(d.Bcc), &ret)
+	return ret
+}
+
+func (d Email) GetCc() []*parsemail.User {
+	var ret []*parsemail.User
+	json.Unmarshal([]byte(d.Cc), &ret)
+	return ret
+}
+
+func (d Email) GetAttachments() []*parsemail.Attachment {
+	var ret []*parsemail.Attachment
+	json.Unmarshal([]byte(d.Attachments), &ret)
+	return ret
 }
 
 func (d Email) MarshalJSON() ([]byte, error) {
@@ -77,4 +114,25 @@ func (d Email) MarshalJSON() ([]byte, error) {
 		Error:        d.Error.String,
 		Attachments:  showAtt,
 	})
+}
+
+func (d Email) ToTransObj() *parsemail.Email {
+
+	return &parsemail.Email{
+		From: &parsemail.User{
+			Name:         d.FromName,
+			EmailAddress: d.FromAddress,
+		},
+		To:          d.GetTos(),
+		Subject:     d.Subject,
+		Text:        []byte(d.Text.String),
+		HTML:        []byte(d.Html.String),
+		Sender:      d.GetSender(),
+		ReplyTo:     d.GetReplyTo(),
+		Bcc:         d.GetBcc(),
+		Cc:          d.GetCc(),
+		Attachments: d.GetAttachments(),
+		Date:        d.SendDate.Format("2006-01-02 15:04:05"),
+	}
+
 }

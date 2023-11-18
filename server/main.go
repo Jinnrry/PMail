@@ -81,7 +81,7 @@ func main() {
 	log.Infoln("***************************************************")
 
 	// 定时任务启动
-	go cron_server.Start()
+	cron_server.Start()
 
 	// 核心服务启动
 	res_init.Init()

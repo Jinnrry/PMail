@@ -13,7 +13,7 @@ func TestDecodeEmailContentFromTxt(t *testing.T) {
 
 	r := strings.NewReader(string(c))
 
-	email := NewEmailFromReader(r)
+	email := NewEmailFromReader(nil, r)
 
 	fmt.Println(email)
 }
@@ -24,18 +24,18 @@ func TestDecodeEmailContentFromTxt3(t *testing.T) {
 
 	r := strings.NewReader(string(c))
 
-	email := NewEmailFromReader(r)
+	email := NewEmailFromReader(nil, r)
 
 	fmt.Println(email)
 }
 
 func TestDecodeEmailContentFromTxt2(t *testing.T) {
-	c, _ := os.ReadFile("../../docs/qqemail/带图片格式排版.txt")
+	c, _ := os.ReadFile("../../../docs/pmail/demo.txt")
 
 	r := strings.NewReader(string(c))
 
-	email := NewEmailFromReader(r)
+	email := NewEmailFromReader(nil, r)
 
-	fmt.Println(email)
+	fmt.Println(string(email.BuildBytes(nil, false)))
 
 }

@@ -4,7 +4,7 @@
 
 ## [中文文档](./README_CN.md)
 
-I'm Chinese and I'm not good at English, so I apologise for my translation.
+I'm Chinese, and I'm not good at English, so I apologise for my translation.
 
 ## Introduction
 
@@ -34,6 +34,8 @@ beautiful and cute Logo for this project!
 (Note: Even if you don't need https, please make sure the path to the ssl certificate file is correct, although the web
 > service doesn't use the certificate anymore, the smtp protocol still needs the certificate)
 
+* Support pop3, smtp protocol, you can use any mail client you like.
+
 ## Disadvantages
 
 * At present, only the core function of sending and receiving emails has been completed. Basically, it can only be used
@@ -42,6 +44,10 @@ beautiful and cute Logo for this project!
 * The UI is ugly
 
 # How to run
+
+## 0、Check You IP / Domain
+
+First go to [spamhaus](https://check.spamhaus.org/) and check your domain name and server IP for blocking records
 
 ## 1、Download
 
@@ -55,10 +61,10 @@ beautiful and cute Logo for this project!
 
 Or 
 
-`docker run -p 25:25 -p 80:80 -p 443:443 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
+`docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
 > [!IMPORTANT]
-> If your server has a firewall turned on, you need to open ports 25, 80, and 443.
+> If your server has a firewall turned on, you need to open ports 25, 80, 110, 443, 465
 
 ## 3、Configuration
 
@@ -106,8 +112,15 @@ Open the `config/config.json` file in the run directory, edit a few configuratio
 }
 ```
 
+# Mail Client Configuration
 
+POP3 Server Address : [Your Domain]
 
+POP3 Port: 110/995(SSL)
+
+SMTP Server Address : smtp.[Your Domain]
+
+SMTP Port: 25/465(SSL)
 
 # For Developer
 

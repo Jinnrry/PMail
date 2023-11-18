@@ -25,7 +25,7 @@ func (c *Context) SetValue(key string, value any) {
 
 }
 
-func (c Context) GetValue(key string) any {
+func (c *Context) GetValue(key string) any {
 	if c.values == nil {
 		return nil
 	}

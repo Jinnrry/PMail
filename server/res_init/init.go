@@ -9,6 +9,7 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/hooks"
 	"pmail/http_server"
+	"pmail/pop3_server"
 	"pmail/session"
 	"pmail/signal"
 	"pmail/smtp_server"
@@ -37,9 +38,13 @@ func Init() {
 		hooks.Init()
 		// smtp server start
 		go smtp_server.Start()
+		go smtp_server.StartWithTLS()
 		// http server start
 		go http_server.HttpsStart()
 		go http_server.HttpStart()
+		// pop3 server start
+		go pop3_server.Start()
+		go pop3_server.StartWithTls()
 
 		configStr, _ := json.Marshal(config.Instance)
 		log.Warnf("Config File Info:  %s", configStr)
@@ -49,6 +54,7 @@ func Init() {
 		smtp_server.Stop()
 		http_server.HttpsStop()
 		http_server.HttpStop()
+		pop3_server.Stop()
 	}
 
 }

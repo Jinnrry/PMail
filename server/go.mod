@@ -1,12 +1,13 @@
 module pmail
 
-go 1.20
+go 1.21
 
 require (
+	github.com/Jinnrry/gopop v0.0.0-20231113115125-fbdf52ae39ea
 	github.com/alexedwards/scs/mysqlstore v0.0.0-20230327161757-10d4299e3b24
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20230327161757-10d4299e3b24
 	github.com/alexedwards/scs/v2 v2.5.1
-	github.com/emersion/go-message v0.16.0
+	github.com/emersion/go-message v0.17.0
 	github.com/emersion/go-msgauth v0.6.6
 	github.com/emersion/go-smtp v0.16.0
 	github.com/go-acme/lego/v4 v4.13.3
@@ -16,7 +17,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.5.1
 	golang.org/x/crypto v0.10.0
-	golang.org/x/text v0.10.0
+	golang.org/x/text v0.12.0
 	modernc.org/sqlite v1.24.0
 )
 

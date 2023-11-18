@@ -44,6 +44,18 @@ func testInit() {
 
 }
 
+func TestNuisanace(t *testing.T) {
+	testInit()
+
+	s := Session{
+		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+	}
+
+	data, _ := os.ReadFile("../docs/nuisance/demo.txt")
+	s.Data(bytes.NewReader(data))
+
+}
+
 func TestSession_Data(t *testing.T) {
 	testInit()
 	s := Session{

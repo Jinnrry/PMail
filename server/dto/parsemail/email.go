@@ -16,8 +16,17 @@ import (
 )
 
 type User struct {
-	EmailAddress string
-	Name         string
+	EmailAddress string `json:"EmailAddress"`
+	Name         string `json:"Name"`
+}
+
+func (u User) GetDomainAccount() (string, string) {
+	infos := strings.Split(u.EmailAddress, "@")
+	if len(infos) >= 2 {
+		return infos[0], infos[1]
+	}
+
+	return "", ""
 }
 
 type Attachment struct {
@@ -47,7 +56,7 @@ type Email struct {
 	GroupId     int // 分组id
 }
 
-func NewEmailFromReader(r io.Reader) *Email {
+func NewEmailFromReader(to []string, r io.Reader) *Email {
 	ret := &Email{}
 	m, err := message.Read(r)
 	if err != nil {
@@ -55,7 +64,13 @@ func NewEmailFromReader(r io.Reader) *Email {
 	}
 
 	ret.From = buildUser(m.Header.Get("From"))
-	ret.To = buildUsers(m.Header.Values("To"))
+
+	if len(to) > 0 {
+		ret.To = buildUsers(to)
+	} else {
+		ret.To = buildUsers(m.Header.Values("To"))
+	}
+
 	ret.Cc = buildUsers(m.Header.Values("Cc"))
 	ret.ReplyTo = buildUsers(m.Header.Values("ReplyTo"))
 	ret.Sender = buildUser(m.Header.Get("Sender"))
@@ -121,6 +136,10 @@ func formatContent(entity *message.Entity, ret *Email) error {
 	}
 
 	return nil
+}
+
+func BuilderUser(str string) *User {
+	return buildUser(str)
 }
 
 func buildUser(str string) *User {
@@ -247,7 +266,7 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, forwardAddress string) [
 	return instance.Sign(b.String())
 }
 
-func (e *Email) BuildBytes(ctx *context.Context) []byte {
+func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	var b bytes.Buffer
 
 	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
@@ -261,7 +280,18 @@ func (e *Email) BuildBytes(ctx *context.Context) []byte {
 
 	// Create our mail header
 	var h mail.Header
-	h.SetDate(time.Now())
+	if e.Date != "" {
+		t, err := time.ParseInLocation("2006-01-02 15:04:05", e.Date, time.Local)
+		if err != nil {
+			log.WithContext(ctx).Errorf("Time Error ! Err:%+v", err)
+			h.SetDate(time.Now())
+		} else {
+			h.SetDate(t)
+		}
+	} else {
+		h.SetDate(time.Now())
+	}
+
 	h.SetAddressList("From", from)
 	h.SetAddressList("To", to)
 	h.SetText("Subject", e.Subject)
@@ -288,7 +318,9 @@ func (e *Email) BuildBytes(ctx *context.Context) []byte {
 		log.WithContext(ctx).Fatal(err)
 	}
 	var th mail.InlineHeader
-	th.Set("Content-Type", "text/plain")
+	th.SetContentType("text/plain", map[string]string{
+		"charset": "UTF-8",
+	})
 	w, err := tw.CreatePart(th)
 	if err != nil {
 		log.Fatal(err)
@@ -297,12 +329,19 @@ func (e *Email) BuildBytes(ctx *context.Context) []byte {
 	w.Close()
 
 	var html mail.InlineHeader
-	html.Set("Content-Type", "text/html")
+	html.SetContentType("text/html", map[string]string{
+		"charset": "UTF-8",
+	})
 	w, err = tw.CreatePart(html)
 	if err != nil {
 		log.Fatal(err)
 	}
-	io.WriteString(w, string(e.HTML))
+	if len(e.HTML) > 0 {
+		io.WriteString(w, string(e.HTML))
+	} else {
+		io.WriteString(w, string(e.Text))
+	}
+
 	w.Close()
 
 	tw.Close()
@@ -323,6 +362,9 @@ func (e *Email) BuildBytes(ctx *context.Context) []byte {
 
 	mw.Close()
 
-	// dkim 签名后返回
-	return instance.Sign(b.String())
+	if dkim {
+		// dkim 签名后返回
+		return instance.Sign(b.String())
+	}
+	return b.Bytes()
 }

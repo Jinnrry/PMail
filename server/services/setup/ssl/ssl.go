@@ -143,7 +143,7 @@ func GenSSL(update bool) error {
 }
 
 // CheckSSLCrtInfo 返回证书过期剩余天数
-func CheckSSLCrtInfo() (int, error) {
+func CheckSSLCrtInfo() (int, time.Time, error) {
 
 	cfg, err := setup.ReadConfig()
 	if err != nil {
@@ -152,21 +152,21 @@ func CheckSSLCrtInfo() (int, error) {
 	// load cert and key by tls.LoadX509KeyPair
 	tlsCert, err := tls.LoadX509KeyPair(cfg.SSLPublicKeyPath, cfg.SSLPrivateKeyPath)
 	if err != nil {
-		return -1, errors.Wrap(err)
+		return -1, time.Now(), errors.Wrap(err)
 	}
 
 	cert, err := x509.ParseCertificate(tlsCert.Certificate[0])
 
 	if err != nil {
-		return -1, errors.Wrap(err)
+		return -1, time.Now(), errors.Wrap(err)
 	}
 
 	// 检查过期时间
 	hours := cert.NotAfter.Sub(time.Now()).Hours()
 
 	if hours <= 0 {
-		return -1, errors.New("Certificate has expired")
+		return -1, time.Now(), errors.New("Certificate has expired")
 	}
 
-	return cast.ToInt(hours / 24), nil
+	return cast.ToInt(hours / 24), cert.NotAfter, nil
 }
