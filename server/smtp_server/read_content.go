@@ -55,8 +55,8 @@ func (s *Session) Data(r io.Reader) error {
 		}
 		if email.From.EmailAddress != from.EmailAddress {
 			// 协议中的from和邮件内容中的from不匹配，当成垃圾邮件处理
-			log.WithContext(s.Ctx).Infof("垃圾邮件，拒信")
-			return nil
+			//log.WithContext(s.Ctx).Infof("垃圾邮件，拒信")
+			//return nil
 		}
 	}
 
