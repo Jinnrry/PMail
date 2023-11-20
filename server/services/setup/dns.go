@@ -27,6 +27,7 @@ func GetDNSSettings(ctx *context.Context) ([]*DNSItem, error) {
 
 	ret := []*DNSItem{
 		{Type: "A", Host: "smtp", Value: getIp(), TTL: 3600, Tips: i18n.GetText(ctx.Lang, "ip_taps")},
+		{Type: "A", Host: "pop", Value: getIp(), TTL: 3600, Tips: i18n.GetText(ctx.Lang, "ip_taps")},
 		{Type: "MX", Host: "-", Value: fmt.Sprintf("smtp.%s", configData.Domain), TTL: 3600},
 		{Type: "TXT", Host: "-", Value: "v=spf1 a mx ~all", TTL: 3600},
 		{Type: "TXT", Host: "default._domainkey", Value: auth.DkimGen(), TTL: 3600},

@@ -116,7 +116,7 @@ func GenSSL(update bool) error {
 	myUser.Registration = reg
 
 	request := certificate.ObtainRequest{
-		Domains: []string{"smtp." + cfg.Domain, cfg.WebDomain},
+		Domains: []string{"smtp." + cfg.Domain, cfg.WebDomain, "pop." + cfg.Domain},
 		Bundle:  true,
 	}
 	certificates, err := client.Certificate.Obtain(request)

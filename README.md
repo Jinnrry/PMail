@@ -114,7 +114,7 @@ Open the `config/config.json` file in the run directory, edit a few configuratio
 
 # Mail Client Configuration
 
-POP3 Server Address : [Your Domain]
+POP3 Server Address : pop.[Your Domain]
 
 POP3 Port: 110/995(SSL)
 
