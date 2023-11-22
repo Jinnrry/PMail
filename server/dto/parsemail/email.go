@@ -6,6 +6,7 @@ import (
 	_ "github.com/emersion/go-message/charset"
 	"github.com/emersion/go-message/mail"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"io"
 	"net/textproto"
 	"pmail/utils/array"
@@ -54,6 +55,7 @@ type Email struct {
 	IsRead      int
 	Status      int // 0未发送，1已发送，2发送失败，3删除
 	GroupId     int // 分组id
+	MessageId   int64
 }
 
 func NewEmailFromReader(to []string, r io.Reader) *Email {
@@ -204,6 +206,7 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, forwardAddress string) [
 	h.SetAddressList("From", from)
 	h.SetAddressList("To", to)
 	h.SetText("Subject", e.Subject)
+	h.SetMessageID(cast.ToString(e.MessageId))
 	if len(e.Cc) != 0 {
 		cc := []*mail.Address{}
 		for _, user := range e.Cc {
@@ -291,7 +294,7 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	} else {
 		h.SetDate(time.Now())
 	}
-
+	h.SetMessageID(cast.ToString(e.MessageId))
 	h.SetAddressList("From", from)
 	h.SetAddressList("To", to)
 	h.SetText("Subject", e.Subject)

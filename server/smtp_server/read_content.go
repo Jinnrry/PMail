@@ -140,7 +140,7 @@ func saveEmail(ctx *context.Context, email *parsemail.Email, emailType int, SPFS
 	}
 
 	sql := "INSERT INTO email (type, send_date, subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,is_read,status,group_id) VALUES (?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err := db.Instance.Exec(sql,
+	res, err := db.Instance.Exec(sql,
 		emailType,
 		email.Date,
 		email.Subject,
@@ -164,6 +164,10 @@ func saveEmail(ctx *context.Context, email *parsemail.Email, emailType int, SPFS
 
 	if err != nil {
 		log.WithContext(ctx).Println("mysql insert error:", err.Error())
+	}
+	insertId, _ := res.LastInsertId()
+	if insertId > 0 {
+		email.MessageId = insertId
 	}
 
 	return nil

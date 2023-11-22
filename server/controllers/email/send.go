@@ -168,6 +168,8 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	e.MessageId = emailId
+
 	async.New(ctx).Process(func(p any) {
 		errMsg := ""
 		err, sendErr := send.Send(ctx, e)
