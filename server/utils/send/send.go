@@ -111,6 +111,8 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 
 	b := e.BuildBytes(ctx, true)
 
+	log.WithContext(ctx).Debugf("Message Infos : %s", string(b))
+
 	var to []*parsemail.User
 	to = append(append(append(to, e.To...), e.Cc...), e.Bcc...)
 
