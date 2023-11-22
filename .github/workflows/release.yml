@@ -3,7 +3,7 @@ name: Build and Release
 on:
   workflow_dispatch:
   release:
-    types: [released]
+    types: [released,prereleased]
 
       
 jobs:
