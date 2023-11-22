@@ -4,10 +4,43 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/emersion/go-message"
+	log "github.com/sirupsen/logrus"
 	"io"
+	"os"
+	"pmail/config"
+	"pmail/db"
+	"pmail/session"
 	"testing"
+	"time"
 )
 
+func testInit() {
+	// 设置日志格式为json格式
+	//log.SetFormatter(&log.JSONFormatter{})
+
+	log.SetReportCaller(true)
+	log.SetFormatter(&log.TextFormatter{
+		//以下设置只是为了使输出更美观
+		DisableColors:   true,
+		TimestampFormat: "2006-01-02 15:03:04",
+	})
+
+	// 设置将日志输出到标准输出（默认的输出为stderr,标准错误）
+	// 日志消息输出可以是任意的io.writer类型
+	log.SetOutput(os.Stdout)
+
+	// 设置日志级别为warn以上
+	log.SetLevel(log.TraceLevel)
+
+	var cst, _ = time.LoadLocation("Asia/Shanghai")
+	time.Local = cst
+
+	config.Init()
+	Init()
+	db.Init()
+	session.Init()
+
+}
 func TestEmail_domainMatch(t *testing.T) {
 	//e := &Email{}
 	//dnsNames := []string{
@@ -77,6 +110,8 @@ func TestEmailBuidlers(t *testing.T) {
 }
 
 func TestEmail_builder(t *testing.T) {
+	testInit()
+
 	e := Email{
 		From:    buildUser("i@test.com"),
 		To:      buildUsers([]string{"to@test.com"}),

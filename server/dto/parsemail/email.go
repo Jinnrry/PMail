@@ -2,13 +2,14 @@ package parsemail
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/emersion/go-message"
 	_ "github.com/emersion/go-message/charset"
 	"github.com/emersion/go-message/mail"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
 	"io"
 	"net/textproto"
+	"pmail/config"
 	"pmail/utils/array"
 	"pmail/utils/context"
 	"regexp"
@@ -206,7 +207,7 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, forwardAddress string) [
 	h.SetAddressList("From", from)
 	h.SetAddressList("To", to)
 	h.SetText("Subject", e.Subject)
-	h.SetMessageID(cast.ToString(e.MessageId))
+	h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
 	if len(e.Cc) != 0 {
 		cc := []*mail.Address{}
 		for _, user := range e.Cc {
@@ -294,7 +295,7 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	} else {
 		h.SetDate(time.Now())
 	}
-	h.SetMessageID(cast.ToString(e.MessageId))
+	h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
 	h.SetAddressList("From", from)
 	h.SetAddressList("To", to)
 	h.SetText("Subject", e.Subject)
