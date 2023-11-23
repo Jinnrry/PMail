@@ -68,6 +68,9 @@ func checkTable() {
 	}
 
 	for tableName, createSQL := range config.Instance.Tables {
+		if createSQL == "" {
+			continue
+		}
 		if _, ok := existTable[tableName]; !ok {
 			_, err = Instance.Exec(createSQL)
 			log.Infof("Create Table: %s", createSQL)
@@ -76,10 +79,12 @@ func checkTable() {
 			}
 
 			if initData, ok := config.Instance.TablesInitData[tableName]; ok {
-				_, err = Instance.Exec(initData)
-				log.Infof("Init Table: %s", initData)
-				if err != nil {
-					panic(err)
+				if initData != "" {
+					_, err = Instance.Exec(initData)
+					log.Infof("Init Table: %s", initData)
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 

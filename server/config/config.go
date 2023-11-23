@@ -91,6 +91,9 @@ func Init() {
 			if e != nil {
 				panic(e)
 			}
+			if len(i) == 0 || strings.TrimSpace(string(i)) == "" {
+				return nil
+			}
 			if strings.Contains(path, "data") {
 				Instance.TablesInitData[tableName] = string(i)
 			} else {
