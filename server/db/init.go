@@ -79,13 +79,12 @@ func checkTable() {
 			}
 
 			if initData, ok := config.Instance.TablesInitData[tableName]; ok {
-				if initData == "" {
-					continue
-				}
-				_, err = Instance.Exec(initData)
-				log.Infof("Init Table: %s", initData)
-				if err != nil {
-					panic(err)
+				if initData != "" {
+					_, err = Instance.Exec(initData)
+					log.Infof("Init Table: %s", initData)
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 
