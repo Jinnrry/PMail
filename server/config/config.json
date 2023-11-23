@@ -1,5 +1,5 @@
 {
-  "logLevel": "info",
+  "logLevel": "debug",
   "domain": "domain.com",
   "webDomain": "mail.domain.com",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",

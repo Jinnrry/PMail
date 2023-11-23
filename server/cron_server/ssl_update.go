@@ -11,8 +11,19 @@ import (
 var expiredTime time.Time
 
 func Start() {
+
+	// 第一次启动，等待到初始化完成
+	if config.Instance == nil {
+		for {
+			time.Sleep(1 * time.Minute)
+			if config.Instance != nil && config.IsInit {
+				break
+			}
+		}
+	}
+
 	if config.Instance.SSLType == "0" {
-		go sslUpdate()
+		go sslUpdateLoop()
 	} else {
 		go sslCheck()
 	}
@@ -42,26 +53,9 @@ func sslCheck() {
 }
 
 // 每天检查一遍SSL证书是否即将过期，即将过期就重新生成
-func sslUpdate() {
+func sslUpdateLoop() {
 	for {
-		if config.Instance != nil && config.Instance.IsInit && config.Instance.SSLType == "0" {
-			days, _, err := ssl.CheckSSLCrtInfo()
-			if days < 30 || err != nil {
-				if err != nil {
-					log.Errorf("SSL Check Error, Update SSL Certificate. Error Info :%+v", err)
-				} else {
-					log.Infof("SSL certificate remaining time is only %d days, renew SSL certificate.", days)
-				}
-				err = ssl.GenSSL(true)
-				if err != nil {
-					log.Errorf("SSL Update Error! %+v", err)
-				}
-				// 更新完证书，重启服务
-				signal.RestartChan <- true
-			} else {
-				log.Debugf("SSL Check.")
-			}
-		}
+		ssl.Update(true)
 		// 每24小时检测一次证书有效期
 		time.Sleep(24 * time.Hour)
 	}

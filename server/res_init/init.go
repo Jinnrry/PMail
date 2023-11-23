@@ -10,6 +10,7 @@ import (
 	"pmail/hooks"
 	"pmail/http_server"
 	"pmail/pop3_server"
+	"pmail/services/setup/ssl"
 	"pmail/session"
 	"pmail/signal"
 	"pmail/smtp_server"
@@ -29,6 +30,8 @@ func Init() {
 
 	for {
 		config.Init()
+		// 启动前检查一遍证书
+		ssl.Update(false)
 		parsemail.Init()
 		err := db.Init()
 		if err != nil {

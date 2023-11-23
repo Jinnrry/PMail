@@ -8,10 +8,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/go-acme/lego/v4/certificate"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"os"
 	"pmail/config"
 	"pmail/services/setup"
+	"pmail/signal"
 	"pmail/utils/errors"
 	"time"
 
@@ -169,4 +171,28 @@ func CheckSSLCrtInfo() (int, time.Time, error) {
 	}
 
 	return cast.ToInt(hours / 24), cert.NotAfter, nil
+}
+
+func Update(needRestart bool) {
+	if config.Instance != nil && config.Instance.IsInit && config.Instance.SSLType == "0" {
+		days, _, err := CheckSSLCrtInfo()
+		if days < 30 || err != nil {
+			if err != nil {
+				log.Errorf("SSL Check Error, Update SSL Certificate. Error Info :%+v", err)
+			} else {
+				log.Infof("SSL certificate remaining time is only %d days, renew SSL certificate.", days)
+			}
+			err = GenSSL(true)
+			if err != nil {
+				log.Errorf("SSL Update Error! %+v", err)
+			}
+			if needRestart {
+				// 更新完证书，重启服务
+				signal.RestartChan <- true
+			}
+		} else {
+			log.Debugf("SSL Check.")
+		}
+	}
+
 }
