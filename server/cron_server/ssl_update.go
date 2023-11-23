@@ -13,7 +13,7 @@ var expiredTime time.Time
 func Start() {
 
 	// 第一次启动，等待到初始化完成
-	if config.Instance == nil {
+	if config.Instance == nil || config.IsInit == false {
 		for {
 			time.Sleep(1 * time.Minute)
 			if config.Instance != nil && config.IsInit {
