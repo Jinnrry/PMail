@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"pmail/config"
@@ -13,6 +14,7 @@ import (
 )
 
 func AcmeChallenge(w http.ResponseWriter, r *http.Request) {
+	log.Infof("AcmeChallenge: %s", r.URL.Path)
 	instance := ssl.GetHttpChallengeInstance()
 	token := strings.ReplaceAll(r.URL.Path, "/.well-known/acme-challenge/", "")
 	auth, exist := instance.AuthInfo[token]
