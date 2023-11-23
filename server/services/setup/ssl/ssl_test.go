@@ -11,7 +11,7 @@ func TestGenSSL(t *testing.T) {
 }
 
 func TestGetSSLCrtInfo(t *testing.T) {
-	days, err := CheckSSLCrtInfo()
+	days, tm, err := CheckSSLCrtInfo()
 
-	fmt.Println(days, err)
+	fmt.Println(days, tm, err)
 }
