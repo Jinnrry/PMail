@@ -100,17 +100,17 @@ var instanceTls *smtp.Server
 func StartWithTLS() {
 	be := &Backend{}
 
-	instance = smtp.NewServer(be)
+	instanceTls = smtp.NewServer(be)
 
-	instance.Addr = ":465"
-	instance.Domain = config.Instance.Domain
-	instance.ReadTimeout = 10 * time.Second
-	instance.AuthDisabled = false
-	instance.WriteTimeout = 10 * time.Second
-	instance.MaxMessageBytes = 1024 * 1024
-	instance.MaxRecipients = 50
+	instanceTls.Addr = ":465"
+	instanceTls.Domain = config.Instance.Domain
+	instanceTls.ReadTimeout = 10 * time.Second
+	instanceTls.AuthDisabled = false
+	instanceTls.WriteTimeout = 10 * time.Second
+	instanceTls.MaxMessageBytes = 1024 * 1024
+	instanceTls.MaxRecipients = 50
 	// force TLS for auth
-	instance.AllowInsecureAuth = false
+	instanceTls.AllowInsecureAuth = false
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
@@ -118,10 +118,10 @@ func StartWithTLS() {
 		return
 	}
 	// Configure the TLS support
-	instance.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
+	instanceTls.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	log.Println("Starting Smtp With SSL Server Port:", instance.Addr)
-	if err := instance.ListenAndServeTLS(); err != nil {
+	log.Println("Starting Smtp With SSL Server Port:", instanceTls.Addr)
+	if err := instanceTls.ListenAndServeTLS(); err != nil {
 		log.Fatal(err)
 	}
 }
