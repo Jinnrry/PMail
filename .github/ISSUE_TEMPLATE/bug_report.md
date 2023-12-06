@@ -25,7 +25,8 @@ A clear and concise description of what you expected to happen.
   <summary>config.json</summary>
 
 ```
-.....
+这里贴上你的配置文件内容。
+Copy the contents of your configuration file here.
 ```
 
 </details>
@@ -36,7 +37,9 @@ A clear and concise description of what you expected to happen.
   <summary>log</summary>
 
 ```
-.....
+这里贴上问题相关日志
+Copy the contents of your log here.
+
 ```
 
 </details>
