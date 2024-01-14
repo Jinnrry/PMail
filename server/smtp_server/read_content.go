@@ -13,7 +13,6 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/hooks"
 	"pmail/services/rule"
-	"pmail/utils/array"
 	"pmail/utils/async"
 	"pmail/utils/context"
 	"pmail/utils/send"
@@ -60,9 +59,9 @@ func (s *Session) Data(r io.Reader) error {
 		}
 	}
 
-	// 判断是收信还是转发
-	account, domain := email.From.GetDomainAccount()
-	if array.InArray(domain, config.Instance.Domains) && s.Ctx.UserName == account {
+	// 判断是收信还是转发，只要是登陆了，都当成转发处理
+	//account, domain := email.From.GetDomainAccount()
+	if s.Ctx.UserID > 0 {
 		// 转发
 		err := saveEmail(ctx, email, 1, true, true)
 		if err != nil {

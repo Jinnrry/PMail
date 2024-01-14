@@ -19,6 +19,7 @@ import (
 type action struct {
 }
 
+// Custom 非标准命令
 func (a action) Custom(session *gopop.Session, cmd string, args []string) ([]string, error) {
 	if session.Ctx == nil {
 		tc := &context.Context{}
@@ -30,6 +31,7 @@ func (a action) Custom(session *gopop.Session, cmd string, args []string) ([]str
 	return nil, nil
 }
 
+// Capa 说明服务端支持的命令列表
 func (a action) Capa(session *gopop.Session) ([]string, error) {
 	if session.Ctx == nil {
 		tc := &context.Context{}
@@ -64,6 +66,7 @@ func (a action) Capa(session *gopop.Session) ([]string, error) {
 	return ret, nil
 }
 
+// User 提交登陆的用户名
 func (a action) User(session *gopop.Session, username string) error {
 	if session.Ctx == nil {
 		tc := &context.Context{}
@@ -83,6 +86,7 @@ func (a action) User(session *gopop.Session, username string) error {
 	return nil
 }
 
+// Pass 提交密码验证
 func (a action) Pass(session *gopop.Session, pwd string) error {
 	if session.Ctx == nil {
 		tc := &context.Context{}
@@ -114,6 +118,7 @@ func (a action) Pass(session *gopop.Session, pwd string) error {
 	return errors.New("password error")
 }
 
+// Apop APOP登陆命令
 func (a action) Apop(session *gopop.Session, username, digest string) error {
 	if session.Ctx == nil {
 		tc := &context.Context{}
@@ -156,11 +161,12 @@ type statInfo struct {
 	Size int64 `json:"size"`
 }
 
+// Stat 查询邮件数量
 func (a action) Stat(session *gopop.Session) (msgNum, msgSize int64, err error) {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: STAT")
 
 	var si statInfo
-	err = db.Instance.Get(&si, db.WithContext(session.Ctx.(*context.Context), "select count(1) as `num`, sum(length(text)+length(html)) as `size` from email"))
+	err = db.Instance.Get(&si, db.WithContext(session.Ctx.(*context.Context), "select count(1) as `num`, sum(length(text)+length(html)) as `size` from email where type = 0"))
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 		err = nil
@@ -213,6 +219,7 @@ type listItem struct {
 	Size int64 `json:"size"`
 }
 
+// List 邮件列表
 func (a action) List(session *gopop.Session, msg string) ([]gopop.MailInfo, error) {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: LIST ,Args:%s", msg)
 	var res []listItem
@@ -230,7 +237,7 @@ func (a action) List(session *gopop.Session, msg string) ([]gopop.MailInfo, erro
 		ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size` FROM email where id =?")
 		err = db.Instance.Select(&res, ssql, listId)
 	} else {
-		ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size` FROM email")
+		ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size` FROM email where type = 0")
 		err = db.Instance.Select(&res, ssql)
 	}
 
@@ -249,6 +256,7 @@ func (a action) List(session *gopop.Session, msg string) ([]gopop.MailInfo, erro
 	return ret, nil
 }
 
+// Retr 获取邮件详情
 func (a action) Retr(session *gopop.Session, id int64) (string, int64, error) {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: RETR ,Args:%d", id)
 	email, err := detail.GetEmailDetail(session.Ctx.(*context.Context), cast.ToInt(id), false)
@@ -262,6 +270,7 @@ func (a action) Retr(session *gopop.Session, id int64) (string, int64, error) {
 
 }
 
+// Delete 删除邮件
 func (a action) Delete(session *gopop.Session, id int64) error {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: DELE ,Args:%d", id)
 
