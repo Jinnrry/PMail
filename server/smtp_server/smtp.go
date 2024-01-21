@@ -81,7 +81,7 @@ func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
 	return nil
 }
 
-func (s *Session) Rcpt(to string) error {
+func (s *Session) Rcpt(to string, opts *smtp.RcptOptions) error {
 	log.WithContext(s.Ctx).Debugf("Rcpt Success %+v", to)
 
 	s.To = append(s.To, to)

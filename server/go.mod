@@ -7,9 +7,9 @@ require (
 	github.com/alexedwards/scs/mysqlstore v0.0.0-20230327161757-10d4299e3b24
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20230327161757-10d4299e3b24
 	github.com/alexedwards/scs/v2 v2.5.1
-	github.com/emersion/go-message v0.17.0
+	github.com/emersion/go-message v0.18.0
 	github.com/emersion/go-msgauth v0.6.6
-	github.com/emersion/go-smtp v0.16.0
+	github.com/emersion/go-smtp v0.20.1
 	github.com/go-acme/lego/v4 v4.13.3
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jmoiron/sqlx v1.3.5
@@ -17,7 +17,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.5.1
 	golang.org/x/crypto v0.10.0
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.14.0
 	modernc.org/sqlite v1.24.0
 )
 
