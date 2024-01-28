@@ -1,6 +1,7 @@
 package send
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"pmail/config"
@@ -48,4 +49,27 @@ func TestSend(t *testing.T) {
 		HTML:    []byte("<div>这是Html</div>"),
 	}
 	Send(nil, e)
+}
+
+func TestSendSohu(t *testing.T) {
+	testInit()
+	e := &parsemail.Email{
+		From: &parsemail.User{
+			Name:         "发送人",
+			EmailAddress: "j@jinnrry.com",
+		},
+		To: []*parsemail.User{
+			{"jinnrry@sohu.com", "名"},
+		},
+		Subject: "插件测试",
+		Text:    []byte("这是Text"),
+		HTML:    []byte("<div>这是Html</div>"),
+	}
+	Send(nil, e)
+}
+
+func Test_domainMatch(t *testing.T) {
+	domain := domainMatch("qq.com", nil)
+
+	fmt.Println(domain)
 }
