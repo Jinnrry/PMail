@@ -110,7 +110,7 @@ func StartWithTLS() {
 	instanceTls.MaxMessageBytes = 1024 * 1024
 	instanceTls.MaxRecipients = 50
 	// force TLS for auth
-	instanceTls.AllowInsecureAuth = false
+	instanceTls.AllowInsecureAuth = true
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {

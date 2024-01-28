@@ -33,6 +33,8 @@ import (
 	"time"
 )
 
+var NoSupportSTARTTLSError = errors.New("smtp: server doesn't support STARTTLS")
+
 // A Client represents a client connection to an SMTP server.
 type Client struct {
 	// Text is the textproto.Conn used by the Client. It is exported to allow for
@@ -417,7 +419,7 @@ func SendMail(domain string, addr string, a smtp.Auth, from string, to []string,
 		return err
 	}
 	if ok, _ := c.Extension("STARTTLS"); !ok {
-		return errors.New("smtp: server doesn't support STARTTLS")
+		return NoSupportSTARTTLSError
 	}
 
 	var config *tls.Config
@@ -430,6 +432,56 @@ func SendMail(domain string, addr string, a smtp.Auth, from string, to []string,
 	if err = c.StartTLS(config); err != nil {
 		return err
 	}
+	if a != nil && c.ext != nil {
+		if _, ok := c.ext["AUTH"]; !ok {
+			return errors.New("smtp: server doesn't support AUTH")
+		}
+		if err = c.Auth(a); err != nil {
+			return err
+		}
+	}
+	if err = c.Mail(from); err != nil {
+		return err
+	}
+	for _, addr := range to {
+		if err = c.Rcpt(addr); err != nil {
+			return err
+		}
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(msg)
+	if err != nil {
+		return err
+	}
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	return c.Quit()
+}
+
+// SendMailUnsafe 无TLS加密的邮件发送方式
+func SendMailUnsafe(domain string, addr string, a smtp.Auth, from string, to []string, msg []byte) error {
+	if err := validateLine(from); err != nil {
+		return err
+	}
+	for _, recp := range to {
+		if err := validateLine(recp); err != nil {
+			return err
+		}
+	}
+	c, err := Dial(addr)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if err = c.hello(); err != nil {
+		return err
+	}
+
 	if a != nil && c.ext != nil {
 		if _, ok := c.ext["AUTH"]; !ok {
 			return errors.New("smtp: server doesn't support AUTH")

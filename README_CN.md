@@ -65,10 +65,10 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 或者
 
-`docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -p 465:465 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
+`docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -p 465:465 -p 995:995 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
 > [!IMPORTANT]
-> 如果你服务器开启了防火墙，你需要放行25、80、110、443、465这五个端口
+> 如果你服务器开启了防火墙，你需要打开25、80、110、443、465、995端口
 
 ## 3、配置
 

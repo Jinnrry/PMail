@@ -39,7 +39,7 @@ type Config struct {
 //go:embed tables/*
 var tableConfig embed.FS
 
-const Version = "2.3.6"
+const Version = "2.3.7"
 
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"

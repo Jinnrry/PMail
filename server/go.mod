@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/Jinnrry/gopop v0.0.0-20231113115125-fbdf52ae39ea
 	github.com/alexedwards/scs/mysqlstore v0.0.0-20230327161757-10d4299e3b24
-	github.com/alexedwards/scs/sqlite3store v0.0.0-20230327161757-10d4299e3b24
+	github.com/alexedwards/scs/sqlite3store v0.0.0-20231113091146-cef4b05350c8
 	github.com/alexedwards/scs/v2 v2.5.1
 	github.com/emersion/go-message v0.18.0
 	github.com/emersion/go-msgauth v0.6.6
@@ -21,7 +21,7 @@ require (
 	modernc.org/sqlite v1.24.0
 )
 
-replace github.com/alexedwards/scs/sqlite3store v0.0.0-20230327161757-10d4299e3b24 => github.com/Jinnrry/scs/sqlite3store v0.0.0-20230803080525-914f01e0d379
+replace github.com/emersion/go-smtp v0.20.1 => github.com/jinnrry/go-smtp v0.20.1
 
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
