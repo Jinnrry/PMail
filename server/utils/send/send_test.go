@@ -68,6 +68,23 @@ func TestSendSohu(t *testing.T) {
 	Send(nil, e)
 }
 
+func TestSendTom(t *testing.T) {
+	testInit()
+	e := &parsemail.Email{
+		From: &parsemail.User{
+			Name:         "发送人",
+			EmailAddress: "j@jinnrry.com",
+		},
+		To: []*parsemail.User{
+			{"tom@tom.com", "名"},
+		},
+		Subject: "插件测试",
+		Text:    []byte("这是Text"),
+		HTML:    []byte("<div>这是Html</div>"),
+	}
+	Send(nil, e)
+}
+
 func Test_domainMatch(t *testing.T) {
 	domain := domainMatch("qq.com", nil)
 

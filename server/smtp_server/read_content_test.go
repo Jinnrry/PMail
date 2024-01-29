@@ -12,6 +12,7 @@ import (
 	"pmail/db"
 	parsemail2 "pmail/dto/parsemail"
 	"pmail/session"
+	"pmail/utils/context"
 	"testing"
 	"time"
 )
@@ -49,6 +50,11 @@ func TestNuisanace(t *testing.T) {
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
 	}
 
 	data, _ := os.ReadFile("../docs/nuisance/demo.txt")
@@ -122,6 +128,11 @@ Content-Type: text/html
 `
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
 	}
 
 	s.Data(bytes.NewReader([]byte(emailData)))
@@ -281,6 +292,11 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
 	}
 
 	s.Data(bytes.NewReader([]byte(deleteEmail)))
@@ -331,6 +347,11 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
 	}
 
 	s.Data(bytes.NewReader([]byte(readEmail)))
@@ -379,10 +400,61 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
 	}
 
 	s.Data(bytes.NewReader([]byte(deleteEmail)))
 
+}
+
+func TestNullCC(t *testing.T) {
+	testInit()
+
+	emailData := `Date: Mon, 29 Jan 2024 16:54:30 +0800
+Return-Path: 1231@111.com
+From: =?utf-8?B?b2VhdHY=?= 1231@111.com
+To: =?utf-8?B?ODQ2ODAzOTY=?= 123213@qq.com
+Cc:
+Bcc:
+Reply-To: <>
+Subject: =?utf-8?B?6L+Z5piv5LiA5bCB5p2l6IeqUmVsYXhEcmFtYeeahOmCruS7tg==?=
+Message-ID: <cf43cc780b72dad392d4f90dfced88a8@1231@111.com>
+X-Priority: 3
+X-Mailer: Mailer (https://github.com/txthinking/Mailer)
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="6edc2ef285d93010a080caccc858c67b"
+
+--6edc2ef285d93010a080caccc858c67b
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+PGRpdiBzdHlsZT0ibWluLWhlaWdodDo1NTBweDsgcGFkZGluZzogMTAwcHggNTVweCAyMDBweDsi
+Pui/meaYr+S4gOWwgeadpeiHqlJlbGF4RHJhbWHnmoTmoKHpqozpgq7ku7Ys55So5LqO5qCh6aqM
+6YKu5Lu26YWN572u5piv5ZCm5q2j5bi4ITwvZGl2Pg==
+
+--6edc2ef285d93010a080caccc858c67b
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+PGRpdiBzdHlsZT0ibWluLWhlaWdodDo1NTBweDsgcGFkZGluZzogMTAwcHggNTVweCAyMDBweDsi
+Pui/meaYr+S4gOWwgeadpeiHqlJlbGF4RHJhbWHnmoTmoKHpqozpgq7ku7Ys55So5LqO5qCh6aqM
+6YKu5Lu26YWN572u5piv5ZCm5q2j5bi4ITwvZGl2Pg==
+
+--6edc2ef285d93010a080caccc858c67b--`
+	s := Session{
+		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
+	}
+
+	s.Data(bytes.NewReader([]byte(emailData)))
 }
 
 func TestRuleMove(t *testing.T) {
@@ -427,6 +499,11 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
 	}
 
 	s.Data(bytes.NewReader([]byte(moveEmail)))

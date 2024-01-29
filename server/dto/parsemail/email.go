@@ -182,6 +182,10 @@ func buildUser(str string) *User {
 func buildUsers(str []string) []*User {
 	var ret []*User
 	for _, s1 := range str {
+		if s1 == "" {
+			continue
+		}
+
 		for _, s := range strings.Split(s1, ",") {
 			s = strings.TrimSpace(s)
 			ret = append(ret, buildUser(s))
