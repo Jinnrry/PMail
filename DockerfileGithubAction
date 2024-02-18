@@ -1,4 +1,4 @@
-FROM golang:alpine as serverbuild
+FROM golang as serverbuild
 
 WORKDIR /work
 
