@@ -4,7 +4,7 @@ WORKDIR /work
 
 COPY server .
 
-RUN apk update && apk add git
+RUN apt-get update && apt-get install -y git
 RUN go build -ldflags "-X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
 
 
