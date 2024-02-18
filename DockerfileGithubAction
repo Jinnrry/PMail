@@ -1,10 +1,10 @@
-FROM golang as serverbuild
+FROM golang:alpine as serverbuild
 
 WORKDIR /work
 
 COPY server .
 
-RUN apt-get update && apt-get install -y git
+RUN apk update && apk add git
 RUN go build -ldflags "-X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
 
 
