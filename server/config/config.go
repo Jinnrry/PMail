@@ -32,6 +32,8 @@ type Config struct {
 	TgBotToken           string            `json:"tgBotToken"`
 	TgChatId             string            `json:"tgChatId"`
 	IsInit               bool              `json:"isInit"`
+	WebPushUrl           string            `json:"webPushUrl"`
+	WebPushToken         string            `json:"webPushToken"`
 	Tables               map[string]string `json:"-"`
 	TablesInitData       map[string]string `json:"-"`
 }

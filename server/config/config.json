@@ -17,6 +17,8 @@
   "weChatPushUserId": "",
   "tgChatId": "",
   "tgBotToken": "",
+  "webPushUrl": "",
+  "webPushToken": "",
   "isInit": true,
   "httpsEnabled": 1
 }

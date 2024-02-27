@@ -3,6 +3,7 @@ package hooks
 import (
 	"pmail/dto/parsemail"
 	"pmail/hooks/telegram_push"
+	"pmail/hooks/web_push"
 	"pmail/hooks/wechat_push"
 	"pmail/utils/context"
 )
@@ -26,5 +27,6 @@ func Init() {
 	HookList = []EmailHook{
 		wechat_push.NewWechatPushHook(),
 		telegram_push.NewTelegramPushHook(),
+		web_push.NewWebPushHook(),
 	}
 }

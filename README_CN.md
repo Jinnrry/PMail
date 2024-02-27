@@ -32,8 +32,8 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 实现了ACME协议，程序将自动获取并更新Let’s Encrypt证书。
 
-默认情况下，会为web后台也生成ssl证书，让后台使用https访问，如果你有自己的网关层，不需要https的话，在配置文件中将`httpsEnabled`
-设置为`2`，这样管理后台就不会使用https协议。（ 注意：即使你不需要https，也请保证ssl证书文件路径正确，http协议虽然不使用证书了，但是smtp协议还需要证书）
+默认情况下，会为web后台也生成ssl证书，让后台使用https访问，如果你有自己的网关层，不需要https的话，在配置文件中将 `httpsEnabled`
+设置为 `2`，这样管理后台就不会使用https协议。（ 注意：即使你不需要https，也请保证ssl证书文件路径正确，http协议虽然不使用证书了，但是smtp协议还需要证书）
 
 ### 5、邮件客户端支持
 
@@ -56,12 +56,11 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 ## 1、下载文件
 
 * [点击这里](https://github.com/Jinnrry/PMail/releases)下载一个与你匹配的程序文件。
-
 * 或者使用Docker运行 `docker pull ghcr.io/jinnrry/pmail:latest`
 
 ## 2、运行
 
-`./pmail` 
+`./pmail`
 
 或者
 
@@ -83,8 +82,12 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 打开运行目录下的 `config/config.json`文件，编辑 `weChatPush` 开头的几个配置项，重启服务即可。
 
 ## 6、Telegram推送
+
 从 [BotFather](https://t.me/BotFather) 创建并获取令牌机器人。 打开运行目录下的 config/config.json 文件，编辑 `tg` 开头的几个配置项，重启服务即可。
 
+## 7、WebHook推送
+
+打开运行目录下的 `config/config.json`文件，编辑 webPushUrl 跟webPushToken (可选)，接收到邮件后会往hook地址post发送邮件信息，token也会放在body中，方便需要的进行校验，配置完重启服务即可。
 
 # 配置文件说明
 
@@ -109,6 +112,8 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "weChatPushUserId": "", // 微信推送用户id
   "tgChatId": "", // telegram 推送chatid
   "tgBotToken": "", // telegram 推送 token
+  "webPushUrl": "", // webhook 推送地址
+  "webPushToken": "", // webhook 推送 token
   "isInit": true // 为false的时候会进入安装引导流程 
 }
 ```
@@ -129,11 +134,11 @@ SMTP端口： 25/465(SSL)
 
 1、前端： vue3+element-plus
 
-前端代码位于`fe`目录中，运行参考`fe`目录中的README文件
+前端代码位于 `fe`目录中，运行参考 `fe`目录中的README文件
 
 2、后端： golang + mysql
 
-后端代码进入`server`文件夹，运行`main.go`文件
+后端代码进入 `server`文件夹，运行 `main.go`文件
 
 ## 后端接口文档
 
@@ -141,5 +146,4 @@ SMTP端口： 25/465(SSL)
 
 ## 插件开发
 
-参考微信推送插件`server/hooks/wechat_push/wechat_push.go`
-
+参考微信推送插件 `server/hooks/wechat_push/wechat_push.go`

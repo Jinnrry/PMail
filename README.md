@@ -21,17 +21,14 @@ beautiful and cute Logo for this project!
 ## Features
 
 * Single file operation and easy deployment.
-
 * The binary file is only 15MB and takes up less than 10M of memory during the run.
-
 * Support dkim, spf checksum, [Email Test](https://www.mail-tester.com/) score 10 points if correctly configured.
-
 * Implementing the ACME protocol, the program will automatically obtain and update Let's Encrypt certificates.
 
 > By default, a ssl certificate is generated for the web service, allowing pages to use the https protocol.
 > If you have your own gateway or don't need https, set `httpsEnabled` to `2` in the configuration file so that the web
 > service will not use https.
-(Note: Even if you don't need https, please make sure the path to the ssl certificate file is correct, although the web
+> (Note: Even if you don't need https, please make sure the path to the ssl certificate file is correct, although the web
 > service doesn't use the certificate anymore, the smtp protocol still needs the certificate)
 
 * Support pop3, smtp protocol, you can use any mail client you like.
@@ -40,7 +37,6 @@ beautiful and cute Logo for this project!
 
 * At present, only the core function of sending and receiving emails has been completed. Basically, it can only be used
   by a single person, and does not deal with issues related to permission management in the process of multiple users.
-
 * The UI is ugly
 
 # How to run
@@ -52,14 +48,13 @@ First go to [spamhaus](https://check.spamhaus.org/) and check your domain name a
 ## 1、Download
 
 * [Click Here](https://github.com/Jinnrry/PMail/releases) Download a program file that matches you.
-
 * Or use Docker `docker pull ghcr.io/jinnrry/pmail:latest`
 
 ## 2、Run
 
-`./pmail` 
+`./pmail`
 
-Or 
+Or
 
 `docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -p 465:465 -p 995:995 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
@@ -82,8 +77,13 @@ Open the `config/config.json` file in the run directory, edit a few configuratio
 and restart the service.
 
 ## 6、Telegram Message Push
+
 Create bot and get token from [BotFather](https://t.me/BotFather)
 Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `tg`and restart the service.
+
+## 7、WebHook Push
+
+Open the `config/config.json` file in the running directory, edit the webPushUrl and webPushToken (optional). After receiving an email, the email information will be posted to the hook address, and the token will also be placed in the body for easy verification. After configuring, restart the service.
 
 # Configuration file format description
 
@@ -108,6 +108,8 @@ Open the `config/config.json` file in the run directory, edit a few configuratio
   "weChatPushUserId": "", // weChat UserId
   "tgChatId": "", // telegram chatid
   "tgBotToken": "", // telegram  token
+  "webPushUrl": "", // webhook 推送地址
+  "webPushToken": "", // webhook 推送 token
   "isInit": true // If false, it will enter the bootstrap process.
 }
 ```
