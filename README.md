@@ -108,8 +108,8 @@ Open the `config/config.json` file in the running directory, edit the webPushUrl
   "weChatPushUserId": "", // weChat UserId
   "tgChatId": "", // telegram chatid
   "tgBotToken": "", // telegram  token
-  "webPushUrl": "", // webhook 推送地址
-  "webPushToken": "", // webhook 推送 token
+  "webPushUrl": "", // webhook push URL
+  "webPushToken": "", // webhook push token
   "isInit": true // If false, it will enter the bootstrap process.
 }
 ```
