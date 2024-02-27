@@ -4,8 +4,6 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
 	"io/fs"
 	olog "log"
 	"net/http"
@@ -19,6 +17,9 @@ import (
 	"pmail/utils/context"
 	"pmail/utils/id"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 )
 
 //go:embed dist/*
