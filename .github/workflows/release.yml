@@ -61,8 +61,7 @@ jobs:
           ls -alh
       - name: Zip
         run: |
-          ls
-          ls /server
+          ls ./server
           zip ${{ env.ZIPNAME }}.zip ./server/${{ env.FILENAME }} ./server/${{ env.TGFILENAME }} ./server/${{ env.WEBFILENAME }} ./server/${{ env.WCFILENAME }}
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v3
