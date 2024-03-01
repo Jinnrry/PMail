@@ -14,10 +14,10 @@ COPY server .
 COPY --from=febuild /work/dist /work/http_server/dist
 
 RUN apk update && apk add git
-RUN go build -ldflags "-X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
-RUN cd /work/hooks/telegram_push && go build -ldflags "-s -W" -o output/telegram_push main.go
-RUN cd /work/hooks/web_push && go build -ldflags "-s -W" -o output/web_push main.go
-RUN cd /work/hooks/wechat_push && go build -ldflags "-s -W" -o output/wechat_push main.go
+RUN go build -ldflags "-s -w -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
+RUN cd /work/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push main.go
+RUN cd /work/hooks/web_push && go build -ldflags "-s -w" -o output/web_push main.go
+RUN cd /work/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push main.go
 
 
 FROM alpine
