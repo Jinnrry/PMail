@@ -41,6 +41,7 @@ jobs:
           echo "TGFILENAME=telegram_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
           echo "WCFILENAME=wechat_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
           echo "WEBFILENAME=web_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+          echo "ZIPNAME=${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
       - name: Rename Windows File
         if: matrix.goos == 'windows'
         run: |
@@ -58,41 +59,19 @@ jobs:
           go build -ldflags "-s -w" -o ${{ env.WEBFILENAME }} hooks/web_push/web_push.go 
           go build -ldflags "-s -w" -o ${{ env.WCFILENAME }} hooks/wechat_push/wechat_push.go
           ls -alh
+      - name: Zip
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r ${{ env.ZIPNAME }}.zip ./server/${{ env.FILENAME }} ./server/${{ env.TGFILENAME }} ./server/${{ env.WEBFILENAME }} ./server/${{ env.WCFILENAME }}
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.FILENAME }}
-          path: |
-            ./server/${{ env.FILENAME }}
-            ./server/${{ env.TGFILENAME }}
-            ./server/${{ env.WEBFILENAME }}
-            ./server/${{ env.WCFILENAME }}
+          path: ${{ env.FILENAME }}.zip
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./server/${{ env.FILENAME }}
-          tag: ${{ github.ref }}
-          file_glob: true
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file:
-            ./server/${{ env.TGFILENAME }}
-          tag: ${{ github.ref }}
-          file_glob: true
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./server/${{ env.WEBFILENAME }}
-          tag: ${{ github.ref }}
-          file_glob: true
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./server/${{ env.WCFILENAME }}
+          file: ${{ env.FILENAME }}.zip
           tag: ${{ github.ref }}
           file_glob: true
