@@ -41,8 +41,6 @@ type Config struct {
 //go:embed tables/*
 var tableConfig embed.FS
 
-const Version = "2.4.0"
-
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"
 const SSLTypeAuto = "0" //自动生成证书

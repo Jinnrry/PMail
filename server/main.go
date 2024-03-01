@@ -74,6 +74,10 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
+	if version == "" {
+		version = "2.4.0"
+	}
+
 	log.Infoln("***************************************************")
 	log.Infof("***\tServer Start Success Version:%s\n", version)
 	log.Infof("***\tGit Commit Hash: %s ", gitHash)
