@@ -61,6 +61,7 @@ jobs:
           ls -alh
       - name: Zip
         uses: montudor/action-zip@v1
+        run: ls
         with:
           args: zip -qq -r ${{ env.ZIPNAME }}.zip ./server/${{ env.FILENAME }} ./server/${{ env.TGFILENAME }} ./server/${{ env.WEBFILENAME }} ./server/${{ env.WCFILENAME }}
       - name: Upload files to Artifacts
