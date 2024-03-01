@@ -2,9 +2,7 @@ build: build_fe build_server telegram_push web_push wechat_push package
 
 clean:
 	rm -rf output
-	rm -rf server/hooks/telegram_push/output
-	rm -rf server/hooks/web_push/output
-	rm -rf server/hooks/wechat_push/output
+
 
 build_fe:
 	cd fe && yarn && yarn build
@@ -41,11 +39,11 @@ package: clean
 	mkdir output
 	mv server/pmail* output/
 	mkdir output/config
-	mkdir output/plugin
+	mkdir output/plugins
 	cp -r server/config/dkim output/config/
 	cp -r server/config/ssl output/config/
 	cp -r server/config/config.json output/config/
-	mv server/hooks/telegram_push/output/* output/plugin
-	mv server/hooks/web_push/output/* output/plugin
-	mv server/hooks/wechat_push/output/* output/plugin
+	mv server/hooks/telegram_push/output/* output/plugins
+	mv server/hooks/web_push/output/* output/plugins
+	mv server/hooks/wechat_push/output/* output/plugins
 	cp README.md output/

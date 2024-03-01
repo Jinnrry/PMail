@@ -77,18 +77,6 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 建议找一下邮箱测试服务(比如[https://www.mail-tester.com/](https://www.mail-tester.com/))进行邮件得分检测，避免自己某些步骤漏配，导致发件进对方垃圾箱。
 
-## 5、微信推送
-
-打开运行目录下的 `config/config.json`文件，编辑 `weChatPush` 开头的几个配置项，重启服务即可。
-
-## 6、Telegram推送
-
-从 [BotFather](https://t.me/BotFather) 创建并获取令牌机器人。 打开运行目录下的 config/config.json 文件，编辑 `tg` 开头的几个配置项，重启服务即可。
-
-## 7、WebHook推送
-
-打开运行目录下的 `config/config.json`文件，编辑 webPushUrl 跟webPushToken (可选)，接收到邮件后会往hook地址post发送邮件信息，token也会放在body中，方便需要的进行校验，配置完重启服务即可。
-
 # 配置文件说明
 
 ```json
@@ -106,14 +94,6 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "spamFilterLevel": 0,// 垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时过滤，2 spf校验不通过时过滤
   "httpPort": 80, // http 端口 . 默认 80
   "httpsPort": 443, // https 端口 . 默认 443
-  "weChatPushAppId": "", // 微信推送appid
-  "weChatPushSecret": "", // 微信推送秘钥
-  "weChatPushTemplateId": "", // 微信推送模板id
-  "weChatPushUserId": "", // 微信推送用户id
-  "tgChatId": "", // telegram 推送chatid
-  "tgBotToken": "", // telegram 推送 token
-  "webPushUrl": "", // webhook 推送地址
-  "webPushToken": "", // webhook 推送 token
   "isInit": true // 为false的时候会进入安装引导流程 
 }
 ```
@@ -127,6 +107,15 @@ POP3端口： 110/995(SSL)
 SMTP地址： smtp.[你的域名]
 
 SMTP端口： 25/465(SSL)
+
+
+# 插件
+
+[微信推送](server/hooks/wechat_push/README.md)
+
+[Telegram推送](server/hooks/wechat_push/README.md)
+
+[WebHook推送](server/hooks/wechat_push/README.md)
 
 # 参与开发
 

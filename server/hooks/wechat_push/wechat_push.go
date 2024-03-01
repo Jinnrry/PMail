@@ -174,6 +174,7 @@ func NewWechatPushHook() *WeChatPushHook {
 
 }
 
+// 插件将以独立进程运行，因此需要主函数。
 func main() {
 	framework.CreatePlugin(NewWechatPushHook()).Run()
 }

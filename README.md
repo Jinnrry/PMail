@@ -71,19 +71,6 @@ configure.
 Check if your mailbox has completed all the security configuration. It is recommended to
 use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
 
-## 5、 WeChat Message Push
-
-Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `weChatPush`
-and restart the service.
-
-## 6、Telegram Message Push
-
-Create bot and get token from [BotFather](https://t.me/BotFather)
-Open the `config/config.json` file in the run directory, edit a few configuration items at the beginning of `tg`and restart the service.
-
-## 7、WebHook Push
-
-Open the `config/config.json` file in the running directory, edit the webPushUrl and webPushToken (optional). After receiving an email, the email information will be posted to the hook address, and the token will also be placed in the body for easy verification. After configuring, restart the service.
 
 # Configuration file format description
 
@@ -102,14 +89,6 @@ Open the `config/config.json` file in the running directory, edit the webPushUrl
   "httpPort": 80, // http port . default 80
   "httpsPort": 443, // https port . default 443
   "spamFilterLevel": 0,// Spam filter level, 0: no filter, 1: filtering when `spf` and `dkim` don't pass, 2: filtering when `spf` don't pass
-  "weChatPushAppId": "", // wechat appid
-  "weChatPushSecret": "", // weChat  Secret
-  "weChatPushTemplateId": "", // weChat TemplateId
-  "weChatPushUserId": "", // weChat UserId
-  "tgChatId": "", // telegram chatid
-  "tgBotToken": "", // telegram  token
-  "webPushUrl": "", // webhook push URL
-  "webPushToken": "", // webhook push token
   "isInit": true // If false, it will enter the bootstrap process.
 }
 ```
@@ -123,6 +102,16 @@ POP3 Port: 110/995(SSL)
 SMTP Server Address : smtp.[Your Domain]
 
 SMTP Port: 25/465(SSL)
+
+# Plugin
+
+[WeChat Push](server/hooks/wechat_push/README.md)
+
+[Telegram Push](server/hooks/wechat_push/README.md)
+
+[Web Push](server/hooks/wechat_push/README.md)
+
+
 
 # For Developer
 
@@ -143,3 +132,4 @@ The code is in `server` folder.
 ## Plugin Development
 
 Reference this file. `server/hooks/wechat_push/wechat_push.go`
+
