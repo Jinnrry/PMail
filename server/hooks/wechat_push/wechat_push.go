@@ -1,4 +1,4 @@
-package wechat_push
+package main
 
 import (
 	"encoding/json"
@@ -7,8 +7,10 @@ import (
 	"github.com/spf13/cast"
 	"io"
 	"net/http"
+	"os"
 	"pmail/config"
 	"pmail/dto/parsemail"
+	"pmail/hooks/framework"
 	"pmail/utils/context"
 	"strings"
 	"time"
@@ -26,6 +28,7 @@ type WeChatPushHook struct {
 	tokenExpires int64
 	templateId   string
 	pushUser     string
+	mainConfig   *config.Config
 }
 
 func (w *WeChatPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
@@ -36,11 +39,11 @@ func (w *WeChatPushHook) SendAfter(ctx *context.Context, email *parsemail.Email,
 
 }
 
-func (w *WeChatPushHook) ReceiveParseBefore(email []byte) {
+func (w *WeChatPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
 
 }
 
-func (w *WeChatPushHook) ReceiveParseAfter(email *parsemail.Email) {
+func (w *WeChatPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
 	if w.appId == "" || w.secret == "" || w.pushUser == "" {
 		return
 	}
@@ -88,8 +91,8 @@ type DataItem struct {
 
 func (w *WeChatPushHook) sendUserMsg(ctx *context.Context, userId string, content string) {
 
-	url := config.Instance.WebDomain
-	if config.Instance.HttpsEnabled > 1 {
+	url := w.mainConfig.WebDomain
+	if w.mainConfig.HttpsEnabled > 1 {
 		url = "http://" + url
 	} else {
 		url = "https://" + url
@@ -108,14 +111,69 @@ func (w *WeChatPushHook) sendUserMsg(ctx *context.Context, userId string, conten
 	}
 
 }
+
+type Config struct {
+	WeChatPushAppId      string `json:"weChatPushAppId"`
+	WeChatPushSecret     string `json:"weChatPushSecret"`
+	WeChatPushTemplateId string `json:"weChatPushTemplateId"`
+	WeChatPushUserId     string `json:"weChatPushUserId"`
+}
+
 func NewWechatPushHook() *WeChatPushHook {
 
+	var cfgData []byte
+	var err error
+
+	cfgData, err = os.ReadFile("../config/config.json")
+	if err != nil {
+		panic(err)
+	}
+	var mainConfig *config.Config
+	err = json.Unmarshal(cfgData, &mainConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	var pluginConfig *Config
+	if _, err := os.Stat("./wechat_push_config.json"); err == nil {
+		cfgData, err = os.ReadFile("./wechat_push_config.json")
+		if err != nil {
+			panic(err)
+		}
+		err = json.Unmarshal(cfgData, &pluginConfig)
+		if err != nil {
+			panic(err)
+		}
+
+	}
+
+	appid := ""
+	secret := ""
+	templateId := ""
+	userId := ""
+	if pluginConfig != nil {
+		appid = pluginConfig.WeChatPushAppId
+		secret = pluginConfig.WeChatPushSecret
+		templateId = pluginConfig.WeChatPushTemplateId
+		userId = pluginConfig.WeChatPushUserId
+	} else {
+		appid = mainConfig.WeChatPushAppId
+		secret = mainConfig.WeChatPushSecret
+		templateId = mainConfig.WeChatPushTemplateId
+		userId = mainConfig.WeChatPushUserId
+	}
+
 	ret := &WeChatPushHook{
-		appId:      config.Instance.WeChatPushAppId,
-		secret:     config.Instance.WeChatPushSecret,
-		templateId: config.Instance.WeChatPushTemplateId,
-		pushUser:   config.Instance.WeChatPushUserId,
+		appId:      appid,
+		secret:     secret,
+		templateId: templateId,
+		pushUser:   userId,
+		mainConfig: mainConfig,
 	}
 	return ret
 
+}
+
+func main() {
+	framework.CreatePlugin(NewWechatPushHook()).Run()
 }

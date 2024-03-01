@@ -12,6 +12,7 @@ import (
 	"pmail/db"
 	"pmail/dto/parsemail"
 	"pmail/hooks"
+	"pmail/hooks/framework"
 	"pmail/services/rule"
 	"pmail/utils/async"
 	"pmail/utils/context"
@@ -38,7 +39,7 @@ func (s *Session) Data(r io.Reader) error {
 			continue
 		}
 		as1.WaitProcess(func(hk any) {
-			hk.(hooks.EmailHook).ReceiveParseBefore(emailData)
+			hk.(framework.EmailHook).ReceiveParseBefore(ctx, &emailData)
 		}, hook)
 	}
 	as1.Wait()
@@ -94,7 +95,7 @@ func (s *Session) Data(r io.Reader) error {
 				continue
 			}
 			as2.WaitProcess(func(hk any) {
-				hk.(hooks.EmailHook).ReceiveParseAfter(email)
+				hk.(framework.EmailHook).ReceiveParseAfter(ctx, email)
 			}, hook)
 		}
 		as2.Wait()

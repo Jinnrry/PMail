@@ -11,6 +11,7 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/dto/response"
 	"pmail/hooks"
+	"pmail/hooks/framework"
 	"pmail/i18n"
 	"pmail/utils/async"
 	"pmail/utils/context"
@@ -134,7 +135,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 		as.WaitProcess(func(hk any) {
-			hk.(hooks.EmailHook).SendBefore(ctx, e)
+			hk.(framework.EmailHook).SendBefore(ctx, e)
 		}, hook)
 	}
 	as.Wait()
@@ -180,7 +181,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 				continue
 			}
 			as2.WaitProcess(func(hk any) {
-				hk.(hooks.EmailHook).SendAfter(ctx, e, sendErr)
+				hk.(framework.EmailHook).SendAfter(ctx, e, sendErr)
 			}, hook)
 		}
 		as2.Wait()

@@ -11,14 +11,6 @@
   "spamFilterLevel": 2,
   "httpPort": 80,
   "httpsPort": 443,
-  "weChatPushAppId": "",
-  "weChatPushSecret": "",
-  "weChatPushTemplateId": "",
-  "weChatPushUserId": "",
-  "tgChatId": "",
-  "tgBotToken": "",
-  "webPushUrl": "",
-  "webPushToken": "",
   "isInit": true,
   "httpsEnabled": 1
 }

@@ -1,4 +1,4 @@
-package telegram_push
+package main
 
 import (
 	"pmail/config"

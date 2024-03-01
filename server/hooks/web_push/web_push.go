@@ -1,11 +1,13 @@
-package web_push
+package main
 
 import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"pmail/config"
 	"pmail/dto/parsemail"
+	"pmail/hooks/framework"
 	"pmail/utils/context"
 
 	log "github.com/sirupsen/logrus"
@@ -33,11 +35,11 @@ func (w *WebPushHook) SendAfter(ctx *context.Context, email *parsemail.Email, er
 
 }
 
-func (w *WebPushHook) ReceiveParseBefore(email []byte) {
+func (w *WebPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
 
 }
 
-func (w *WebPushHook) ReceiveParseAfter(email *parsemail.Email) {
+func (w *WebPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
 	if w.url == "" {
 		return
 	}
@@ -63,7 +65,6 @@ func (w *WebPushHook) ReceiveParseAfter(email *parsemail.Email) {
 		Token:   w.token,
 	}
 
-	var ctx *context.Context = nil
 	jsonData, err := json.Marshal(data)
 
 	if err != nil {
@@ -77,12 +78,56 @@ func (w *WebPushHook) ReceiveParseAfter(email *parsemail.Email) {
 	defer resp.Body.Close()
 }
 
+type Config struct {
+	WebPushUrl   string `json:"webPushUrl"`
+	WebPushToken string `json:"webPushToken"`
+}
+
 func NewWebPushHook() *WebPushHook {
+	var cfgData []byte
+	var err error
+
+	cfgData, err = os.ReadFile("../config/config.json")
+	if err != nil {
+		panic(err)
+	}
+	var mainConfig *config.Config
+	err = json.Unmarshal(cfgData, &mainConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	var pluginConfig *Config
+	if _, err := os.Stat("./web_push_config.json"); err == nil {
+		cfgData, err = os.ReadFile("./web_push_config.json")
+		if err != nil {
+			panic(err)
+		}
+		err = json.Unmarshal(cfgData, &pluginConfig)
+		if err != nil {
+			panic(err)
+		}
+
+	}
+
+	token := ""
+	pushURL := ""
+	if pluginConfig != nil {
+		pushURL = pluginConfig.WebPushUrl
+		token = pluginConfig.WebPushToken
+	} else {
+		pushURL = mainConfig.WebPushUrl
+		token = mainConfig.WebPushToken
+	}
 
 	ret := &WebPushHook{
-		url:   config.Instance.WebPushUrl,
-		token: config.Instance.WebPushToken,
+		url:   pushURL,
+		token: token,
 	}
 	return ret
 
+}
+
+func main() {
+	framework.CreatePlugin(NewWebPushHook()).Run()
 }
