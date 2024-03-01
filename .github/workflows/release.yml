@@ -60,12 +60,10 @@ jobs:
           go build -ldflags "-s -w" -o ${{ env.WCFILENAME }} hooks/wechat_push/wechat_push.go
           ls -alh
       - name: Zip
-        uses: montudor/action-zip@v1
-        run: | 
+        run: |
           ls
-          ls ./server
-        with:
-          args: zip -qq -r ${{ env.ZIPNAME }}.zip ./server/${{ env.FILENAME }} ./server/${{ env.TGFILENAME }} ./server/${{ env.WEBFILENAME }} ./server/${{ env.WCFILENAME }}
+          ls /server
+          zip ${{ env.ZIPNAME }}.zip ./server/${{ env.FILENAME }} ./server/${{ env.TGFILENAME }} ./server/${{ env.WEBFILENAME }} ./server/${{ env.WCFILENAME }}
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v3
         with:
