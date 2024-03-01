@@ -1,11 +1,13 @@
-package telegram_push
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"pmail/config"
 	"pmail/dto/parsemail"
+	"pmail/hooks/framework"
 	"pmail/utils/context"
 	"strings"
 
@@ -27,11 +29,11 @@ func (w *TelegramPushHook) SendAfter(ctx *context.Context, email *parsemail.Emai
 
 }
 
-func (w *TelegramPushHook) ReceiveParseBefore(email []byte) {
+func (w *TelegramPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
 
 }
 
-func (w *TelegramPushHook) ReceiveParseAfter(email *parsemail.Email) {
+func (w *TelegramPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
 	if w.chatId == "" || w.botToken == "" {
 		return
 	}
@@ -84,13 +86,59 @@ func (w *TelegramPushHook) sendUserMsg(ctx *context.Context, email *parsemail.Em
 	}
 
 }
+
+type Config struct {
+	TgBotToken string `json:"tgBotToken"`
+	TgChatId   string `json:"tgChatId"`
+}
+
 func NewTelegramPushHook() *TelegramPushHook {
+	var cfgData []byte
+	var err error
+
+	cfgData, err = os.ReadFile("../config/config.json")
+	if err != nil {
+		panic(err)
+	}
+	var mainConfig *config.Config
+	err = json.Unmarshal(cfgData, &mainConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	var pluginConfig *Config
+	if _, err := os.Stat("./telegram_push_config.json"); err == nil {
+		cfgData, err = os.ReadFile("./telegram_push_config.json")
+		if err != nil {
+			panic(err)
+		}
+		err = json.Unmarshal(cfgData, &pluginConfig)
+		if err != nil {
+			panic(err)
+		}
+
+	}
+
+	token := ""
+	chatID := ""
+	if pluginConfig != nil {
+		token = pluginConfig.TgBotToken
+		chatID = pluginConfig.TgChatId
+	} else {
+		token = mainConfig.TgBotToken
+		chatID = mainConfig.TgChatId
+	}
+
 	ret := &TelegramPushHook{
-		botToken:     config.Instance.TgBotToken,
-		chatId:       config.Instance.TgChatId,
-		webDomain:    config.Instance.WebDomain,
-		httpsEnabled: config.Instance.HttpsEnabled,
+		botToken:     token,
+		chatId:       chatID,
+		webDomain:    mainConfig.WebDomain,
+		httpsEnabled: mainConfig.HttpsEnabled,
 	}
 	return ret
 
+}
+
+func main() {
+	framework.CreatePlugin(NewTelegramPushHook()).Run()
 }

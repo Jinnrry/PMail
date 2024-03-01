@@ -1,11 +1,11 @@
 package http_server
 
 import (
+	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"net/http"
-	"pmail/config"
 	"pmail/controllers"
 	"time"
 )
@@ -27,9 +27,8 @@ func SetupStart() {
 	mux.HandleFunc("/.well-known/", controllers.AcmeChallenge)
 
 	HttpPort := 80
-	if config.Instance != nil && config.Instance.HttpPort > 0 {
-		HttpPort = config.Instance.HttpPort
-	}
+	flag.IntVar(&HttpPort, "p", 80, "初始化阶段Http服务端口")
+	flag.Parse()
 	log.Infof("HttpServer Start On Port :%d", HttpPort)
 	setupServer = &http.Server{
 		Addr:         fmt.Sprintf(":%d", HttpPort),

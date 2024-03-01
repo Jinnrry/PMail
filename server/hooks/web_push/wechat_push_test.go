@@ -1,4 +1,4 @@
-package web_push
+package main
 
 import (
 	"pmail/config"
@@ -15,5 +15,5 @@ func TestWebPushHook_ReceiveParseAfter(t *testing.T) {
 	testInit()
 
 	w := NewWebPushHook()
-	w.ReceiveParseAfter(&parsemail.Email{Subject: "标题", Text: []byte("文本内容")})
+	w.ReceiveParseAfter(nil, &parsemail.Email{Subject: "标题", Text: []byte("文本内容")})
 }

@@ -38,6 +38,7 @@ var (
 	gitHash   string
 	buildTime string
 	goVersion string
+	version   string
 )
 
 func main() {
@@ -74,7 +75,7 @@ func main() {
 	}
 
 	log.Infoln("***************************************************")
-	log.Infof("***\tServer Start Success Version:%s\n", config.Version)
+	log.Infof("***\tServer Start Success Version:%s\n", version)
 	log.Infof("***\tGit Commit Hash: %s ", gitHash)
 	log.Infof("***\tBuild TimeStamp: %s ", buildTime)
 	log.Infof("***\tBuild GoLang Version: %s ", goVersion)

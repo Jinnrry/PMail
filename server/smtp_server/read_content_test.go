@@ -11,6 +11,7 @@ import (
 	"pmail/config"
 	"pmail/db"
 	parsemail2 "pmail/dto/parsemail"
+	"pmail/hooks"
 	"pmail/session"
 	"pmail/utils/context"
 	"testing"
@@ -42,7 +43,7 @@ func testInit() {
 	parsemail2.Init()
 	db.Init()
 	session.Init()
-
+	hooks.Init()
 }
 
 func TestNuisanace(t *testing.T) {
@@ -129,9 +130,9 @@ Content-Type: text/html
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
 		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
+			UserID:      0,
+			UserName:    "",
+			UserAccount: "",
 		},
 	}
 

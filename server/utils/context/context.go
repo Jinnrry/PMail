@@ -13,21 +13,21 @@ type Context struct {
 	UserID      int
 	UserAccount string
 	UserName    string
-	values      map[string]any
+	Values      map[string]any
 	Lang        string
 }
 
 func (c *Context) SetValue(key string, value any) {
-	if c.values == nil {
-		c.values = map[string]any{}
+	if c.Values == nil {
+		c.Values = map[string]any{}
 	}
-	c.values[key] = value
+	c.Values[key] = value
 
 }
 
 func (c *Context) GetValue(key string) any {
-	if c.values == nil {
+	if c.Values == nil {
 		return nil
 	}
-	return c.values[key]
+	return c.Values[key]
 }
