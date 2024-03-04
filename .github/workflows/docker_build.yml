@@ -22,6 +22,7 @@ jobs:
           echo "${GITHUB_REF/refs\/tags\//}"
           echo "${GITHUB_REF#refs/*/}"
           echo "${GITHUB_REF}"
+          echo "GITHASH=${git show -s --format=%H}" >> ${GITHASH}
       - uses: actions/checkout@v3
 
       - name: set lower case repository name
@@ -51,7 +52,9 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v4
         with:
-          build-args: VERSION=${{ env.VERSION }}
+          build-args: |
+            VERSION=${{ env.VERSION }}
+            GITHASH=${{ env.GITHASH }}
           context: .
           file: ./DockerfileGithubAction
           platforms: |

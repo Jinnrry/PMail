@@ -1,11 +1,12 @@
 FROM golang:alpine as serverbuild
 ARG VERSION
+ARG GITHASH
 WORKDIR /work
 
 COPY server .
 
 RUN apk update && apk add git
-RUN go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
+RUN go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=${GITHASH}' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
 RUN cd /work/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
 RUN cd /work/hooks/web_push && go build -ldflags "-s -w" -o output/web_push web_push.go
 RUN cd /work/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push wechat_push.go
