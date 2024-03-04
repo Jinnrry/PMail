@@ -193,7 +193,7 @@ func Init(serverVersion string) {
 			}
 			if loadSucc {
 				HookList = append(HookList, NewHookSender(socketPath, info.Name(), serverVersion))
-				log.Infof("[%s] Plugin Load Success!")
+				log.Infof("[%s] Plugin Load Success!", info.Name())
 			}
 
 		}
