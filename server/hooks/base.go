@@ -142,7 +142,7 @@ func Init() {
 
 	pluginNo := 1
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if info != nil && !info.IsDir() && !strings.Contains(info.Name(), ".") {
+		if info != nil && !info.IsDir() && (!strings.Contains(info.Name(), ".") || strings.Contains(info.Name(), ".exe")) {
 
 			socketPath := fmt.Sprintf("%s/%d.socket", root, pluginNo)
 
