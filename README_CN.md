@@ -39,13 +39,6 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 只要支持pop3、smtp协议的邮件客户端均可使用
 
-## 其他
-
-### 不足
-
-1、目前只完成了最核心的收发邮件功能。基本上仅针对单人使用，没有处理多人使用、权限管理相关问题。
-
-2、前端UI交互较差
 
 # 如何部署
 
@@ -117,6 +110,12 @@ SMTP端口： 25/465(SSL)
 
 [WebHook推送](server/hooks/wechat_push/README.md)
 
+## 插件安装
+> [!IMPORTANT]
+> 插件已独立进程的方式运行在你的服务器上，请自行审查第三方插件的安全性。PMail目前仅维护上述三款插件
+
+将插件二进制文件放到`plugins`文件夹中即可
+
 # 参与开发
 
 ## 项目架构
@@ -131,8 +130,10 @@ SMTP端口： 25/465(SSL)
 
 ## 后端接口文档
 
-[参见Wiki](https://github.com/Jinnrry/PMail/wiki)
+[go to wiki](https://github.com/Jinnrry/PMail/wiki/%E5%90%8E%E7%AB%AF%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3)
 
 ## 插件开发
 
-参考微信推送插件 `server/hooks/wechat_push/wechat_push.go`
+[go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
+
+

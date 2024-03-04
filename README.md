@@ -33,11 +33,7 @@ beautiful and cute Logo for this project!
 
 * Support pop3, smtp protocol, you can use any mail client you like.
 
-## Disadvantages
 
-* At present, only the core function of sending and receiving emails has been completed. Basically, it can only be used
-  by a single person, and does not deal with issues related to permission management in the process of multiple users.
-* The UI is ugly
 
 # How to run
 
@@ -111,7 +107,11 @@ SMTP Port: 25/465(SSL)
 
 [Web Push](server/hooks/wechat_push/README.md)
 
+## Plugin Install
+> [!IMPORTANT]
+> Plugins run on your server as independent processes, please review the security of third-party plugins on your own.PMail currently only maintains the three plugins mentioned above.
 
+Copy plugin binary file to `/plugins`
 
 # For Developer
 
@@ -127,9 +127,9 @@ The code is in `server` folder.
 
 ## Api Documentation
 
-[go to wiki](https://github.com/Jinnrry/PMail/wiki)
+[go to wiki](https://github.com/Jinnrry/PMail/wiki/%E5%90%8E%E7%AB%AF%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3)
 
 ## Plugin Development
 
-Reference this file. `server/hooks/wechat_push/wechat_push.go`
+[go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
 
