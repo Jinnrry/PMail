@@ -124,7 +124,7 @@ SMTP端口： 25/465(SSL)
 
 前端代码位于 `fe`目录中，运行参考 `fe`目录中的README文件
 
-2、后端： golang + mysql
+2、后端： golang + MySQL/SQLite
 
 后端代码进入 `server`文件夹，运行 `main.go`文件
 

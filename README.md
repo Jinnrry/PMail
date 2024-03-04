@@ -121,7 +121,7 @@ Copy plugin binary file to `/plugins`
 
 The code is in `fe` folder.
 
-2、Server： golang + mysql
+2、Server： golang + MySQL/SQLite
 
 The code is in `server` folder.
 
