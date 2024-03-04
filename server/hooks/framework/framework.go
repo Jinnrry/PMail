@@ -1,7 +1,9 @@
 package framework
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
@@ -45,7 +47,38 @@ func CreatePlugin(name string, hook EmailHook) *Plugin {
 	}
 }
 
+type logFormatter struct {
+}
+
+// Format 定义日志输出格式
+func (l *logFormatter) Format(entry *log.Entry) ([]byte, error) {
+	b := bytes.Buffer{}
+
+	b.WriteString(fmt.Sprintf("[%s]", entry.Level.String()))
+	b.WriteString(fmt.Sprintf("[%s]", entry.Time.Format("2006-01-02 15:04:05")))
+	if entry.Context != nil {
+		ctx := entry.Context.(*context.Context)
+		if ctx != nil {
+			b.WriteString(fmt.Sprintf("[%s]", ctx.GetValue(context.LogID)))
+		}
+	}
+	b.WriteString(fmt.Sprintf("[%s:%d]", entry.Caller.File, entry.Caller.Line))
+	b.WriteString(entry.Message)
+
+	b.WriteString("\n")
+	return b.Bytes(), nil
+}
+
 func (p *Plugin) Run() {
+
+	// 设置日志格式为json格式
+	log.SetFormatter(&logFormatter{})
+	log.SetReportCaller(true)
+
+	// 设置将日志输出到标准输出（默认的输出为stderr,标准错误）
+	// 日志消息输出可以是任意的io.writer类型
+	log.SetOutput(os.Stdout)
+
 	if len(os.Args) < 2 {
 		panic("Command Params Error!")
 	}
