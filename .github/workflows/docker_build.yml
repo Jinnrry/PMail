@@ -40,6 +40,7 @@ jobs:
 
       - name: Build FE
         run: |
+          echo "$(git show -s --format=%H)"
           echo "GITHASH=$(git show -s --format=%H)" >> ${GITHASH}
           make build_fe
 
