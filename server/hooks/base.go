@@ -175,21 +175,25 @@ func Init(serverVersion string) {
 
 			pluginNo++
 
-			HookList = append(HookList, NewHookSender(socketPath, info.Name(), serverVersion))
-
 			go func() {
 				stat, err := p.Wait()
 				log.Errorf("[%s] Plugin Stop. Error:%v Stat:%v", info.Name(), err, stat.String())
 			}()
 
+			loadSucc := false
 			for i := 0; i < 5; i++ {
 				time.Sleep(1 * time.Second)
 				if _, err := os.Stat(socketPath); err == nil {
+					loadSucc = true
 					break
 				}
 				if i == 4 {
-					panic(fmt.Sprintf("[%s] Start Fail!", info.Name()))
+					log.Errorf(fmt.Sprintf("[%s] Start Fail!", info.Name()))
 				}
+			}
+			if loadSucc {
+				HookList = append(HookList, NewHookSender(socketPath, info.Name(), serverVersion))
+				log.Infof("[%s] Plugin Load Success!")
 			}
 
 		}

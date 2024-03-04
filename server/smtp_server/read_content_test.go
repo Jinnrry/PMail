@@ -43,7 +43,7 @@ func testInit() {
 	parsemail2.Init()
 	db.Init()
 	session.Init()
-	hooks.Init()
+	hooks.Init("dev")
 }
 
 func TestNuisanace(t *testing.T) {
