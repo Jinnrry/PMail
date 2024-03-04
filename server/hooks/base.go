@@ -154,7 +154,8 @@ func Init() {
 				fmt.Sprintf("%d.socket", pluginNo),
 			}, procAttr)
 			if err != nil {
-				panic(err)
+				log.Errorf("Plug Load Error! %v", err)
+				return nil
 			}
 			fmt.Printf("[%s] Plugin Start! PID:%d", info.Name(), p.Pid)
 
