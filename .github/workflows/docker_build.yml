@@ -41,7 +41,7 @@ jobs:
       - name: Build FE
         run: |
           echo "$(git show -s --format=%H)"
-          echo "GITHASH=$(git show -s --format=%H)" >> ${GITHASH}
+          echo "GITHASH=$(git show -s --format=%H)" >> ${GITHUB_ENV}
           make build_fe
 
       - name: Log in to the Container registry
