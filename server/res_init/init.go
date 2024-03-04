@@ -17,7 +17,7 @@ import (
 	"pmail/utils/file"
 )
 
-func Init() {
+func Init(serverVersion string) {
 
 	if !config.IsInit {
 		dirInit()
@@ -38,7 +38,7 @@ func Init() {
 			panic(err)
 		}
 		session.Init()
-		hooks.Init()
+		hooks.Init(serverVersion)
 		// smtp server start
 		go smtp_server.Start()
 		go smtp_server.StartWithTLS()

@@ -27,6 +27,7 @@ type HookSender struct {
 }
 
 func (h *HookSender) SendBefore(ctx *context.Context, email *parsemail.Email) {
+	log.WithContext(ctx).Debugf("[%s]Plugin SendBefore Start", h.name)
 
 	dto := framework.HookDTO{
 		Ctx:   ctx,
@@ -45,9 +46,12 @@ func (h *HookSender) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 	ctx = dto.Ctx
 	email = dto.Email
+	log.WithContext(ctx).Debugf("[%s]Plugin SendBefore End", h.name)
+
 }
 
 func (h *HookSender) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
+	log.WithContext(ctx).Debugf("[%s]Plugin SendAfter Start", h.name)
 	dto := framework.HookDTO{
 		Ctx:    ctx,
 		Email:  email,
@@ -67,9 +71,13 @@ func (h *HookSender) SendAfter(ctx *context.Context, email *parsemail.Email, err
 	ctx = dto.Ctx
 	email = dto.Email
 	err = dto.ErrMap
+	log.WithContext(ctx).Debugf("[%s]Plugin SendAfter End", h.name)
+
 }
 
 func (h *HookSender) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
+	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveParseBefore Start", h.name)
+
 	dto := framework.HookDTO{
 		Ctx:       ctx,
 		EmailByte: email,
@@ -87,9 +95,13 @@ func (h *HookSender) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
 
 	ctx = dto.Ctx
 	email = dto.EmailByte
+	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveParseBefore End", h.name)
+
 }
 
 func (h *HookSender) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
+	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveParseAfter Start", h.name)
+
 	dto := framework.HookDTO{
 		Ctx:   ctx,
 		Email: email,
@@ -107,9 +119,11 @@ func (h *HookSender) ReceiveParseAfter(ctx *context.Context, email *parsemail.Em
 
 	ctx = dto.Ctx
 	email = dto.Email
+	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveParseAfter End", h.name)
+
 }
 
-func NewHookSender(socketPath string, name string) *HookSender {
+func NewHookSender(socketPath string, name string, serverVersion string) *HookSender {
 	httpc := http.Client{
 		Timeout: time.Second * 10,
 		Transport: &http.Transport{
@@ -126,7 +140,7 @@ func NewHookSender(socketPath string, name string) *HookSender {
 }
 
 // Init 注册hook对象
-func Init() {
+func Init(serverVersion string) {
 
 	env := os.Environ()
 	procAttr := &os.ProcAttr{
@@ -161,7 +175,7 @@ func Init() {
 
 			pluginNo++
 
-			HookList = append(HookList, NewHookSender(socketPath, info.Name()))
+			HookList = append(HookList, NewHookSender(socketPath, info.Name(), serverVersion))
 
 			go func() {
 				stat, err := p.Wait()

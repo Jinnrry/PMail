@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"pmail/dto/parsemail"
 	"pmail/utils/context"
+	"time"
 )
 
 type EmailHook interface {
@@ -23,19 +24,23 @@ type EmailHook interface {
 	ReceiveParseAfter(ctx *context.Context, email *parsemail.Email)
 }
 
+// HookDTO PMail 主程序和插件通信的结构体
 type HookDTO struct {
-	Ctx       *context.Context
-	Email     *parsemail.Email
-	EmailByte *[]byte
-	ErrMap    map[string]error
+	ServerVersion string           // 服务端程序版本
+	Ctx           *context.Context // 上下文
+	Email         *parsemail.Email // 邮件内容
+	EmailByte     *[]byte          // 未解析前的文件内容
+	ErrMap        map[string]error // 错误信息
 }
 
 type Plugin struct {
+	name string
 	hook EmailHook
 }
 
-func CreatePlugin(hook EmailHook) *Plugin {
+func CreatePlugin(name string, hook EmailHook) *Plugin {
 	return &Plugin{
+		name: name,
 		hook: hook,
 	}
 }
@@ -47,6 +52,7 @@ func (p *Plugin) Run() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/SendBefore", func(writer http.ResponseWriter, request *http.Request) {
+		log.Debugf("[%s] SendBefore Start", p.name)
 		var hookDTO HookDTO
 		body, _ := io.ReadAll(request.Body)
 		err := json.Unmarshal(body, &hookDTO)
@@ -57,8 +63,10 @@ func (p *Plugin) Run() {
 		p.hook.SendBefore(hookDTO.Ctx, hookDTO.Email)
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
+		log.Debugf("[%s] SendBefore End", p.name)
 	})
 	mux.HandleFunc("/SendAfter", func(writer http.ResponseWriter, request *http.Request) {
+		log.Debugf("[%s] SendAfter Start", p.name)
 
 		var hookDTO HookDTO
 		body, _ := io.ReadAll(request.Body)
@@ -70,9 +78,11 @@ func (p *Plugin) Run() {
 		p.hook.SendAfter(hookDTO.Ctx, hookDTO.Email, hookDTO.ErrMap)
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
+		log.Debugf("[%s] SendAfter End", p.name)
+
 	})
 	mux.HandleFunc("/ReceiveParseBefore", func(writer http.ResponseWriter, request *http.Request) {
-
+		log.Debugf("[%s] ReceiveParseBefore Start", p.name)
 		var hookDTO HookDTO
 		body, _ := io.ReadAll(request.Body)
 		err := json.Unmarshal(body, &hookDTO)
@@ -83,9 +93,10 @@ func (p *Plugin) Run() {
 		p.hook.ReceiveParseBefore(hookDTO.Ctx, hookDTO.EmailByte)
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
+		log.Debugf("[%s] ReceiveParseBefore End", p.name)
 	})
 	mux.HandleFunc("/ReceiveParseAfter", func(writer http.ResponseWriter, request *http.Request) {
-
+		log.Debugf("[%s] ReceiveParseAfter Start", p.name)
 		var hookDTO HookDTO
 		body, _ := io.ReadAll(request.Body)
 		err := json.Unmarshal(body, &hookDTO)
@@ -96,10 +107,13 @@ func (p *Plugin) Run() {
 		p.hook.ReceiveParseAfter(hookDTO.Ctx, hookDTO.Email)
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
+		log.Debugf("[%s] ReceiveParseAfter End", p.name)
 	})
 
 	server := http.Server{
-		Handler: mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		Handler:      mux,
 	}
 
 	unixListener, err := net.Listen("unix", getExePath()+"/"+os.Args[1])

@@ -32,7 +32,7 @@ func (s *Session) Data(r io.Reader) error {
 		log.WithContext(ctx).Error("邮件内容无法读取", err)
 		return err
 	}
-
+	log.WithContext(ctx).Debugf("开始执行插件ReceiveParseBefore！")
 	as1 := async.New(ctx)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
@@ -43,6 +43,7 @@ func (s *Session) Data(r io.Reader) error {
 		}, hook)
 	}
 	as1.Wait()
+	log.WithContext(ctx).Debugf("开始执行插件ReceiveParseBefore End！")
 
 	log.WithContext(ctx).Infof("邮件原始内容: %s", emailData)
 
@@ -87,7 +88,7 @@ func (s *Session) Data(r io.Reader) error {
 
 		saveEmail(ctx, email, 0, SPFStatus, dkimStatus)
 
-		log.WithContext(ctx).Debugf("开始执行插件！")
+		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！")
 
 		as2 := async.New(ctx)
 		for _, hook := range hooks.HookList {
@@ -99,6 +100,7 @@ func (s *Session) Data(r io.Reader) error {
 			}, hook)
 		}
 		as2.Wait()
+		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！End")
 
 		log.WithContext(ctx).Debugf("开始执行邮件规则！")
 		// 执行邮件规则

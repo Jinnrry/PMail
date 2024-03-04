@@ -129,5 +129,5 @@ func NewWebPushHook() *WebPushHook {
 }
 
 func main() {
-	framework.CreatePlugin(NewWebPushHook()).Run()
+	framework.CreatePlugin("web_push", NewWebPushHook()).Run()
 }

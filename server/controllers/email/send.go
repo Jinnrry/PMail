@@ -129,6 +129,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 	}
 
+	log.WithContext(ctx).Debugf("插件执行--SendBefore")
 	as := async.New(ctx)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
@@ -139,6 +140,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		}, hook)
 	}
 	as.Wait()
+	log.WithContext(ctx).Debugf("插件执行--SendBefore End")
 
 	// 邮件落库
 	sql := "INSERT INTO email (type,subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,send_user_id,error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -175,6 +177,8 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		errMsg := ""
 		err, sendErr := send.Send(ctx, e)
 
+		log.WithContext(ctx).Debugf("插件执行--SendAfter")
+
 		as2 := async.New(ctx)
 		for _, hook := range hooks.HookList {
 			if hook == nil {
@@ -185,6 +189,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			}, hook)
 		}
 		as2.Wait()
+		log.WithContext(ctx).Debugf("插件执行--SendAfter")
 
 		if err != nil {
 			errMsg = err.Error()

@@ -140,5 +140,5 @@ func NewTelegramPushHook() *TelegramPushHook {
 }
 
 func main() {
-	framework.CreatePlugin(NewTelegramPushHook()).Run()
+	framework.CreatePlugin("telegram_push", NewTelegramPushHook()).Run()
 }
