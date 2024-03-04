@@ -124,7 +124,7 @@ func NewWechatPushHook() *WeChatPushHook {
 	var cfgData []byte
 	var err error
 
-	cfgData, err = os.ReadFile("../config/config.json")
+	cfgData, err = os.ReadFile("./config/config.json")
 	if err != nil {
 		panic(err)
 	}
@@ -135,8 +135,8 @@ func NewWechatPushHook() *WeChatPushHook {
 	}
 
 	var pluginConfig *Config
-	if _, err := os.Stat("./wechat_push_config.json"); err == nil {
-		cfgData, err = os.ReadFile("./wechat_push_config.json")
+	if _, err := os.Stat("./plugins/wechat_push_config.json"); err == nil {
+		cfgData, err = os.ReadFile("./plugins/wechat_push_config.json")
 		if err != nil {
 			panic(err)
 		}

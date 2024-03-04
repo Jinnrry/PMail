@@ -87,7 +87,7 @@ func NewWebPushHook() *WebPushHook {
 	var cfgData []byte
 	var err error
 
-	cfgData, err = os.ReadFile("../config/config.json")
+	cfgData, err = os.ReadFile("./config/config.json")
 	if err != nil {
 		panic(err)
 	}
@@ -98,8 +98,8 @@ func NewWebPushHook() *WebPushHook {
 	}
 
 	var pluginConfig *Config
-	if _, err := os.Stat("./web_push_config.json"); err == nil {
-		cfgData, err = os.ReadFile("./web_push_config.json")
+	if _, err := os.Stat("./plugins/web_push_config.json"); err == nil {
+		cfgData, err = os.ReadFile("./plugins/web_push_config.json")
 		if err != nil {
 			panic(err)
 		}

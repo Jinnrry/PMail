@@ -96,7 +96,7 @@ func NewTelegramPushHook() *TelegramPushHook {
 	var cfgData []byte
 	var err error
 
-	cfgData, err = os.ReadFile("../config/config.json")
+	cfgData, err = os.ReadFile("./config/config.json")
 	if err != nil {
 		panic(err)
 	}
@@ -107,8 +107,8 @@ func NewTelegramPushHook() *TelegramPushHook {
 	}
 
 	var pluginConfig *Config
-	if _, err := os.Stat("./telegram_push_config.json"); err == nil {
-		cfgData, err = os.ReadFile("./telegram_push_config.json")
+	if _, err := os.Stat("./plugins/telegram_push_config.json"); err == nil {
+		cfgData, err = os.ReadFile("./plugins/telegram_push_config.json")
 		if err != nil {
 			panic(err)
 		}
