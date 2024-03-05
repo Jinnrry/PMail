@@ -64,6 +64,24 @@ func (s *Session) Data(r io.Reader) error {
 	// 判断是收信还是转发，只要是登陆了，都当成转发处理
 	//account, domain := email.From.GetDomainAccount()
 	if s.Ctx.UserID > 0 {
+
+		log.WithContext(ctx).Debugf("开始执行插件SendBefore！")
+		as2 := async.New(ctx)
+		for _, hook := range hooks.HookList {
+			if hook == nil {
+				continue
+			}
+			as2.WaitProcess(func(hk any) {
+				hk.(framework.EmailHook).SendBefore(ctx, email)
+			}, hook)
+		}
+		as2.Wait()
+		log.WithContext(ctx).Debugf("开始执行插件SendBefore！End")
+
+		if email == nil {
+			return nil
+		}
+
 		// 转发
 		err := saveEmail(ctx, email, 1, true, true)
 		if err != nil {
@@ -86,10 +104,7 @@ func (s *Session) Data(r io.Reader) error {
 
 		SPFStatus = spfCheck(s.RemoteAddress.String(), email.Sender, email.Sender.EmailAddress)
 
-		saveEmail(ctx, email, 0, SPFStatus, dkimStatus)
-
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！")
-
 		as2 := async.New(ctx)
 		for _, hook := range hooks.HookList {
 			if hook == nil {
@@ -101,6 +116,12 @@ func (s *Session) Data(r io.Reader) error {
 		}
 		as2.Wait()
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！End")
+
+		if email == nil {
+			return nil
+		}
+
+		saveEmail(ctx, email, 0, SPFStatus, dkimStatus)
 
 		log.WithContext(ctx).Debugf("开始执行邮件规则！")
 		// 执行邮件规则
