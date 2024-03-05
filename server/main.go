@@ -78,12 +78,13 @@ func main() {
 		version = "TestVersion"
 	}
 
-	log.Infoln("***************************************************")
-	log.Infof("***\tServer Start Success Version:%s\n", version)
+	log.Infoln("*******************************************************************")
+	log.Infof("***\tServer Start Success \n")
+	log.Infof("***\tServer Version: %s \n", version)
 	log.Infof("***\tGit Commit Hash: %s ", gitHash)
-	log.Infof("***\tBuild TimeStamp: %s ", buildTime)
+	log.Infof("***\tBuild Date: %s ", buildTime)
 	log.Infof("***\tBuild GoLang Version: %s ", goVersion)
-	log.Infoln("***************************************************")
+	log.Infoln("*******************************************************************")
 
 	// 定时任务启动
 	go cron_server.Start()
