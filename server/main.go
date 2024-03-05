@@ -50,11 +50,8 @@ func main() {
 	// 日志消息输出可以是任意的io.writer类型
 	log.SetOutput(os.Stdout)
 
-	var cst, err = time.LoadLocation("Asia/Shanghai")
-	if err != nil {
-		panic(err)
-	}
-	time.Local = cst
+	var cstZone = time.FixedZone("CST", 8*3600)
+	time.Local = cstZone
 
 	config.Init()
 
