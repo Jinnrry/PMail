@@ -50,8 +50,8 @@ func main() {
 	// 日志消息输出可以是任意的io.writer类型
 	log.SetOutput(os.Stdout)
 
-	var cst, _ = time.LoadLocation("Asia/Shanghai")
-	time.Local = cst
+	var cstZone = time.FixedZone("CST", 8*3600)
+	time.Local = cstZone
 
 	config.Init()
 
@@ -75,15 +75,16 @@ func main() {
 	}
 
 	if version == "" {
-		version = time.Now().Format("2006-01-02 15:04:05")
+		version = "TestVersion"
 	}
 
-	log.Infoln("***************************************************")
-	log.Infof("***\tServer Start Success Version:%s\n", version)
+	log.Infoln("*******************************************************************")
+	log.Infof("***\tServer Start Success \n")
+	log.Infof("***\tServer Version: %s \n", version)
 	log.Infof("***\tGit Commit Hash: %s ", gitHash)
-	log.Infof("***\tBuild TimeStamp: %s ", buildTime)
+	log.Infof("***\tBuild Date: %s ", buildTime)
 	log.Infof("***\tBuild GoLang Version: %s ", goVersion)
-	log.Infoln("***************************************************")
+	log.Infoln("*******************************************************************")
 
 	// 定时任务启动
 	go cron_server.Start()

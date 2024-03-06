@@ -39,7 +39,10 @@ jobs:
       - uses: actions/setup-node@v4
 
       - name: Build FE
-        run: make build_fe
+        run: |
+          echo "$(git show -s --format=%H)"
+          echo "GITHASH=$(git show -s --format=%H)" >> ${GITHUB_ENV}
+          make build_fe
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
@@ -51,6 +54,9 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v4
         with:
+          build-args: |
+            VERSION=${{ env.VERSION }}
+            GITHASH=${{ env.GITHASH }}
           context: .
           file: ./DockerfileGithubAction
           platforms: |
