@@ -9,14 +9,13 @@ RUN yarn && yarn build
 FROM golang:alpine as serverbuild
 ARG VERSION
 WORKDIR /work
-
-COPY --from=febuild /work/dist /work/http_server/dist
-
+COPY . .
+COPY --from=febuild /work/dist /work/server/http_server/dist
 RUN apk update && apk add git
-RUN go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
-RUN cd /work/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
-RUN cd /work/hooks/web_push && go build -ldflags "-s -w" -o output/web_push web_push.go
-RUN cd /work/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push wechat_push.go
+RUN cd /work/server && go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
+RUN cd /work/server/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
+RUN cd /work/server/hooks/web_push && go build -ldflags "-s -w" -o output/web_push web_push.go
+RUN cd /work/server/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push wechat_push.go
 
 
 FROM alpine
@@ -31,9 +30,9 @@ RUN apk add --no-cache tzdata \
     &&rm -rf /var/cache/apk/* /tmp/* /var/tmp/* $HOME/.cache
 
 
-COPY --from=serverbuild /work/pmail .
-COPY --from=serverbuild /work/hooks/telegram_push/output/* ./plugins/
-COPY --from=serverbuild /work/hooks/web_push/output/* ./plugins/
-COPY --from=serverbuild /work/hooks/wechat_push/output/* ./plugins/
+COPY --from=serverbuild /work/server/pmail .
+COPY --from=serverbuild /work/server/hooks/telegram_push/output/* ./plugins/
+COPY --from=serverbuild /work/server/hooks/web_push/output/* ./plugins/
+COPY --from=serverbuild /work/server/hooks/wechat_push/output/* ./plugins/
 
 CMD /work/pmail
