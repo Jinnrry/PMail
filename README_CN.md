@@ -106,9 +106,9 @@ SMTP端口： 25/465(SSL)
 
 [微信推送](server/hooks/wechat_push/README.md)
 
-[Telegram推送](server/hooks/wechat_push/README.md)
+[Telegram推送](server/hooks/telegram_push/README.md)
 
-[WebHook推送](server/hooks/wechat_push/README.md)
+[WebHook推送](server/hooks/web_push/README.md)
 
 ## 插件安装
 > [!IMPORTANT]
