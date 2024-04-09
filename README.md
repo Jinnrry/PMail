@@ -103,9 +103,9 @@ SMTP Port: 25/465(SSL)
 
 [WeChat Push](server/hooks/wechat_push/README.md)
 
-[Telegram Push](server/hooks/wechat_push/README.md)
+[Telegram Push](server/hooks/telegram_push/README.md)
 
-[Web Push](server/hooks/wechat_push/README.md)
+[Web Push](server/hooks/web_push/README.md)
 
 ## Plugin Install
 > [!IMPORTANT]
