@@ -23,10 +23,7 @@ func DelGroup(ctx *context.Context, groupId int) (bool, error) {
 	allGroupIds = append(allGroupIds, groupId)
 
 	// 开启一个事务
-	trans, err := db.Instance.Begin()
-	if err != nil {
-		return false, errors.Wrap(err)
-	}
+	trans := db.Instance.NewSession()
 
 	res, err := trans.Exec(db.WithContext(ctx, fmt.Sprintf("delete from `group` where id in (%s) and user_id =?", array.Join(allGroupIds, ","))), ctx.UserID)
 	if err != nil {
@@ -57,7 +54,10 @@ type id struct {
 func getAllChildId(ctx *context.Context, rootId int) []int {
 	var ids []id
 	var ret []int
-	db.Instance.Select(&ids, db.WithContext(ctx, "select id from `group` where parent_id=? and user_id=?"), rootId, ctx.UserID)
+	err := db.Instance.Table("group").Where("parent_id=? and user_id=?", rootId, ctx.UserID).Find(&ids)
+	if err != nil {
+		log.WithContext(ctx).Errorf("getAllChildId err: %v", err)
+	}
 	for _, item := range ids {
 		ret = array.Merge(ret, getAllChildId(ctx, item.Id))
 		ret = append(ret, item.Id)
@@ -89,7 +89,7 @@ func MoveMailToGroup(ctx *context.Context, mailId []int, groupId int) bool {
 func buildChildren(ctx *context.Context, parentId int) []*GroupItem {
 	var ret []*GroupItem
 	var rootGroup []*models.Group
-	err := db.Instance.Select(&rootGroup, db.WithContext(ctx, "select * from `group` where parent_id=? and user_id=?"), parentId, ctx.UserID)
+	err := db.Instance.Table("group").Where("parent_id=? and user_id=?", parentId, ctx.UserID).Find(&rootGroup)
 
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL Error:%v", err)
@@ -110,6 +110,6 @@ func buildChildren(ctx *context.Context, parentId int) []*GroupItem {
 
 func GetGroupList(ctx *context.Context) []*models.Group {
 	var ret []*models.Group
-	db.Instance.Select(&ret, db.WithContext(ctx, "select * from `group` where user_id=?"), ctx.UserID)
+	db.Instance.Table("group").Where("user_id=?", ctx.UserID).Find(&ret)
 	return ret
 }

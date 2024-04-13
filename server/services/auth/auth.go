@@ -19,7 +19,7 @@ import (
 func HasAuth(ctx *context.Context, email *models.Email) bool {
 	// 获取当前用户的auth
 	var auth []models.UserAuth
-	err := db.Instance.Select(&auth, db.WithContext(ctx, "select * from user_auth where user_id = ?"), ctx.UserID)
+	err := db.Instance.Where("user_id = ?", ctx.UserID).Find(&auth)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		return false

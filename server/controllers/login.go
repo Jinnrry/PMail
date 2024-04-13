@@ -35,9 +35,8 @@ func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	var user models.User
 
 	encodePwd := password.Encode(reqData.Password)
-
-	err = db.Instance.Get(&user, db.WithContext(ctx, "select * from user where account =? and password =?"),
-		reqData.Account, encodePwd)
+	
+	_, err = db.Instance.Where("account =? and password =?", reqData.Account, encodePwd).Get(&user)
 	if err != nil && err != sql.ErrNoRows {
 		log.Errorf("%+v", err)
 	}

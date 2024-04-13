@@ -13,8 +13,10 @@ import (
 func DelEmail(ctx *context.Context, ids []int) error {
 	var emails []*models.Email
 
-	db.Instance.Select(&emails, db.WithContext(ctx, fmt.Sprintf("select * from email where id in (%s)", array.Join(ids, ","))))
-
+	err := db.Instance.ID(ids).Find(&emails)
+	if err != nil {
+		return errors.Wrap(err)
+	}
 	for _, email := range emails {
 		// 检查是否有权限
 		hasAuth := auth.HasAuth(ctx, email)
@@ -23,8 +25,7 @@ func DelEmail(ctx *context.Context, ids []int) error {
 		}
 	}
 
-	//_, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("delete from email where id in (%s)", array.Join(ids, ","))))
-	_, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("update email set status = 3 where id in (%s)", array.Join(ids, ","))))
+	_, err = db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("update email set status = 3 where id in (%s)", array.Join(ids, ","))))
 	if err != nil {
 		return errors.Wrap(err)
 	}

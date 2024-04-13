@@ -48,7 +48,7 @@ First go to [spamhaus](https://check.spamhaus.org/) and check your domain name a
 
 ## 2、Run
 
-`./pmail`
+`./pmail` (Set the http port for the initialization interface with `-p` )
 
 Or
 

@@ -9,6 +9,7 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/hooks"
 	"pmail/http_server"
+	"pmail/models"
 	"pmail/pop3_server"
 	"pmail/services/setup/ssl"
 	"pmail/session"
@@ -37,6 +38,7 @@ func Init(serverVersion string) {
 		if err != nil {
 			panic(err)
 		}
+		syncTables()
 		session.Init()
 		hooks.Init(serverVersion)
 		// smtp server start
@@ -82,5 +84,28 @@ func dirInit() {
 		if err != nil {
 			panic(err)
 		}
+	}
+}
+
+func syncTables() {
+	err := db.Instance.Sync2(&models.User{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.Instance.Sync2(&models.Email{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.Instance.Sync2(&models.Group{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.Instance.Sync2(&models.Rule{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.Instance.Sync2(&models.UserAuth{})
+	if err != nil {
+		panic(err)
 	}
 }

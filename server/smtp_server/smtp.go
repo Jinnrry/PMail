@@ -81,8 +81,7 @@ func (s *Session) AuthPlain(username, pwd string) error {
 		username = infos[0]
 	}
 
-	err := db.Instance.Get(&user, db.WithContext(s.Ctx, "select * from user where account =? and password =?"),
-		username, encodePwd)
+	_, err := db.Instance.Where("account =? and password =?", username, encodePwd).Get(&user)
 	if err != nil && err != sql.ErrNoRows {
 		log.Errorf("%+v", err)
 	}

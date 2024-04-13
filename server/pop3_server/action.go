@@ -100,7 +100,7 @@ func (a action) Pass(session *gopop.Session, pwd string) error {
 
 	encodePwd := password.Encode(pwd)
 
-	err := db.Instance.Get(&user, db.WithContext(session.Ctx.(*context.Context), "select * from user where account =? and password =?"), session.User, encodePwd)
+	_, err := db.Instance.Where("account =? and password =?", session.User, encodePwd).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 	}
@@ -136,7 +136,7 @@ func (a action) Apop(session *gopop.Session, username, digest string) error {
 
 	var user models.User
 
-	err := db.Instance.Get(&user, db.WithContext(session.Ctx.(*context.Context), "select * from user where account =? "), username)
+	_, err := db.Instance.Where("account =? ", username).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 	}
@@ -166,7 +166,7 @@ func (a action) Stat(session *gopop.Session) (msgNum, msgSize int64, err error) 
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: STAT")
 
 	var si statInfo
-	err = db.Instance.Get(&si, db.WithContext(session.Ctx.(*context.Context), "select count(1) as `num`, sum(length(text)+length(html)) as `size` from email where type = 0"))
+	_, err = db.Instance.Select("count(1) as `num`, sum(length(text)+length(html)) as `size`").Table("email").Where("type=0 and status=0").Get(&si)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 		err = nil
@@ -197,8 +197,7 @@ func (a action) Uidl(session *gopop.Session, msg string) ([]gopop.UidlItem, erro
 	var err error
 	var ssql string
 
-	ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id FROM email where type = 0")
-	err = db.Instance.Select(&res, ssql)
+	err = db.Instance.Where("type=0 and status=0").Select("id").Table("email").Find(&res)
 
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("SQL:%s  Error: %+v", ssql, err)
@@ -235,11 +234,9 @@ func (a action) List(session *gopop.Session, msg string) ([]gopop.MailInfo, erro
 	var ssql string
 
 	if listId != 0 {
-		ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size` FROM email where id =?")
-		err = db.Instance.Select(&res, ssql, listId)
+		err = db.Instance.Select("id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size`").Table("email").Where("id=?", listId).Find(&res)
 	} else {
-		ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size` FROM email where type = 0")
-		err = db.Instance.Select(&res, ssql)
+		err = db.Instance.Select("id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size`").Table("email").Where("type=0 and status=0").Find(&res)
 	}
 
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {

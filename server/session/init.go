@@ -18,8 +18,8 @@ func Init() {
 	// 使用db存储session数据，目前为了架构简单，
 	// 暂不引入redis存储，如果日后性能存在瓶颈，可以将session迁移到redis
 	if config.Instance.DbType == "mysql" {
-		Instance.Store = mysqlstore.New(db.Instance.DB)
+		Instance.Store = mysqlstore.New(db.Instance.DB().DB)
 	} else {
-		Instance.Store = sqlite3store.New(db.Instance.DB)
+		Instance.Store = sqlite3store.New(db.Instance.DB().DB)
 	}
 }

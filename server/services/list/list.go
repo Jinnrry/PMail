@@ -9,17 +9,11 @@ import (
 	"pmail/utils/context"
 )
 
-func GetEmailList(ctx *context.Context, tag string, keyword string, offset, limit int) (emailList []*models.Email, total int) {
+func GetEmailList(ctx *context.Context, tag string, keyword string, offset, limit int) (emailList []*models.Email, total int64) {
 
-	querySQL, queryParams := genSQL(ctx, false, tag, keyword, offset, limit)
-	counterSQL, counterParams := genSQL(ctx, true, tag, keyword, offset, limit)
+	querySQL, queryParams := genSQL(ctx, tag, keyword)
 
-	err := db.Instance.Select(&emailList, db.WithContext(ctx, querySQL), queryParams...)
-	if err != nil {
-		log.Errorf("SQL ERROR: %s ,Error:%s", querySQL, err)
-	}
-
-	err = db.Instance.Get(&total, db.WithContext(ctx, counterSQL), counterParams...)
+	total, err := db.Instance.Table("email").Where(querySQL, queryParams...).Desc("id").Limit(limit, offset).FindAndCount(&emailList)
 	if err != nil {
 		log.Errorf("SQL ERROR: %s ,Error:%s", querySQL, err)
 	}
@@ -27,12 +21,9 @@ func GetEmailList(ctx *context.Context, tag string, keyword string, offset, limi
 	return
 }
 
-func genSQL(ctx *context.Context, counter bool, tag, keyword string, offset, limit int) (string, []any) {
+func genSQL(ctx *context.Context, tag, keyword string) (string, []any) {
 
-	sql := "select * from email where 1=1 "
-	if counter {
-		sql = "select count(1) from email where 1=1 "
-	}
+	sql := "1=1 "
 
 	sqlParams := []any{}
 
@@ -60,9 +51,6 @@ func genSQL(ctx *context.Context, counter bool, tag, keyword string, offset, lim
 		sql += " and (subject like ? or text like ? )"
 		sqlParams = append(sqlParams, "%"+keyword+"%", "%"+keyword+"%")
 	}
-
-	sql += " order by id desc limit ? offset ?"
-	sqlParams = append(sqlParams, limit, offset)
 
 	return sql, sqlParams
 }

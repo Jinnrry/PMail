@@ -1,8 +1,12 @@
 package models
 
 type User struct {
-	ID       int    `db:"id"`
-	Account  string `db:"account"`
-	Name     string `db:"name"`
-	Password string `db:"password"`
+	ID       int    `xorm:"id unsigned int not null pk autoincr"`
+	Account  string `xorm:"varchar(20) notnull unique comment('账号登陆名')"`
+	Name     string `xorm:"varchar(10) notnull comment('用户名')"`
+	Password string `xorm:"char(32) notnull comment('登陆密码，两次md5加盐，md5(md5(password+pmail) +pmail2023)')"`
+}
+
+func (p User) TableName() string {
+	return "user"
 }

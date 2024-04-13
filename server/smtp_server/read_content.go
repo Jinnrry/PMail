@@ -2,9 +2,11 @@ package smtp_server
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"github.com/mileusna/spf"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"io"
 	"net"
 	"net/netip"
@@ -13,6 +15,7 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/hooks"
 	"pmail/hooks/framework"
+	"pmail/models"
 	"pmail/services/rule"
 	"pmail/utils/async"
 	"pmail/utils/context"
@@ -83,12 +86,40 @@ func (s *Session) Data(r io.Reader) error {
 		}
 
 		// 转发
-		err := saveEmail(ctx, email, 1, true, true)
+		err := saveEmail(ctx, email, s.Ctx.UserID, 1, true, true)
 		if err != nil {
 			log.WithContext(ctx).Errorf("Email Save Error %v", err)
 		}
 
-		send.Send(ctx, email)
+		errMsg := ""
+		err, sendErr := send.Send(ctx, email)
+
+		log.WithContext(ctx).Debugf("插件执行--SendAfter")
+
+		as3 := async.New(ctx)
+		for _, hook := range hooks.HookList {
+			if hook == nil {
+				continue
+			}
+			as3.WaitProcess(func(hk any) {
+				hk.(framework.EmailHook).SendAfter(ctx, email, sendErr)
+			}, hook)
+		}
+		as3.Wait()
+		log.WithContext(ctx).Debugf("插件执行--SendAfter")
+
+		if err != nil {
+			errMsg = err.Error()
+			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, email.MessageId)
+			if err != nil {
+				log.WithContext(ctx).Errorf("sql Error :%+v", err)
+			}
+		} else {
+			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), email.MessageId)
+			if err != nil {
+				log.WithContext(ctx).Errorf("sql Error :%+v", err)
+			}
+		}
 
 	} else {
 		// 收件
@@ -121,7 +152,18 @@ func (s *Session) Data(r io.Reader) error {
 			return nil
 		}
 
-		saveEmail(ctx, email, 0, SPFStatus, dkimStatus)
+		// 垃圾过滤
+		if config.Instance.SpamFilterLevel == 1 && !SPFStatus && !dkimStatus {
+			log.WithContext(ctx).Infoln("垃圾邮件，拒信")
+			return nil
+		}
+
+		if config.Instance.SpamFilterLevel == 2 && !SPFStatus {
+			log.WithContext(ctx).Infoln("垃圾邮件，拒信")
+			return nil
+		}
+
+		saveEmail(ctx, email, 0, 0, SPFStatus, dkimStatus)
 
 		if email.MessageId > 0 {
 			log.WithContext(ctx).Debugf("开始执行邮件规则！")
@@ -152,7 +194,7 @@ func (s *Session) Data(r io.Reader) error {
 	return nil
 }
 
-func saveEmail(ctx *context.Context, email *parsemail.Email, emailType int, SPFStatus, dkimStatus bool) error {
+func saveEmail(ctx *context.Context, email *parsemail.Email, sendUserID int, emailType int, SPFStatus, dkimStatus bool) error {
 	var dkimV, spfV int8
 	if dkimStatus {
 		dkimV = 1
@@ -161,52 +203,42 @@ func saveEmail(ctx *context.Context, email *parsemail.Email, emailType int, SPFS
 		spfV = 1
 	}
 
-	// 垃圾过滤
-	if config.Instance.SpamFilterLevel == 1 && !SPFStatus && !dkimStatus {
-		log.WithContext(ctx).Infoln("垃圾邮件，拒信")
-		return nil
-	}
-
-	if config.Instance.SpamFilterLevel == 2 && !SPFStatus {
-		log.WithContext(ctx).Infoln("垃圾邮件，拒信")
-		return nil
-	}
-
 	log.WithContext(ctx).Debugf("开始入库！")
 
 	if email == nil {
 		return nil
 	}
 
-	sql := "INSERT INTO email (type, send_date, subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,is_read,status,group_id) VALUES (?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	res, err := db.Instance.Exec(sql,
-		emailType,
-		email.Date,
-		email.Subject,
-		json2string(email.ReplyTo),
-		email.From.Name,
-		email.From.EmailAddress,
-		json2string(email.To),
-		json2string(email.Bcc),
-		json2string(email.Cc),
-		email.Text,
-		email.HTML,
-		json2string(email.Sender),
-		json2string(email.Attachments),
-		spfV,
-		dkimV,
-		time.Now(),
-		email.IsRead,
-		email.Status,
-		email.GroupId,
-	)
+	modelEmail := models.Email{
+		Type:        cast.ToInt8(emailType),
+		GroupId:     email.GroupId,
+		Subject:     email.Subject,
+		ReplyTo:     json2string(email.ReplyTo),
+		FromName:    email.From.Name,
+		FromAddress: email.From.EmailAddress,
+		To:          json2string(email.To),
+		Bcc:         json2string(email.Bcc),
+		Cc:          json2string(email.Cc),
+		Text:        sql.NullString{String: string(email.Text), Valid: true},
+		Html:        sql.NullString{String: string(email.HTML), Valid: true},
+		Sender:      json2string(email.Sender),
+		Attachments: json2string(email.Attachments),
+		SPFCheck:    spfV,
+		DKIMCheck:   dkimV,
+		SendUserID:  sendUserID,
+		SendDate:    time.Now(),
+		Status:      cast.ToInt8(email.Status),
+		CreateTime:  time.Now(),
+	}
+
+	_, err := db.Instance.Insert(&modelEmail)
 
 	if err != nil {
 		log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
 	}
-	insertId, _ := res.LastInsertId()
-	if insertId > 0 {
-		email.MessageId = insertId
+
+	if modelEmail.Id > 0 {
+		email.MessageId = cast.ToInt64(modelEmail.Id)
 	}
 
 	return nil

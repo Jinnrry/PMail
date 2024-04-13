@@ -8,30 +8,34 @@ import (
 )
 
 type Email struct {
-	Id           int            `db:"id" json:"id"`
-	Type         int8           `db:"type" json:"type"`
-	GroupId      int            `db:"group_id" json:"group_id"`
-	Subject      string         `db:"subject" json:"subject"`
-	ReplyTo      string         `db:"reply_to" json:"reply_to"`
-	FromName     string         `db:"from_name" json:"from_name"`
-	FromAddress  string         `db:"from_address" json:"from_address"`
-	To           string         `db:"to" json:"to"`
-	Bcc          string         `db:"bcc" json:"bcc"`
-	Cc           string         `db:"cc" json:"cc"`
-	Text         sql.NullString `db:"text" json:"text"`
-	Html         sql.NullString `db:"html" json:"html"`
-	Sender       string         `db:"sender" json:"sender"`
-	Attachments  string         `db:"attachments" json:"attachments"`
-	SPFCheck     int8           `db:"spf_check" json:"spf_check"`
-	DKIMCheck    int8           `db:"dkim_check" json:"dkim_check"`
-	Status       int8           `db:"status" json:"status"` // 0未发送，1已发送，2发送失败，3删除
-	CronSendTime time.Time      `db:"cron_send_time" json:"cron_send_time"`
-	UpdateTime   time.Time      `db:"update_time" json:"update_time"`
-	SendUserID   int            `db:"send_user_id" json:"send_user_id"`
-	IsRead       int8           `db:"is_read" json:"is_read"`
-	Error        sql.NullString `db:"error" json:"error"`
-	SendDate     time.Time      `db:"send_date" json:"send_date"`
-	CreateTime   time.Time      `db:"create_time" json:"create_time"`
+	Id           int            `xorm:"id pk unsigned int autoincr notnull" json:"id"`
+	Type         int8           `xorm:"type tinyint(4) notnull default(0) comment('邮件类型，0:收到的邮件，1:发送的邮件')" json:"type"`
+	GroupId      int            `xorm:"group_id int notnull default(0) comment('分组id')'" json:"group_id"`
+	Subject      string         `xorm:"subject varchar(1000) notnull default('') comment('邮件标题')" json:"subject"`
+	ReplyTo      string         `xorm:"reply_to text comment('回复人')" json:"reply_to"`
+	FromName     string         `xorm:"from_name varchar(50) notnull default('') comment('发件人名称')" json:"from_name"`
+	FromAddress  string         `xorm:"from_address varchar(100) notnull default('') comment('发件人邮件地址')" json:"from_address"`
+	To           string         `xorm:"to text comment('收件人地址')" json:"to"`
+	Bcc          string         `xorm:"bcc text comment('密送')" json:"bcc"`
+	Cc           string         `xorm:"cc text comment('抄送')" json:"cc"`
+	Text         sql.NullString `xorm:"text text comment('文本内容')" json:"text"`
+	Html         sql.NullString `xorm:"html mediumtext comment('html内容')" json:"html"`
+	Sender       string         `xorm:"sender text comment('发送人')" json:"sender"`
+	Attachments  string         `xorm:"attachments longtext comment('附件')" json:"attachments"`
+	SPFCheck     int8           `xorm:"spf_check tinyint(1) comment('spf校验是否通过')" json:"spf_check"`
+	DKIMCheck    int8           `xorm:"dkim_check tinyint(1) comment('dkim校验是否通过')" json:"dkim_check"`
+	Status       int8           `xorm:"status tinyint(4) notnull default(0) comment('0未发送，1已发送，2发送失败，3删除')" json:"status"` // 0未发送，1已发送，2发送失败，3删除
+	CronSendTime time.Time      `xorm:"cron_send_time comment('定时发送时间')" json:"cron_send_time"`
+	UpdateTime   time.Time      `xorm:"update_time updated comment('更新时间')" json:"update_time"`
+	SendUserID   int            `xorm:"send_user_id unsigned int  notnull default(0) comment('发件人用户id')" json:"send_user_id"`
+	IsRead       int8           `xorm:"is_read tinyint(1) comment('是否已读')" json:"is_read"`
+	Error        sql.NullString `xorm:"error text comment('投递错误信息')" json:"error"`
+	SendDate     time.Time      `xorm:"send_date comment('投递时间')" json:"send_date"`
+	CreateTime   time.Time      `xorm:"create_time created" json:"create_time"`
+}
+
+func (p Email) TableName() string {
+	return "email"
 }
 
 type attachments struct {

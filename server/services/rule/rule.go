@@ -18,9 +18,9 @@ func GetAllRules(ctx *context.Context) []*dto.Rule {
 	var res []*models.Rule
 	var err error
 	if ctx == nil || ctx.UserID == 0 {
-		err = db.Instance.Select(&res, "select * from rule order by sort desc")
+		err = db.Instance.Decr("sort").Find(&res)
 	} else {
-		err = db.Instance.Select(&res, db.WithContext(ctx, "select * from rule where user_id=? order by sort desc"), ctx.UserID)
+		err = db.Instance.Where("user_id=?", ctx.UserID).Decr("sort").Find(&res)
 	}
 
 	if err != nil {
