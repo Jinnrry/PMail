@@ -21,6 +21,17 @@ type TelegramPushHook struct {
 	webDomain    string
 }
 
+func (w *TelegramPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+	if w.chatId == "" || w.botToken == "" {
+		return
+	}
+	// 被标记为已读，或者是已删除，或是垃圾邮件 就不处理了
+	if email.IsRead == 1 || email.Status == 3 || email.MessageId <= 0 {
+		return
+	}
+	w.sendUserMsg(nil, email)
+}
+
 func (w *TelegramPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 }
@@ -33,13 +44,7 @@ func (w *TelegramPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byt
 
 }
 
-func (w *TelegramPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
-	if w.chatId == "" || w.botToken == "" {
-		return
-	}
-
-	w.sendUserMsg(nil, email)
-}
+func (w *TelegramPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {}
 
 type SendMessageRequest struct {
 	ChatID      string      `json:"chat_id"`

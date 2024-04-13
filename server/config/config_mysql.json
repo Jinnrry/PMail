@@ -8,17 +8,9 @@
   "SSLPublicKeyPath": "config/ssl/public.crt",
   "dbDSN": "root:root@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local",
   "dbType": "mysql",
-  "spamFilterLevel": 2,
+  "spamFilterLevel": 1,
   "httpPort": 80,
   "httpsPort": 443,
-  "weChatPushAppId": "",
-  "weChatPushSecret": "",
-  "weChatPushTemplateId": "",
-  "weChatPushUserId": "",
-  "tgChatId": "",
-  "tgBotToken": "",
-  "webPushUrl": "",
-  "webPushToken": "",
   "isInit": true,
   "httpsEnabled": 2
 }

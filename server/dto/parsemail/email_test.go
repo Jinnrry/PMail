@@ -77,6 +77,22 @@ func Test_buildUser(t *testing.T) {
 	if u.Name != "Jinnrry N" {
 		t.Error("error")
 	}
+
+	u = buildUser("=?UTF-8?B?YWRtaW5AamlubnJyeS5jb20=?=<admin@jinnrry.com>")
+	if u.EmailAddress != "admin@jinnrry.com" {
+		t.Error("error")
+	}
+	if u.Name != "admin@jinnrry.com" {
+		t.Error("error")
+	}
+
+	u = buildUser("\"admin@jinnrry.com\" <admin@jinnrry.com>")
+	if u.EmailAddress != "admin@jinnrry.com" {
+		t.Error("error")
+	}
+	if u.Name != "admin@jinnrry.com" {
+		t.Error("error")
+	}
 }
 
 func TestEmailBuidlers(t *testing.T) {

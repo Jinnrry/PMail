@@ -22,8 +22,10 @@ type EmailHook interface {
 	SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error)
 	// ReceiveParseBefore 接收到邮件，解析之前的原始数据
 	ReceiveParseBefore(ctx *context.Context, email *[]byte)
-	// ReceiveParseAfter 接收到邮件，解析之后的结构化数据
+	// ReceiveParseAfter 接收到邮件，解析之后的结构化数据 (收信规则前，写数据库前执行)
 	ReceiveParseAfter(ctx *context.Context, email *parsemail.Email)
+	// ReceiveSaveAfter 邮件落库以后执行（收信规则后执行）
+	ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email)
 }
 
 // HookDTO PMail 主程序和插件通信的结构体
@@ -141,6 +143,20 @@ func (p *Plugin) Run() {
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
 		log.Debugf("[%s] ReceiveParseAfter End", p.name)
+	})
+	mux.HandleFunc("/ReceiveSaveAfter", func(writer http.ResponseWriter, request *http.Request) {
+		log.Debugf("[%s] ReceiveSaveAfter Start", p.name)
+		var hookDTO HookDTO
+		body, _ := io.ReadAll(request.Body)
+		err := json.Unmarshal(body, &hookDTO)
+		if err != nil {
+			log.Errorf("params error %+v", err)
+			return
+		}
+		p.hook.ReceiveSaveAfter(hookDTO.Ctx, hookDTO.Email)
+		body, _ = json.Marshal(hookDTO)
+		writer.Write(body)
+		log.Debugf("[%s] ReceiveSaveAfter End", p.name)
 	})
 
 	server := http.Server{

@@ -106,9 +106,9 @@ SMTP端口： 25/465(SSL)
 
 [微信推送](server/hooks/wechat_push/README.md)
 
-[Telegram推送](server/hooks/wechat_push/README.md)
+[Telegram推送](server/hooks/telegram_push/README.md)
 
-[WebHook推送](server/hooks/wechat_push/README.md)
+[WebHook推送](server/hooks/web_push/README.md)
 
 ## 插件安装
 > [!IMPORTANT]
@@ -127,6 +127,10 @@ SMTP端口： 25/465(SSL)
 2、后端： golang + MySQL/SQLite
 
 后端代码进入 `server`文件夹，运行 `main.go`文件
+
+3、编译该项目
+
+`make build`
 
 ## 后端接口文档
 

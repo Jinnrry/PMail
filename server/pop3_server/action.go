@@ -178,6 +178,7 @@ func (a action) Stat(session *gopop.Session) (msgNum, msgSize int64, err error) 
 	return si.Num, si.Size, nil
 }
 
+// Uidl 查询某封邮件的唯一标志符
 func (a action) Uidl(session *gopop.Session, msg string) ([]gopop.UidlItem, error) {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: UIDL ,Args:%s", msg)
 
@@ -196,7 +197,7 @@ func (a action) Uidl(session *gopop.Session, msg string) ([]gopop.UidlItem, erro
 	var err error
 	var ssql string
 
-	ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id FROM email")
+	ssql = db.WithContext(session.Ctx.(*context.Context), "SELECT id FROM email where type = 0")
 	err = db.Instance.Select(&res, ssql)
 
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -319,7 +320,7 @@ func (a action) Quit(session *gopop.Session) error {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: QUIT ")
 	if len(session.DeleteIds) > 0 {
 
-		_, err := db.Instance.Exec(db.WithContext(session.Ctx.(*context.Context), "DELETE FROM email WHERE id in ?"), session.DeleteIds)
+		_, err := db.Instance.Exec(db.WithContext(session.Ctx.(*context.Context), "UPDATE email SET status=3 WHERE id in ?"), session.DeleteIds)
 		if err != nil {
 			log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 		}

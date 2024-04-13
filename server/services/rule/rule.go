@@ -65,8 +65,14 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
 	switch rule.Action {
 	case dto.READ:
 		email.IsRead = 1
+		if email.MessageId > 0 {
+			db.Instance.Exec(db.WithContext(ctx, "update email set is_read=1 where id =?"), email.MessageId)
+		}
 	case dto.DELETE:
 		email.Status = 3
+		if email.MessageId > 0 {
+			db.Instance.Exec(db.WithContext(ctx, "update email set status=3 where id =?"), email.MessageId)
+		}
 	case dto.FORWARD:
 		if strings.Contains(rule.Params, config.Instance.Domain) {
 			log.WithContext(ctx).Errorf("Forward Error! loop forwarding!")
@@ -78,5 +84,9 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
 		}
 	case dto.MOVE:
 		email.GroupId = cast.ToInt(rule.Params)
+		if email.MessageId > 0 {
+			db.Instance.Exec(db.WithContext(ctx, "update email set group_id=? where id =?"), email.GroupId, email.MessageId)
+		}
 	}
+
 }

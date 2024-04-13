@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/textproto"
 	"pmail/config"
-	"pmail/utils/array"
 	"pmail/utils/context"
 	"regexp"
 	"strings"
@@ -145,37 +144,34 @@ func BuilderUser(str string) *User {
 	return buildUser(str)
 }
 
+var emailAddressRe = regexp.MustCompile(`<(.*@.*)>`)
+
 func buildUser(str string) *User {
 	if str == "" {
 		return nil
 	}
 
 	ret := &User{}
-	args := strings.Split(str, " ")
-	if len(args) == 1 {
+
+	matched := emailAddressRe.FindStringSubmatch(str)
+
+	if len(matched) == 2 {
+		ret.EmailAddress = matched[1]
+	} else {
 		ret.EmailAddress = str
 		return ret
 	}
 
-	if len(args) > 2 {
-		targs := []string{
-			array.Join(args[0:len(args)-1], " "),
-			args[len(args)-1],
-		}
-		args = targs
-	}
+	str = strings.ReplaceAll(str, matched[0], "")
 
-	args[0] = strings.Trim(args[0], "\"")
-	args[1] = strings.TrimPrefix(args[1], "<")
-	args[1] = strings.TrimSuffix(args[1], ">")
+	str = strings.Trim(strings.TrimSpace(str), "\"")
 
-	name, err := (&WordDecoder{}).Decode(strings.ReplaceAll(args[0], "\"", ""))
+	name, err := (&WordDecoder{}).Decode(strings.ReplaceAll(str, "\"", ""))
 	if err == nil {
-		ret.Name = name
+		ret.Name = strings.TrimSpace(name)
 	} else {
-		ret.Name = args[0]
+		ret.Name = strings.TrimSpace(str)
 	}
-	ret.EmailAddress = args[1]
 	return ret
 }
 

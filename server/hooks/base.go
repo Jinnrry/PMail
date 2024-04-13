@@ -26,6 +26,29 @@ type HookSender struct {
 	socket string
 }
 
+func (h *HookSender) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveSaveAfter Start", h.name)
+
+	dto := framework.HookDTO{
+		Ctx:   ctx,
+		Email: email,
+	}
+	body, _ := json.Marshal(dto)
+
+	ret, err := h.httpc.Post("http://plugin/ReceiveSaveAfter", "application/json", strings.NewReader(string(body)))
+	if err != nil {
+		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, err)
+		return
+	}
+
+	body, _ = io.ReadAll(ret.Body)
+	json.Unmarshal(body, &dto)
+
+	ctx = dto.Ctx
+	email = dto.Email
+	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveSaveAfter End", h.name)
+}
+
 func (h *HookSender) SendBefore(ctx *context.Context, email *parsemail.Email) {
 	log.WithContext(ctx).Debugf("[%s]Plugin SendBefore Start", h.name)
 

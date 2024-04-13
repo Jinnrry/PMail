@@ -31,6 +31,25 @@ type WeChatPushHook struct {
 	mainConfig   *config.Config
 }
 
+func (w *WeChatPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+	if w.appId == "" || w.secret == "" || w.pushUser == "" {
+		return
+	}
+
+	// 被标记为已读，或者是已删除，或是垃圾邮件 就不处理了
+	if email.IsRead == 1 || email.Status == 3 || email.MessageId <= 0 {
+		return
+	}
+
+	content := string(email.Text)
+
+	if content == "" {
+		content = email.Subject
+	}
+
+	w.sendUserMsg(nil, w.pushUser, content)
+}
+
 func (w *WeChatPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 }
@@ -43,19 +62,7 @@ func (w *WeChatPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte)
 
 }
 
-func (w *WeChatPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
-	if w.appId == "" || w.secret == "" || w.pushUser == "" {
-		return
-	}
-
-	content := string(email.Text)
-
-	if content == "" {
-		content = email.Subject
-	}
-
-	w.sendUserMsg(nil, w.pushUser, content)
-}
+func (w *WeChatPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {}
 
 func (w *WeChatPushHook) getWxAccessToken() string {
 	if w.tokenExpires > time.Now().Unix() {

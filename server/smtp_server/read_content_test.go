@@ -401,11 +401,7 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
+		Ctx:           &context.Context{},
 	}
 
 	s.Data(bytes.NewReader([]byte(deleteEmail)))
@@ -508,4 +504,42 @@ Content-Type: text/html
 	}
 
 	s.Data(bytes.NewReader([]byte(moveEmail)))
+}
+
+func TestQAEmailForward(t *testing.T) {
+	testInit()
+	data := `Mime-Version: 1.0
+X-QQ-MIME: TCMime 1.0 by Tencent
+X-Mailer: QQMail 2.x
+X-QQ-Mailer: QQMail 2.x
+Message-ID: tencent_D82739970C66D2BFBA23F4A3@qq.com
+Subject: =?UTF-8?B?5rWL6K+V5Y+R6YCB?=
+Date: Wed, 10 Apr 2024 11:11:12 +0800 (GMT+08:00)
+From: =?UTF-8?B?YWRtaW5AamlubnJyeS5jb20=?=<admin@jinnrry.com>
+To: =?UTF-8?B??=<test@jinnrry.com>
+Content-Type: multipart/alternative; 
+        boundary="----=_Part_174_107154538.1712718674768"
+
+------=_Part_174_107154538.1712718674768
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: base64
+
+
+------=_Part_174_107154538.1712718674768
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: base64
+
+PGRpdj7ov5nph4zmmK/lhoXlrrk8L2Rpdj48ZGl2PjwhLS1lbXB0eXNpZ24tLT48L2Rpdj4=
+------=_Part_174_107154538.1712718674768--`
+
+	s := Session{
+		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx: &context.Context{
+			UserID:      1,
+			UserName:    "a",
+			UserAccount: "a",
+		},
+	}
+
+	s.Data(bytes.NewReader([]byte(data)))
 }

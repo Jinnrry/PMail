@@ -3,14 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"pmail/config"
 	"pmail/dto/parsemail"
 	"pmail/hooks/framework"
 	"pmail/utils/context"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type WebPushHook struct {
@@ -18,28 +17,7 @@ type WebPushHook struct {
 	token string
 }
 
-// EmailData 用于存储解析后的邮件数据
-type EmailData struct {
-	From    string   `json:"from"`
-	To      []string `json:"to"`
-	Subject string   `json:"subject"`
-	Body    string   `json:"body"`
-	Token   string   `json:"token"`
-}
-
-func (w *WebPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
-
-}
-
-func (w *WebPushHook) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
-
-}
-
-func (w *WebPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
-
-}
-
-func (w *WebPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
+func (w *WebPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
 	if w.url == "" {
 		return
 	}
@@ -77,6 +55,29 @@ func (w *WebPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.E
 	}
 	defer resp.Body.Close()
 }
+
+// EmailData 用于存储解析后的邮件数据
+type EmailData struct {
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
+	Token   string   `json:"token"`
+}
+
+func (w *WebPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
+
+}
+
+func (w *WebPushHook) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
+
+}
+
+func (w *WebPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
+
+}
+
+func (w *WebPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {}
 
 type Config struct {
 	WebPushUrl   string `json:"webPushUrl"`

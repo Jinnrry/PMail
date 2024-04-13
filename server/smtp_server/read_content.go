@@ -123,14 +123,30 @@ func (s *Session) Data(r io.Reader) error {
 
 		saveEmail(ctx, email, 0, SPFStatus, dkimStatus)
 
-		log.WithContext(ctx).Debugf("开始执行邮件规则！")
-		// 执行邮件规则
-		rs := rule.GetAllRules(ctx)
-		for _, r := range rs {
-			if rule.MatchRule(ctx, r, email) {
-				rule.DoRule(ctx, r, email)
+		if email.MessageId > 0 {
+			log.WithContext(ctx).Debugf("开始执行邮件规则！")
+			// 执行邮件规则
+			rs := rule.GetAllRules(ctx)
+			for _, r := range rs {
+				if rule.MatchRule(ctx, r, email) {
+					rule.DoRule(ctx, r, email)
+				}
 			}
 		}
+
+		log.WithContext(ctx).Debugf("开始执行插件ReceiveSaveAfter！")
+		as3 := async.New(ctx)
+		for _, hook := range hooks.HookList {
+			if hook == nil {
+				continue
+			}
+			as3.WaitProcess(func(hk any) {
+				hk.(framework.EmailHook).ReceiveSaveAfter(ctx, email)
+			}, hook)
+		}
+		as3.Wait()
+		log.WithContext(ctx).Debugf("开始执行插件ReceiveSaveAfter！End")
+
 	}
 
 	return nil
@@ -186,7 +202,7 @@ func saveEmail(ctx *context.Context, email *parsemail.Email, emailType int, SPFS
 	)
 
 	if err != nil {
-		log.WithContext(ctx).Println("mysql insert error:", err.Error())
+		log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
 	}
 	insertId, _ := res.LastInsertId()
 	if insertId > 0 {
