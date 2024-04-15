@@ -23,4 +23,8 @@ func SyncTables() {
 	if err != nil {
 		panic(err)
 	}
+	err = db.Instance.Sync2(&Sessions{})
+	if err != nil {
+		panic(err)
+	}
 }
