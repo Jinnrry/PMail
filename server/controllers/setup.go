@@ -21,6 +21,7 @@ func AcmeChallenge(w http.ResponseWriter, r *http.Request) {
 	if exist {
 		w.Write([]byte(auth.KeyAuth))
 	} else {
+		log.Errorf("AcmeChallenge Error Token Infos:%+v", instance.AuthInfo)
 		http.NotFound(w, r)
 	}
 }
