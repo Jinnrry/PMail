@@ -38,7 +38,7 @@ func Init(serverVersion string) {
 		if err != nil {
 			panic(err)
 		}
-		syncTables()
+		models.SyncTables()
 		session.Init()
 		hooks.Init(serverVersion)
 		// smtp server start
@@ -84,28 +84,5 @@ func dirInit() {
 		if err != nil {
 			panic(err)
 		}
-	}
-}
-
-func syncTables() {
-	err := db.Instance.Sync2(&models.User{})
-	if err != nil {
-		panic(err)
-	}
-	err = db.Instance.Sync2(&models.Email{})
-	if err != nil {
-		panic(err)
-	}
-	err = db.Instance.Sync2(&models.Group{})
-	if err != nil {
-		panic(err)
-	}
-	err = db.Instance.Sync2(&models.Rule{})
-	if err != nil {
-		panic(err)
-	}
-	err = db.Instance.Sync2(&models.UserAuth{})
-	if err != nil {
-		panic(err)
 	}
 }
