@@ -35,17 +35,12 @@ func (h *HookSender) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Ema
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, err := h.httpc.Post("http://plugin/ReceiveSaveAfter", "application/json", strings.NewReader(string(body)))
+	_, err := h.httpc.Post("http://plugin/ReceiveSaveAfter", "application/json", strings.NewReader(string(body)))
 	if err != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, err)
 		return
 	}
 
-	body, _ = io.ReadAll(ret.Body)
-	json.Unmarshal(body, &dto)
-
-	ctx = dto.Ctx
-	email = dto.Email
 	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveSaveAfter End", h.name)
 }
 
@@ -82,18 +77,12 @@ func (h *HookSender) SendAfter(ctx *context.Context, email *parsemail.Email, err
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, errL := h.httpc.Post("http://plugin/SendAfter", "application/json", strings.NewReader(string(body)))
+	_, errL := h.httpc.Post("http://plugin/SendAfter", "application/json", strings.NewReader(string(body)))
 	if errL != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
 		return
 	}
 
-	body, _ = io.ReadAll(ret.Body)
-	json.Unmarshal(body, &dto)
-
-	ctx = dto.Ctx
-	email = dto.Email
-	err = dto.ErrMap
 	log.WithContext(ctx).Debugf("[%s]Plugin SendAfter End", h.name)
 
 }

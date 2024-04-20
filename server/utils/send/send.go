@@ -12,6 +12,7 @@ import (
 	"pmail/utils/context"
 	"pmail/utils/smtp"
 	"strings"
+	"sync"
 )
 
 type mxDomain struct {
@@ -59,8 +60,6 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 
 	var errEmailAddress []string
 
-	errMap := map[string]error{}
-
 	as := async.New(ctx)
 	for domain, tos := range toByDomain {
 		domain := domain
@@ -96,7 +95,6 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 					errEmailAddress = append(errEmailAddress, user.EmailAddress)
 				}
 			}
-			errMap[domain.domain] = err
 		}, nil)
 	}
 	as.Wait()
@@ -145,7 +143,7 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 
 	var errEmailAddress []string
 
-	errMap := map[string]error{}
+	errMap := sync.Map{}
 
 	as := async.New(ctx)
 	for domain, tos := range toByDomain {
@@ -183,15 +181,21 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 					errEmailAddress = append(errEmailAddress, user.EmailAddress)
 				}
 			}
-			errMap[domain.domain] = err
+			errMap.Store(domain.domain, err)
 		}, nil)
 	}
 	as.Wait()
 
+	orgMap := map[string]error{}
+	errMap.Range(func(key, value any) bool {
+		orgMap[key.(string)] = value.(error)
+		return true
+	})
+
 	if len(errEmailAddress) > 0 {
-		return errors.New("以下收件人投递失败：" + array.Join(errEmailAddress, ",")), errMap
+		return errors.New("以下收件人投递失败：" + array.Join(errEmailAddress, ",")), orgMap
 	}
-	return nil, errMap
+	return nil, orgMap
 
 }
 

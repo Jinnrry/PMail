@@ -130,16 +130,12 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.WithContext(ctx).Debugf("插件执行--SendBefore")
-	as := async.New(ctx)
 	for _, hook := range hooks.HookList {
 		if hook == nil {
 			continue
 		}
-		as.WaitProcess(func(hk any) {
-			hk.(framework.EmailHook).SendBefore(ctx, e)
-		}, hook)
+		hook.SendBefore(ctx, e)
 	}
-	as.Wait()
 	log.WithContext(ctx).Debugf("插件执行--SendBefore End")
 
 	// 邮件落库
