@@ -6,11 +6,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"net/http"
+	"pmail/config"
 	"pmail/controllers"
+	"pmail/utils/ip"
 	"time"
 )
-
-var ip string
 
 // 项目初始化引导用的服务，初始化引导结束后即退出
 var setupServer *http.Server
@@ -29,7 +29,14 @@ func SetupStart() {
 	HttpPort := 80
 	flag.IntVar(&HttpPort, "p", 80, "初始化阶段Http服务端口")
 	flag.Parse()
+	config.Instance.SetSetupPort(HttpPort)
 	log.Infof("HttpServer Start On Port :%d", HttpPort)
+	if HttpPort == 80 {
+		log.Infof("Please click http://%s to continue.\n", ip.GetIp())
+	} else {
+		log.Infof("Please click http://%s:%d to continue.", ip.GetIp(), HttpPort)
+	}
+
 	setupServer = &http.Server{
 		Addr:         fmt.Sprintf(":%d", HttpPort),
 		Handler:      mux,

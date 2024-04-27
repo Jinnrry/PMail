@@ -26,6 +26,11 @@ func AcmeChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type sslResponse struct {
+	Port int    `json:"port"`
+	Type string `json:"type"`
+}
+
 func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	reqBytes, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -121,7 +126,11 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 	if reqData["step"] == "ssl" && reqData["action"] == "get" {
 		sslType := ssl.GetSSL()
-		response.NewSuccessResponse(sslType).FPrint(w)
+		res := sslResponse{
+			Type: sslType,
+			Port: config.Instance.GetSetupPort(),
+		}
+		response.NewSuccessResponse(res).FPrint(w)
 		return
 	}
 

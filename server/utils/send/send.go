@@ -188,7 +188,12 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 
 	orgMap := map[string]error{}
 	errMap.Range(func(key, value any) bool {
-		orgMap[key.(string)] = value.(error)
+		if value != nil {
+			orgMap[key.(string)] = value.(error)
+		}else {
+			orgMap[key.(string)] = nil
+		}
+
 		return true
 	})
 

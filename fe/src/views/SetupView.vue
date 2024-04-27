@@ -95,8 +95,8 @@
             </div>
         </div>
 
-
         <div v-if="active == 4" class="ctn_s">
+
             <div class="desc">
                 <h2>{{ lang.setDNS }}</h2>
                 <div style="margin-top: 10px;">{{ lang.dns_desc }}</div>
@@ -121,6 +121,10 @@
             </div>
         </div>
 
+        <el-alert  :closable="false" title="Warning!" type="error"  center  v-if="active == 5 && sslSettings.type == 0 && port != 80 " 
+                    :description="lang.autoSSLWarn"
+                />
+
         <div v-if="active == 5" class="ctn">
             <div class="desc">
                 <h2>{{ lang.setSSL }}</h2>
@@ -142,9 +146,11 @@
                     <el-form-item :label="lang.ssl_crt_path" v-if="sslSettings.type == '1'">
                         <el-input placeholder="./config/ssl/public.crt" v-model="sslSettings.crt_path"></el-input>
                     </el-form-item>
-
                 </el-form>
+
+
             </div>
+
         </div>
 
         <el-button v-loading.fullscreen.lock="fullscreenLoading" id="next" style="margin-top: 12px" @click="next">{{
@@ -191,6 +197,8 @@ const fullscreenLoading = ref(false)
 
 const dnsInfos = ref([
 ])
+
+const port = ref(80)
 
 const setPassword = () => {
     if (adminSettings.hadSeted) {
@@ -279,7 +287,8 @@ const getSSLConfig = () => {
         if (res.errorNo != 0) {
             ElMessage.error(res.errorMsg)
         } else {
-            sslSettings.type = res.data
+            sslSettings.type = res.data.type
+            port.value = res.data.port
         }
     })
 }
@@ -368,6 +377,5 @@ const next = () => {
     flex-direction: column;
 
 }
-
 #next {}
 </style>

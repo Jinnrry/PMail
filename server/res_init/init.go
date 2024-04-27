@@ -23,7 +23,6 @@ func Init(serverVersion string) {
 	if !config.IsInit {
 		dirInit()
 
-		log.Infof("Please click http://127.0.0.1 to continue.\n")
 		go http_server.SetupStart()
 		<-signal.InitChan
 		http_server.SetupStop()

@@ -1,9 +1,11 @@
 package email
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"io"
 	"net/http"
 	"pmail/config"
@@ -13,6 +15,7 @@ import (
 	"pmail/hooks"
 	"pmail/hooks/framework"
 	"pmail/i18n"
+	"pmail/models"
 	"pmail/utils/async"
 	"pmail/utils/context"
 	"pmail/utils/send"
@@ -107,6 +110,18 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		Name:         reqData.From.Name,
 		EmailAddress: reqData.From.Email,
 	}
+	if reqData.Sender.Email != "" {
+		e.Sender = &parsemail.User{
+			Name:         reqData.Sender.Name,
+			EmailAddress: reqData.Sender.Email,
+		}
+	} else {
+		e.Sender = &parsemail.User{
+			Name:         reqData.From.Name,
+			EmailAddress: reqData.From.Email,
+		}
+	}
+
 	e.Text = []byte(reqData.Text)
 	e.HTML = []byte(reqData.HTML)
 	e.Subject = reqData.Subject
@@ -138,36 +153,36 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 	log.WithContext(ctx).Debugf("插件执行--SendBefore End")
 
-	// 邮件落库
-	sql := "INSERT INTO email (type,subject, reply_to, from_name, from_address, `to`, bcc, cc, text, html, sender, attachments,spf_check, dkim_check, create_time,send_user_id,error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	sqlRes, sqlerr := db.Instance.Exec(db.WithContext(ctx, sql),
-		1,
-		e.Subject,
-		json2string(e.ReplyTo),
-		e.From.Name,
-		e.From.EmailAddress,
-		json2string(e.To),
-		json2string(e.Bcc),
-		json2string(e.Cc),
-		e.Text,
-		e.HTML,
-		json2string(e.Sender),
-		json2string(e.Attachments),
-		1,
-		1,
-		time.Now(),
-		ctx.UserID,
-		"",
-	)
-	emailId, _ := sqlRes.LastInsertId()
+	modelEmail := models.Email{
+		Type:        1,
+		Subject:     e.Subject,
+		ReplyTo:     json2string(e.ReplyTo),
+		FromName:    e.From.Name,
+		FromAddress: e.From.EmailAddress,
+		To:          json2string(e.To),
+		Bcc:         json2string(e.Bcc),
+		Cc:          json2string(e.Cc),
+		Text:        sql.NullString{String: string(e.Text), Valid: true},
+		Html:        sql.NullString{String: string(e.HTML), Valid: true},
+		Sender:      json2string(e.Sender),
+		Attachments: json2string(e.Attachments),
+		SPFCheck:    1,
+		DKIMCheck:   1,
+		SendUserID:  ctx.UserID,
+		SendDate:    time.Now(),
+		Status:      1,
+		CreateTime:  time.Now(),
+	}
 
-	if sqlerr != nil || emailId <= 0 {
+	_, err = db.Instance.Insert(&modelEmail)
+
+	if err != nil || modelEmail.Id <= 0 {
 		log.Println("mysql insert error:", err.Error())
 		response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "send_fail"), err.Error()).FPrint(w)
 		return
 	}
 
-	e.MessageId = emailId
+	e.MessageId = cast.ToInt64(modelEmail.Id)
 
 	async.New(ctx).Process(func(p any) {
 		errMsg := ""
@@ -189,12 +204,12 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 		if err != nil {
 			errMsg = err.Error()
-			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, emailId)
+			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, modelEmail.Id)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
 		} else {
-			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), emailId)
+			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), modelEmail.Id)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}

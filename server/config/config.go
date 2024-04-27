@@ -33,6 +33,15 @@ type Config struct {
 	WebPushToken         string            `json:"webPushToken"`
 	Tables               map[string]string `json:"-"`
 	TablesInitData       map[string]string `json:"-"`
+	setupPort            int               // 初始化阶段端口
+}
+
+func (c *Config) GetSetupPort() int {
+	return c.setupPort
+}
+
+func (c *Config) SetSetupPort(setupPort int) {
+	c.setupPort = setupPort
 }
 
 const DBTypeMySQL = "mysql"
