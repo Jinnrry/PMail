@@ -51,7 +51,7 @@ const SSLTypeUser = "1" //用户上传证书
 
 var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite}
 
-var Instance *Config
+var Instance *Config = &Config{}
 
 func Init() {
 	var cfgData []byte
