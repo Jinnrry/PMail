@@ -9,6 +9,7 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/utils/array"
 	"pmail/utils/async"
+	"pmail/utils/consts"
 	"pmail/utils/context"
 	"pmail/utils/smtp"
 	"strings"
@@ -36,22 +37,31 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 	for _, s := range to {
 		args := strings.Split(s.EmailAddress, "@")
 		if len(args) == 2 {
-			//查询dns mx记录
-			mxInfo, err := net.LookupMX(args[1])
-			address := mxDomain{
-				domain: "smtp." + args[1],
-				mxHost: "smtp." + args[1],
-			}
-			if err != nil {
-				log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败")
-			}
-			if len(mxInfo) > 0 {
-				address = mxDomain{
-					domain: args[1],
-					mxHost: mxInfo[0].Host,
+			if args[1] == consts.TEST_DOMAIN {
+				// 测试使用
+				address := mxDomain{
+					domain: "localhost",
+					mxHost: "127.0.0.1",
 				}
+				toByDomain[address] = append(toByDomain[address], s)
+			} else {
+				//查询dns mx记录
+				mxInfo, err := net.LookupMX(args[1])
+				address := mxDomain{
+					domain: "smtp." + args[1],
+					mxHost: "smtp." + args[1],
+				}
+				if err != nil {
+					log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败")
+				}
+				if len(mxInfo) > 0 {
+					address = mxDomain{
+						domain: args[1],
+						mxHost: mxInfo[0].Host,
+					}
+				}
+				toByDomain[address] = append(toByDomain[address], s)
 			}
-			toByDomain[address] = append(toByDomain[address], s)
 		} else {
 			log.WithContext(ctx).Errorf("邮箱地址解析错误！ %s", s)
 			continue
@@ -119,22 +129,31 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 	for _, s := range to {
 		args := strings.Split(s.EmailAddress, "@")
 		if len(args) == 2 {
-			//查询dns mx记录
-			mxInfo, err := net.LookupMX(args[1])
-			address := mxDomain{
-				domain: "smtp." + args[1],
-				mxHost: "smtp." + args[1],
-			}
-			if err != nil {
-				log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败")
-			}
-			if len(mxInfo) > 0 {
-				address = mxDomain{
-					domain: args[1],
-					mxHost: mxInfo[0].Host,
+			if args[1] == consts.TEST_DOMAIN {
+				// 测试使用
+				address := mxDomain{
+					domain: "localhost",
+					mxHost: "127.0.0.1",
 				}
+				toByDomain[address] = append(toByDomain[address], s)
+			} else {
+				//查询dns mx记录
+				mxInfo, err := net.LookupMX(args[1])
+				address := mxDomain{
+					domain: "smtp." + args[1],
+					mxHost: "smtp." + args[1],
+				}
+				if err != nil {
+					log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败")
+				}
+				if len(mxInfo) > 0 {
+					address = mxDomain{
+						domain: args[1],
+						mxHost: mxInfo[0].Host,
+					}
+				}
+				toByDomain[address] = append(toByDomain[address], s)
 			}
-			toByDomain[address] = append(toByDomain[address], s)
 		} else {
 			log.WithContext(ctx).Errorf("邮箱地址解析错误！ %s", s)
 			continue
@@ -190,7 +209,7 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 	errMap.Range(func(key, value any) bool {
 		if value != nil {
 			orgMap[key.(string)] = value.(error)
-		}else {
+		} else {
 			orgMap[key.(string)] = nil
 		}
 

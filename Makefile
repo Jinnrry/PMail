@@ -47,3 +47,6 @@ package: clean
 	mv server/hooks/web_push/output/* output/plugins
 	mv server/hooks/wechat_push/output/* output/plugins
 	cp README.md output/
+
+test:
+	cd server && go test -v ./...

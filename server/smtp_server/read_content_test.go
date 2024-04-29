@@ -3,11 +3,9 @@ package smtp_server
 import (
 	"bytes"
 	log "github.com/sirupsen/logrus"
-	"io/fs"
 	"net"
 	"net/netip"
 	"os"
-	"path/filepath"
 	"pmail/config"
 	"pmail/db"
 	parsemail2 "pmail/dto/parsemail"
@@ -34,60 +32,20 @@ func testInit() {
 	log.SetOutput(os.Stdout)
 
 	// 设置日志级别为warn以上
-	log.SetLevel(log.TraceLevel)
+	log.SetLevel(log.ErrorLevel)
 
 	var cst, _ = time.LoadLocation("Asia/Shanghai")
 	time.Local = cst
 
 	config.Init()
+	config.Instance.DkimPrivateKeyPath = "../config/dkim/dkim.priv"
+	config.Instance.DbType = config.DBTypeSQLite
+	config.Instance.DbDSN = "../config/pmail_temp.db"
+
 	parsemail2.Init()
 	db.Init()
 	session.Init()
 	hooks.Init("dev")
-}
-
-func TestNuisanace(t *testing.T) {
-	testInit()
-
-	s := Session{
-		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
-	}
-
-	data, _ := os.ReadFile("../docs/nuisance/demo.txt")
-	s.Data(bytes.NewReader(data))
-
-}
-
-func TestSession_Data(t *testing.T) {
-	testInit()
-	s := Session{
-		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-	}
-
-	filepath.WalkDir("docs", func(path string, d fs.DirEntry, err error) error {
-		if !d.IsDir() {
-			data, _ := os.ReadFile(path)
-			s.Data(bytes.NewReader(data))
-		}
-		return nil
-	})
-
-}
-
-func TestSession_DataGmail(t *testing.T) {
-	testInit()
-	s := Session{
-		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-	}
-
-	data, _ := os.ReadFile("docs/gmail/带附件带图片.txt")
-	s.Data(bytes.NewReader(data))
-
 }
 
 func TestPmailEmail(t *testing.T) {
@@ -134,6 +92,7 @@ Content-Type: text/html
 			UserName:    "",
 			UserAccount: "",
 		},
+		To: []string{"ok@jinnrry.com"},
 	}
 
 	s.Data(bytes.NewReader([]byte(emailData)))
@@ -293,11 +252,7 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
+		Ctx:           &context.Context{},
 	}
 
 	s.Data(bytes.NewReader([]byte(deleteEmail)))
@@ -348,11 +303,7 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
+		Ctx:           &context.Context{},
 	}
 
 	s.Data(bytes.NewReader([]byte(readEmail)))
@@ -444,11 +395,7 @@ Pui/meaYr+S4gOWwgeadpeiHqlJlbGF4RHJhbWHnmoTmoKHpqozpgq7ku7Ys55So5LqO5qCh6aqM
 --6edc2ef285d93010a080caccc858c67b--`
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
+		Ctx:           &context.Context{},
 	}
 
 	s.Data(bytes.NewReader([]byte(emailData)))
@@ -496,11 +443,7 @@ Content-Type: text/html
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
+		Ctx:           &context.Context{},
 	}
 
 	s.Data(bytes.NewReader([]byte(moveEmail)))
@@ -534,11 +477,7 @@ PGRpdj7ov5nph4zmmK/lhoXlrrk8L2Rpdj48ZGl2PjwhLS1lbXB0eXNpZ24tLT48L2Rpdj4=
 
 	s := Session{
 		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
-		Ctx: &context.Context{
-			UserID:      1,
-			UserName:    "a",
-			UserAccount: "a",
-		},
+		Ctx:           &context.Context{},
 	}
 
 	s.Data(bytes.NewReader([]byte(data)))

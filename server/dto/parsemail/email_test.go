@@ -36,6 +36,10 @@ func testInit() {
 	time.Local = cst
 
 	config.Init()
+	config.Instance.DkimPrivateKeyPath = "../../config/dkim/dkim.priv"
+	config.Instance.DbType = config.DBTypeSQLite
+	config.Instance.DbDSN = "../../config/pmail_temp.db"
+
 	Init()
 	db.Init()
 	session.Init()

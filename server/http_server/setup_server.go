@@ -51,6 +51,7 @@ func SetupStart() {
 
 func SetupStop() {
 	err := setupServer.Close()
+	log.Infof("Setup End!")
 	if err != nil {
 		panic(err)
 	}

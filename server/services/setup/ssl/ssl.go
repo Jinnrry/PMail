@@ -50,7 +50,7 @@ func GetSSL() string {
 	return cfg.SSLType
 }
 
-func SetSSL(sslType string) error {
+func SetSSL(sslType, priKey, crtKey string) error {
 	cfg, err := setup.ReadConfig()
 	if err != nil {
 		panic(err)
@@ -59,6 +59,11 @@ func SetSSL(sslType string) error {
 		cfg.SSLType = sslType
 	} else {
 		return errors.New("SSL Type Error!")
+	}
+
+	if cfg.SSLType == config.SSLTypeUser {
+		cfg.SSLPrivateKeyPath = priKey
+		cfg.SSLPublicKeyPath = crtKey
 	}
 
 	err = setup.WriteConfig(cfg)

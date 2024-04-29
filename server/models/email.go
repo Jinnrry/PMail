@@ -34,7 +34,7 @@ type Email struct {
 	CreateTime   time.Time      `xorm:"create_time created" json:"create_time"`
 }
 
-func (p Email) TableName() string {
+func (d Email) TableName() string {
 	return "email"
 }
 

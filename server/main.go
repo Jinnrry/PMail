@@ -8,6 +8,7 @@ import (
 	"pmail/config"
 	"pmail/cron_server"
 	"pmail/res_init"
+	"pmail/signal"
 	"pmail/utils/context"
 	"time"
 )
@@ -92,6 +93,12 @@ func main() {
 	// 核心服务启动
 	res_init.Init(version)
 
-	s := make(chan bool)
-	<-s
+	log.Warnf("Server Stoped \n")
+
+}
+
+func stop() {
+	log.Warnf("Server Stop \n")
+	signal.RestartChan <- true
+	log.Warnf("Server Stop2 \n")
 }
