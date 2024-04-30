@@ -1,0 +1,48 @@
+name: PR - Docker unit test
+
+on:
+  pull_request:
+    branches:
+      - master
+    types: [opened, reopened, synchronize, edited]
+  # Please, always create a pull request instead of push to master.
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: docker-test-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Docker tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull Request Labeler
+        if: ${{ failure() }}
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'add-labels'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          labels: 'Auto: Test Failed'
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.8.1
+      - name: Install Dependencies
+        run: npm install --global yarn
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version: '1.22'
+          check-latest: true
+      - name: FE build
+        run: make build_fe
+
+      - name: Run Test
+        run: make test
