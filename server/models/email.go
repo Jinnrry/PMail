@@ -8,7 +8,7 @@ import (
 )
 
 type Email struct {
-	Id           int            `xorm:"id pk unsigned int autoincr notnull default(0)" json:"id"`
+	Id           int            `xorm:"id pk unsigned int autoincr notnull" json:"id"`
 	Type         int8           `xorm:"type tinyint(4) notnull default(0) comment('邮件类型，0:收到的邮件，1:发送的邮件')" json:"type"`
 	GroupId      int            `xorm:"group_id int notnull default(0) comment('分组id')'" json:"group_id"`
 	Subject      string         `xorm:"subject varchar(1000) notnull default('') comment('邮件标题')" json:"subject"`

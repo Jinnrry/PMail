@@ -4,11 +4,14 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"io/fs"
 	"net/http"
+	"os"
 	"pmail/config"
 	"pmail/controllers"
 	"pmail/utils/ip"
+	"strings"
 	"time"
 )
 
@@ -29,6 +32,20 @@ func SetupStart() {
 	HttpPort := 80
 	flag.IntVar(&HttpPort, "p", 80, "初始化阶段Http服务端口")
 	flag.Parse()
+
+	if HttpPort == 80 {
+		envs := os.Environ()
+		for _, env := range envs {
+			if strings.HasPrefix(env, "setup_port=") {
+				HttpPort = cast.ToInt(strings.TrimSpace(strings.ReplaceAll(env, "setup_port=", "")))
+			}
+		}
+	}
+
+	if HttpPort <= 0 || HttpPort > 65535 {
+		HttpPort = 80
+	}
+
 	config.Instance.SetSetupPort(HttpPort)
 	log.Infof("HttpServer Start On Port :%d", HttpPort)
 	if HttpPort == 80 {

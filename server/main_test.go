@@ -22,6 +22,10 @@ import (
 
 var httpClient *http.Client
 
+const TestPort = 17888
+
+var TestHost string = "http://127.0.0.1:" + cast.ToString(TestPort)
+
 func TestMain(m *testing.M) {
 	cookeieJar, err := cookiejar.New(nil)
 	if err != nil {
@@ -53,6 +57,7 @@ func TestMaster(t *testing.T) {
 		t.Fatal(err)
 	}
 	cfg.HttpsEnabled = 2
+	cfg.HttpPort = TestPort
 	err = setup.WriteConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -67,7 +72,7 @@ func TestMaster(t *testing.T) {
 }
 
 func testPort(t *testing.T) {
-	if !portCheck(80) {
+	if !portCheck(TestPort) {
 		t.Error("port check failed")
 	}
 	t.Log("port check passed")
@@ -76,7 +81,7 @@ func testPort(t *testing.T) {
 func testDataBaseSet(t *testing.T) {
 
 	// 获取配置
-	ret, err := http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"database\"}"))
+	ret, err := http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"database\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -88,7 +93,7 @@ func testDataBaseSet(t *testing.T) {
 		t.Error("Get Database Config Api Error!")
 	}
 	// 设置配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader(`
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader(`
 {"action":"set","step":"database","db_type":"sqlite","db_dsn":"./config/pmail_temp.db"}
 `))
 	if err != nil {
@@ -103,7 +108,7 @@ func testDataBaseSet(t *testing.T) {
 	}
 
 	// 获取配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"database\"}"))
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"database\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -125,7 +130,7 @@ func testDataBaseSet(t *testing.T) {
 func testPwdSet(t *testing.T) {
 
 	// 获取配置
-	ret, err := http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"password\"}"))
+	ret, err := http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"password\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -137,7 +142,7 @@ func testPwdSet(t *testing.T) {
 		t.Error("Get Password Config Api Error!")
 	}
 	// 设置配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader(`
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader(`
 {"action":"set","step":"password","account":"testCase","password":"testCase"}
 `))
 	if err != nil {
@@ -152,7 +157,7 @@ func testPwdSet(t *testing.T) {
 	}
 
 	// 获取配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"password\"}"))
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"password\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -173,7 +178,7 @@ func testPwdSet(t *testing.T) {
 
 func testDomainSet(t *testing.T) {
 	// 获取配置
-	ret, err := http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"domain\"}"))
+	ret, err := http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"domain\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -185,7 +190,7 @@ func testDomainSet(t *testing.T) {
 		t.Error("Get domain Config Api Error!")
 	}
 	// 设置配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader(`
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader(`
 {"action":"set","step":"domain","smtp_domain":"test.domain","web_domain":"mail.test.domain"}
 `))
 	if err != nil {
@@ -200,7 +205,7 @@ func testDomainSet(t *testing.T) {
 	}
 
 	// 获取配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"domain\"}"))
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"domain\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -225,7 +230,7 @@ func testDomainSet(t *testing.T) {
 
 func testDNSSet(t *testing.T) {
 	// 获取配置
-	ret, err := http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"dns\"}"))
+	ret, err := http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"dns\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -240,7 +245,7 @@ func testDNSSet(t *testing.T) {
 
 func testSSLSet(t *testing.T) {
 	// 获取配置
-	ret, err := http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"ssl\"}"))
+	ret, err := http.Post(TestHost+"/api/setup", "application/json", strings.NewReader("{\"action\":\"get\",\"step\":\"ssl\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -252,7 +257,7 @@ func testSSLSet(t *testing.T) {
 		t.Error("Get domain Config Api Error!")
 	}
 	// 设置配置
-	ret, err = http.Post("http://127.0.0.1/api/setup", "application/json", strings.NewReader(`
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader(`
 {"action":"set","step":"ssl","ssl_type":"1","key_path":"./config/ssl/private.key","crt_path":"./config/ssl/public.crt"}
 `))
 	if err != nil {
@@ -270,7 +275,7 @@ func testSSLSet(t *testing.T) {
 }
 
 func testLogin(t *testing.T) {
-	ret, err := httpClient.Post("http://127.0.0.1/api/login", "application/json", strings.NewReader("{\"account\":\"testCase\",\"password\":\"testCase\"}"))
+	ret, err := httpClient.Post(TestHost+"/api/login", "application/json", strings.NewReader("{\"account\":\"testCase\",\"password\":\"testCase\"}"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -284,7 +289,7 @@ func testLogin(t *testing.T) {
 }
 
 func testSendEmail(t *testing.T) {
-	ret, err := httpClient.Post("http://127.0.0.1/api/email/send", "application/json", strings.NewReader(`
+	ret, err := httpClient.Post(TestHost+"/api/email/send", "application/json", strings.NewReader(`
 		{
     "from": {
         "name": "i",
@@ -318,7 +323,7 @@ func testSendEmail(t *testing.T) {
 }
 
 func testEmailList(t *testing.T) {
-	ret, err := httpClient.Post("http://127.0.0.1/api/email/list", "application/json", strings.NewReader(`{}`))
+	ret, err := httpClient.Post(TestHost+"/api/email/list", "application/json", strings.NewReader(`{}`))
 	if err != nil {
 		t.Error(err)
 	}
@@ -336,7 +341,7 @@ func testEmailList(t *testing.T) {
 }
 
 func testDelEmail(t *testing.T) {
-	ret, err := httpClient.Post("http://127.0.0.1/api/email/list", "application/json", strings.NewReader(`{}`))
+	ret, err := httpClient.Post(TestHost+"/api/email/list", "application/json", strings.NewReader(`{}`))
 	if err != nil {
 		t.Error(err)
 	}
@@ -355,7 +360,7 @@ func testDelEmail(t *testing.T) {
 	item := lst[0].(map[string]interface{})
 	id := cast.ToInt(item["id"])
 
-	ret, err = httpClient.Post("http://127.0.0.1/api/email/del", "application/json", strings.NewReader(fmt.Sprintf(`{
+	ret, err = httpClient.Post(TestHost+"/api/email/del", "application/json", strings.NewReader(fmt.Sprintf(`{
 	"ids":[%d]	
 }`, id)))
 	if err != nil {
