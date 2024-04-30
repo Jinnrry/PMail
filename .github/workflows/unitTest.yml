@@ -19,6 +19,14 @@ jobs:
   test:
     name: Docker tests
     runs-on: ubuntu-latest
+    container:
+      image: golang
+    env:
+      REPOSITORY: ${{ github.repository }}
+      TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+      SOURCE_BRANCH: ${{ github.ref_name }}
+      COMMIT: ${{ github.workflow_sha }}
+      EVENT: ${{ github.event_name}}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
