@@ -1,1 +1,16 @@
-{"logLevel":"","domain":"test.domain","domains":null,"webDomain":"mail.test.domain","dkimPrivateKeyPath":"config/dkim/dkim.priv","sslType":"1","SSLPrivateKeyPath":"./config/ssl/private.key","SSLPublicKeyPath":"./config/ssl/public.crt","dbDSN":"./config/pmail_temp.db","dbType":"sqlite","httpsEnabled":2,"spamFilterLevel":0,"httpPort":0,"httpsPort":0,"weChatPushAppId":"","weChatPushSecret":"","weChatPushTemplateId":"","weChatPushUserId":"","tgBotToken":"","tgChatId":"","isInit":true,"webPushUrl":"","webPushToken":""}
+{
+  "logLevel": "debug",
+  "domain": "domain.com",
+  "webDomain": "mail.domain.com",
+  "dkimPrivateKeyPath": "config/dkim/dkim.priv",
+  "sslType": "0",
+  "SSLPrivateKeyPath": "config/ssl/private.key",
+  "SSLPublicKeyPath": "config/ssl/public.crt",
+  "dbDSN": "./config/pmail.db",
+  "dbType": "sqlite",
+  "spamFilterLevel": 1,
+  "httpPort": 80,
+  "httpsPort": 443,
+  "isInit": true,
+  "httpsEnabled": 1
+}
