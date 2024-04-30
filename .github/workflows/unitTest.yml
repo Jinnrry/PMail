@@ -41,14 +41,11 @@ jobs:
           labels: 'Auto: Test Failed'
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3.8.1
+        run: apt update && apt install -y nodejs npm
+        
       - name: Install Dependencies
         run: npm install --global yarn
-      - name: Setup Go environment
-        uses: actions/setup-go@v4.1.0
-        with:
-          go-version: '1.22'
-          check-latest: true
+
       - name: FE build
         run: make build_fe
 
