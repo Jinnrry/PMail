@@ -23,9 +23,6 @@ import (
 var httpClient *http.Client
 
 func TestMain(m *testing.M) {
-
-	fmt.Println("!!!!!TestMain!!!!!!!!")
-
 	cookeieJar, err := cookiejar.New(nil)
 	if err != nil {
 		panic(err)
@@ -34,21 +31,18 @@ func TestMain(m *testing.M) {
 	httpClient = &http.Client{Jar: cookeieJar, Timeout: 5 * time.Second}
 	os.Remove("config/config.json")
 	os.Remove("config/pmail_temp.db")
-	go main()
+	go func() {
+		main()
+	}()
 	time.Sleep(3 * time.Second)
 
 	m.Run()
-	fmt.Println("!!!!!TestMain!!!!!!!!")
-	time.Sleep(5 * time.Second)
-	stop()
-	signal.RestartChan <- false
-	fmt.Println("!!!!!TestMain!!!!!!!!")
 
+	signal.StopChan <- true
+	time.Sleep(3 * time.Second)
 }
 
 func TestMaster(t *testing.T) {
-	fmt.Println("!!!!!TestMaster!!!!!!!!")
-
 	t.Run("TestPort", testPort)
 	t.Run("testDataBaseSet", testDataBaseSet)
 	t.Run("testPwdSet", testPwdSet)

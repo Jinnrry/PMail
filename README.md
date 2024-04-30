@@ -129,7 +129,9 @@ The code is in `server` folder.
 
 `make build`
 
-4、
+4、Unit test
+
+`make test`
 
 ## Api Documentation
 

@@ -53,13 +53,23 @@ func Init(serverVersion string) {
 		configStr, _ := json.Marshal(config.Instance)
 		log.Warnf("Config File Info:  %s", configStr)
 
-		restart := <-signal.RestartChan
-		log.Infof("Server Restart!")
-		smtp_server.Stop()
-		http_server.HttpsStop()
-		http_server.HttpStop()
-		pop3_server.Stop()
-		log.Warnf("!!!!!ASDFASDF!!!!%+v", restart)
+		select {
+		case <-signal.RestartChan:
+			log.Infof("Server Restart!")
+			smtp_server.Stop()
+			http_server.HttpsStop()
+			http_server.HttpStop()
+			pop3_server.Stop()
+			hooks.Stop()
+		case <-signal.StopChan:
+			log.Infof("Server Stop!")
+			smtp_server.Stop()
+			http_server.HttpsStop()
+			http_server.HttpStop()
+			pop3_server.Stop()
+			hooks.Stop()
+			return
+		}
 
 	}
 

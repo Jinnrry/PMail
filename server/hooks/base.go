@@ -151,6 +151,8 @@ func NewHookSender(socketPath string, name string, serverVersion string) *HookSe
 	}
 }
 
+var processList []*os.Process
+
 // Init 注册hook对象
 func Init(serverVersion string) {
 
@@ -184,6 +186,7 @@ func Init(serverVersion string) {
 				return nil
 			}
 			fmt.Printf("[%s] Plugin Start! PID:%d", info.Name(), p.Pid)
+			processList = append(processList, p)
 
 			pluginNo++
 
@@ -213,4 +216,11 @@ func Init(serverVersion string) {
 		return nil
 	})
 
+}
+
+func Stop() {
+	log.Info("Plugin Stop")
+	for _, process := range processList {
+		process.Kill()
+	}
 }
