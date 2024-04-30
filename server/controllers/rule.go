@@ -9,10 +9,12 @@ import (
 	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/i18n"
+	"pmail/models"
 	"pmail/services/rule"
 	"pmail/utils/address"
 	"pmail/utils/array"
 	"pmail/utils/context"
+	"pmail/utils/errors"
 )
 
 func GetRule(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
@@ -48,12 +50,30 @@ func UpsertRule(ctx *context.Context, w http.ResponseWriter, req *http.Request) 
 		}
 	}
 
-	err = data.Encode().Save(ctx)
+	err = save(ctx, data.Encode())
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, "server error", err).FPrint(w)
 		return
 	}
 	response.NewSuccessResponse("succ").FPrint(w)
+}
+
+func save(ctx *context.Context, p *models.Rule) error {
+
+	if p.Id > 0 {
+		_, err := db.Instance.Exec(db.WithContext(ctx, "update rule set name=? ,value = ? ,action = ?,params = ?,sort = ? where id = ?"), p.Name, p.Value, p.Action, p.Params, p.Sort, p.Id)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		return nil
+	} else {
+		_, err := db.Instance.Exec(db.WithContext(ctx, "insert into rule (name,value,user_id,action,params,sort) values (?,?,?,?,?,?)"), p.Name, p.Value, ctx.UserID, p.Action, p.Params, p.Sort)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		return nil
+	}
+
 }
 
 type delRuleReq struct {
