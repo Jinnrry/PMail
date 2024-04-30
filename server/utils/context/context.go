@@ -9,12 +9,12 @@ const (
 )
 
 type Context struct {
-	context.Context
-	UserID      int
-	UserAccount string
-	UserName    string
-	Values      map[string]any
-	Lang        string
+	context.Context `json:"-"`
+	UserID          int
+	UserAccount     string
+	UserName        string
+	Values          map[string]any
+	Lang            string
 }
 
 func (c *Context) SetValue(key string, value any) {

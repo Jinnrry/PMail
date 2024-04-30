@@ -1,6 +1,7 @@
 package http_server
 
 import (
+	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/fs"
@@ -74,7 +75,7 @@ func HttpStart() {
 	}
 
 	err := httpServer.ListenAndServe()
-	if err != nil {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }

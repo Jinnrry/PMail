@@ -92,6 +92,6 @@ func main() {
 	// 核心服务启动
 	res_init.Init(version)
 
-	s := make(chan bool)
-	<-s
+	log.Warnf("Server Stoped \n")
+
 }

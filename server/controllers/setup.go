@@ -135,7 +135,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "ssl" && reqData["action"] == "set" {
-		err := ssl.SetSSL(reqData["ssl_type"])
+		err := ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"])
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return

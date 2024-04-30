@@ -85,7 +85,6 @@ func SetDatabaseSettings(ctx *context.Context, dbType, dbDSN string) error {
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	models.SyncTables()
 	return nil
 }
 

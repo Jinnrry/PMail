@@ -47,3 +47,6 @@ package: clean
 	mv server/hooks/web_push/output/* output/plugins
 	mv server/hooks/wechat_push/output/* output/plugins
 	cp README.md output/
+
+test:
+	export setup_port=17888 && cd server && go test -v ./...

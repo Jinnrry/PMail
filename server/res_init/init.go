@@ -9,7 +9,6 @@ import (
 	"pmail/dto/parsemail"
 	"pmail/hooks"
 	"pmail/http_server"
-	"pmail/models"
 	"pmail/pop3_server"
 	"pmail/services/setup/ssl"
 	"pmail/session"
@@ -37,7 +36,6 @@ func Init(serverVersion string) {
 		if err != nil {
 			panic(err)
 		}
-		models.SyncTables()
 		session.Init()
 		hooks.Init(serverVersion)
 		// smtp server start
@@ -53,12 +51,24 @@ func Init(serverVersion string) {
 		configStr, _ := json.Marshal(config.Instance)
 		log.Warnf("Config File Info:  %s", configStr)
 
-		<-signal.RestartChan
-		log.Infof("Server Restart!")
-		smtp_server.Stop()
-		http_server.HttpsStop()
-		http_server.HttpStop()
-		pop3_server.Stop()
+		select {
+		case <-signal.RestartChan:
+			log.Infof("Server Restart!")
+			smtp_server.Stop()
+			http_server.HttpsStop()
+			http_server.HttpStop()
+			pop3_server.Stop()
+			hooks.Stop()
+		case <-signal.StopChan:
+			log.Infof("Server Stop!")
+			smtp_server.Stop()
+			http_server.HttpsStop()
+			http_server.HttpStop()
+			pop3_server.Stop()
+			hooks.Stop()
+			return
+		}
+
 	}
 
 }
