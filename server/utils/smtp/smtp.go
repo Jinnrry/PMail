@@ -34,6 +34,7 @@ import (
 )
 
 var NoSupportSTARTTLSError = errors.New("smtp: server doesn't support STARTTLS")
+var EOFError = errors.New("EOF")
 
 // A Client represents a client connection to an SMTP server.
 type Client struct {

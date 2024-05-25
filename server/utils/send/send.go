@@ -174,7 +174,8 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 
 			// 使用其他方式发送
 			if err != nil {
-				if errors.Is(err, smtp.NoSupportSTARTTLSError) {
+				// EOF 表示未知错误，此时降级为非tls连接发送（目前仅139邮箱有这个问题）
+				if errors.Is(err, smtp.NoSupportSTARTTLSError) || err.Error() == "EOF" {
 					err = smtp.SendMailWithTls("", domain.mxHost+":465", nil, e.From.EmailAddress, buildAddress(tos), b)
 					if err != nil {
 						log.WithContext(ctx).Warnf("Unsafe! %s Server Not Support SMTPS & STARTTLS", domain.domain)
