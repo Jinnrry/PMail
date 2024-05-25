@@ -19,6 +19,7 @@ require (
 	golang.org/x/crypto v0.22.0
 	golang.org/x/text v0.14.0
 	modernc.org/sqlite v1.29.6
+	xorm.io/builder v0.3.13
 	xorm.io/xorm v1.3.9
 )
 
@@ -50,5 +51,4 @@ require (
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
 	modernc.org/token v1.1.0 // indirect
-	xorm.io/builder v0.3.13 // indirect
 )
