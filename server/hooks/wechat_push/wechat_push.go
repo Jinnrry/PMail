@@ -72,6 +72,7 @@ func (w *WeChatPushHook) getWxAccessToken() string {
 	if err != nil {
 		return ""
 	}
+	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 	var ret accessTokenRes
 	_ = json.Unmarshal(body, &ret)
