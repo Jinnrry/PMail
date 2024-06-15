@@ -21,16 +21,19 @@ func Init(version string) error {
 	switch config.Instance.DbType {
 	case "mysql":
 		Instance, err = xorm.NewEngine("mysql", dsn)
+		Instance.SetMaxOpenConns(100)
+		Instance.SetMaxIdleConns(10)
 	case "sqlite":
 		Instance, err = xorm.NewEngine("sqlite", dsn)
+		Instance.SetMaxOpenConns(1)
+		Instance.SetMaxIdleConns(1)
 	default:
 		return errors.New("Database Type Error!")
 	}
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	Instance.SetMaxOpenConns(100)
-	Instance.SetMaxIdleConns(10)
+
 	Instance.ShowSQL(false)
 	// 同步表结构
 	syncTables()
