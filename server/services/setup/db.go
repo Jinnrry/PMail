@@ -43,18 +43,11 @@ func GetAdminPassword(ctx *context.Context) (string, error) {
 
 func SetAdminPassword(ctx *context.Context, account, pwd string) error {
 	encodePwd := password.Encode(pwd)
-	res, err := db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user (account, name, password) VALUES (?, 'admin',?)"), account, encodePwd)
+	_, err := db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user (account, name, password,is_admin) VALUES (?, 'admin',?,1)"), account, encodePwd)
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	_, err = db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user_auth (user_id, email_account) VALUES (?, '*')"), id)
-	if err != nil {
-		return errors.Wrap(err)
-	}
+
 	return nil
 }
 
@@ -81,7 +74,7 @@ func SetDatabaseSettings(ctx *context.Context, dbType, dbDSN string) error {
 	}
 	config.Init()
 	// 检查数据库是否能正确连接
-	err = db.Init()
+	err = db.Init("")
 	if err != nil {
 		return errors.Wrap(err)
 	}

@@ -52,6 +52,11 @@ func Start() {
 }
 
 func Stop() {
-	instance.Stop()
-	instanceTls.Stop()
+	if instance != nil {
+		instance.Stop()
+	}
+
+	if instanceTls != nil {
+		instanceTls.Stop()
+	}
 }

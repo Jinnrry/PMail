@@ -8,16 +8,19 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import $http from "../http/http";
 import { reactive, ref } from 'vue'
 import useGroupStore from '../stores/group'
 import lang from '../i18n/i18n';
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
 
 const groupStore = useGroupStore()
 const router = useRouter()
 
 
 const data = ref([])
+
 
 $http.get('/api/group').then(res => {
   data.value = res.data

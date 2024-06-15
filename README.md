@@ -48,7 +48,12 @@ First go to [spamhaus](https://check.spamhaus.org/) and check your domain name a
 
 ## 2、Run
 
-`./pmail` (Set the http port for the initialization interface with `-p` )
+`./pmail -p 80`
+
+> -p Set the http port of the bootstrap setup interface, the default is port 80, note that this parameter only affects the bootstrap setup phase, if you need to change the port after setup is complete, please modify the configuration file.
+
+> [!IMPORTANT]
+> The SSL certificate will not be set automatically if the bootstrap setup phase uses a port other than 80.
 
 Or
 
@@ -141,3 +146,6 @@ The code is in `server` folder.
 
 [go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
 
+# Thanks
+
+A special thanks to [Jetbrains](http://jetbrains.com/) for donating licenses to the project.

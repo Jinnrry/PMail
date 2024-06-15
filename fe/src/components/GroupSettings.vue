@@ -17,11 +17,12 @@
 </template>
 
 <script setup>
-import $http from "../http/http";
-import { reactive, ref } from 'vue'
+import { reactive, ref, getCurrentInstance } from 'vue'
 import lang from '../i18n/i18n';
 
 const data = reactive([])
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
 
 $http.get('/api/group').then(res => {
     data.push(...res.data)
@@ -29,7 +30,7 @@ $http.get('/api/group').then(res => {
 
 const del = function (node, data) {
     if (data.id != -1) {
-        $http.post("/api/group/del", { "id": data.id }).then(res => {
+        this.$axios.post("/api/group/del", { "id": data.id }).then(res => {
             if (res.errorNo != 0) {
                 ElMessage({
                     message: res.errorMsg,
@@ -79,14 +80,14 @@ const addRoot = function () {
 
 const onInputBlur = function (item) {
     if (item.label != "") {
-        $http.post("/api/group/add", { "name": item.label, "parent_id": item.parent_id }).then(res => {
+        this.$axios.post("/api/group/add", { "name": item.label, "parent_id": item.parent_id }).then(res => {
             if (res.errorNo != 0) {
                 ElMessage({
                     message: res.errorMsg,
                     type: 'error',
                 })
             } else {
-                $http.get('/api/group').then(res => {
+                this.$axios.get('/api/group').then(res => {
                     data.splice(0, data.length)
                     data.push(...res.data)
                 })

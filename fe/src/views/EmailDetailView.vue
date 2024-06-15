@@ -35,14 +35,16 @@
 </template>
 
 <script setup>
-import $http from "../http/http";
 
-import { RouterLink } from 'vue-router'
 import { reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import router from "@/router";  //根路由对象
 import { Document } from '@element-plus/icons-vue';
 import lang from '../i18n/i18n';
+
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
+
 
 const route = useRoute()
 const detailData = ref({

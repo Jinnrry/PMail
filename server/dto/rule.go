@@ -17,6 +17,7 @@ var (
 
 type Rule struct {
 	Id     int      `json:"id"`
+	UserId int      `json:"user_id"`
 	Name   string   `json:"name"`
 	Rules  []*Value `json:"rules"`
 	Action RuleType `json:"action"`
@@ -37,6 +38,7 @@ func (p *Rule) Decode(data *models.Rule) *Rule {
 	p.Action = RuleType(data.Action)
 	p.Sort = data.Sort
 	p.Params = data.Params
+	p.UserId = data.UserId
 	return p
 }
 

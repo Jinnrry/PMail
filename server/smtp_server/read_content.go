@@ -19,9 +19,11 @@ import (
 	"pmail/services/rule"
 	"pmail/utils/async"
 	"pmail/utils/context"
+	"pmail/utils/errors"
 	"pmail/utils/send"
 	"strings"
 	"time"
+	. "xorm.io/builder"
 )
 
 func (s *Session) Data(r io.Reader) error {
@@ -61,8 +63,12 @@ func (s *Session) Data(r io.Reader) error {
 	}
 
 	// 判断是收信还是转发，只要是登陆了，都当成转发处理
-	//account, domain := email.From.GetDomainAccount()
 	if s.Ctx.UserID > 0 {
+		account, _ := email.From.GetDomainAccount()
+		if account != ctx.UserAccount && !ctx.IsAdmin {
+			return errors.New("No Auth")
+		}
+
 		log.WithContext(ctx).Debugf("开始执行插件SendBefore！")
 		for _, hook := range hooks.HookList {
 			if hook == nil {
@@ -77,7 +83,7 @@ func (s *Session) Data(r io.Reader) error {
 		}
 
 		// 转发
-		err := saveEmail(ctx, email, s.Ctx.UserID, 1, true, true)
+		_, err := saveEmail(ctx, len(emailData), email, s.Ctx.UserID, 1, true, true)
 		if err != nil {
 			log.WithContext(ctx).Errorf("Email Save Error %v", err)
 		}
@@ -105,8 +111,17 @@ func (s *Session) Data(r io.Reader) error {
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
+			_, err = db.Instance.Exec(db.WithContext(ctx, "update user_email set status =2  where email_id = ? "), email.MessageId)
+			if err != nil {
+				log.WithContext(ctx).Errorf("sql Error :%+v", err)
+			}
+
 		} else {
 			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), email.MessageId)
+			if err != nil {
+				log.WithContext(ctx).Errorf("sql Error :%+v", err)
+			}
+			_, err = db.Instance.Exec(db.WithContext(ctx, "update user_email set status =1  where email_id = ? "), email.MessageId)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
@@ -120,10 +135,6 @@ func (s *Session) Data(r io.Reader) error {
 		// DKIM校验
 		dkimStatus = parsemail.Check(bytes.NewReader(emailData))
 
-		if err != nil {
-			log.WithContext(ctx).Errorf("邮件内容解析失败！ Error : %v \n", err)
-		}
-
 		SPFStatus = spfCheck(s.RemoteAddress.String(), email.Sender, email.Sender.EmailAddress)
 
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！")
@@ -134,10 +145,6 @@ func (s *Session) Data(r io.Reader) error {
 			hook.ReceiveParseAfter(ctx, email)
 		}
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！End")
-
-		if email == nil {
-			return nil
-		}
 
 		// 垃圾过滤
 		if config.Instance.SpamFilterLevel == 1 && !SPFStatus && !dkimStatus {
@@ -150,27 +157,34 @@ func (s *Session) Data(r io.Reader) error {
 			return nil
 		}
 
-		saveEmail(ctx, email, 0, 0, SPFStatus, dkimStatus)
+		users, _ := saveEmail(ctx, len(emailData), email, 0, 0, SPFStatus, dkimStatus)
 
 		if email.MessageId > 0 {
 			log.WithContext(ctx).Debugf("开始执行邮件规则！")
-			// 执行邮件规则
-			rs := rule.GetAllRules(ctx)
-			for _, r := range rs {
-				if rule.MatchRule(ctx, r, email) {
-					rule.DoRule(ctx, r, email)
+			for _, user := range users {
+				// 执行邮件规则
+				rs := rule.GetAllRules(ctx, user.ID)
+				for _, r := range rs {
+					if rule.MatchRule(ctx, r, email) {
+						rule.DoRule(ctx, r, email)
+					}
 				}
 			}
 		}
 
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveSaveAfter！")
+		var ue []*models.UserEmail
+		err = db.Instance.Table(&models.UserEmail{}).Where("email_id=?", email.MessageId).Find(&ue)
+		if err != nil {
+			log.WithContext(ctx).Errorf("sql Error :%+v", err)
+		}
 		as3 := async.New(ctx)
 		for _, hook := range hooks.HookList {
 			if hook == nil {
 				continue
 			}
 			as3.WaitProcess(func(hk any) {
-				hk.(framework.EmailHook).ReceiveSaveAfter(ctx, email)
+				hk.(framework.EmailHook).ReceiveSaveAfter(ctx, email, ue)
 			}, hook)
 		}
 		as3.Wait()
@@ -181,7 +195,7 @@ func (s *Session) Data(r io.Reader) error {
 	return nil
 }
 
-func saveEmail(ctx *context.Context, email *parsemail.Email, sendUserID int, emailType int, SPFStatus, dkimStatus bool) error {
+func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserID int, emailType int, SPFStatus, dkimStatus bool) ([]*models.User, error) {
 	var dkimV, spfV int8
 	if dkimStatus {
 		dkimV = 1
@@ -193,12 +207,11 @@ func saveEmail(ctx *context.Context, email *parsemail.Email, sendUserID int, ema
 	log.WithContext(ctx).Debugf("开始入库！")
 
 	if email == nil {
-		return nil
+		return nil, nil
 	}
 
 	modelEmail := models.Email{
 		Type:        cast.ToInt8(emailType),
-		GroupId:     email.GroupId,
 		Subject:     email.Subject,
 		ReplyTo:     json2string(email.ReplyTo),
 		FromName:    email.From.Name,
@@ -227,8 +240,55 @@ func saveEmail(ctx *context.Context, email *parsemail.Email, sendUserID int, ema
 	if modelEmail.Id > 0 {
 		email.MessageId = cast.ToInt64(modelEmail.Id)
 	}
+	// 收信人信息
+	var users []*models.User
 
-	return nil
+	// 如果是收信
+	if emailType == 0 {
+		// 找到收信人id
+		accounts := []string{}
+		for _, user := range append(append(email.To, email.Cc...), email.Bcc...) {
+			account, _ := user.GetDomainAccount()
+			if account != "" {
+				accounts = append(accounts, account)
+			}
+		}
+
+		where, params, _ := ToSQL(In("account", accounts))
+
+		err = db.Instance.Table(&models.User{}).Where(where, params...).Find(&users)
+		if err != nil {
+			log.WithContext(ctx).Errorf("db Select error:%+v", err.Error())
+		}
+
+		if len(users) > 0 {
+			for _, user := range users {
+				ue := models.UserEmail{EmailID: modelEmail.Id, UserID: user.ID}
+				_, err = db.Instance.Insert(&ue)
+				if err != nil {
+					log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
+				}
+			}
+		} else {
+			users = append(users, &models.User{ID: 1})
+			// 当邮件找不到收件人的时候，邮件全部丢给管理员账号
+			// id = 1的账号直接当成管理员账号处理
+			ue := models.UserEmail{EmailID: modelEmail.Id, UserID: 1}
+			_, err = db.Instance.Insert(&ue)
+			if err != nil {
+				log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
+			}
+		}
+
+	} else {
+		ue := models.UserEmail{EmailID: modelEmail.Id, UserID: ctx.UserID}
+		_, err = db.Instance.Insert(&ue)
+		if err != nil {
+			log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
+		}
+	}
+
+	return users, nil
 }
 
 func json2string(d any) string {

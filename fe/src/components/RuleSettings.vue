@@ -98,7 +98,6 @@
 
 <script setup>
 import { ref, reactive } from 'vue';
-import $http from "../http/http";
 import lang from '../i18n/i18n';
 import {
     Plus,
@@ -106,6 +105,12 @@ import {
     Edit,
     InfoFilled
 } from '@element-plus/icons-vue'
+
+
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
+
 const data = ref([])
 const dialogVisible = ref(false)
 const READ = 1
@@ -134,10 +139,13 @@ const groupData = reactive({
 
 const reflushGroupInfos = function () {
     $http.get('/api/group/list').then(res => {
-        groupData.list = res.data
-        for (let i = 0; i < groupData.list.length; i++) {
-            groupData.list[i].id += ""
+        if (res.data != null) {
+            groupData.list = res.data
+            for (let i = 0; i < groupData.list.length; i++) {
+                groupData.list[i].id += ""
+            }
         }
+
     })
 }
 

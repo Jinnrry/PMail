@@ -2,7 +2,7 @@
     <div id="main">
         <el-form label-width="100px" :rules="rules" ref="ruleFormRef" :model="ruleForm" status-icon>
             <el-form-item :label="lang.sender" prop="sender">
-                <el-input v-model="ruleForm.sender" :placeholder="lang.sender_desc"></el-input>
+                <el-input :disabled="!$userInfos.is_admin" v-model="ruleForm.sender" :placeholder="lang.sender_desc"></el-input>
             </el-form-item>
 
 
@@ -76,8 +76,6 @@
 
 
 <script setup>
-import $http from '../http/http';
-
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, ref, shallowRef, reactive, onMounted } from 'vue'
@@ -85,10 +83,15 @@ import { Close } from '@element-plus/icons-vue';
 import lang from '../i18n/i18n';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { i18nChangeLanguage } from '@wangeditor/editor'
-import router from "@/router";  //根路由对象
+import { useRouter } from 'vue-router';
+const router = useRouter(); 
 import useGroupStore from '../stores/group'
 const groupStore = useGroupStore()
-
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
+const $isLogin = app.appContext.config.globalProperties.$isLogin
+const $userInfos = app.appContext.config.globalProperties.$userInfos
 
 if (lang.lang == "zhCn"){
     i18nChangeLanguage('zh-CN')
@@ -122,6 +125,24 @@ const ruleForm = reactive({
     subject: '',
 })
 const fileList = reactive([]);
+
+
+const init =function(){
+    if (Object.keys($userInfos.value).length == 0) {
+        $http.post("/api/user/info", {}).then(res => {
+            if (res.errorNo == 0) {
+                $userInfos.value = res.data
+            } else {
+                ElMessage({
+                    type: 'error',
+                    message: res.errorMsg,
+                })
+            }
+        })
+    }
+}
+init()
+ruleForm.sender = $userInfos.value.account
 
 
 const validateSender = function (rule, value, callback) {

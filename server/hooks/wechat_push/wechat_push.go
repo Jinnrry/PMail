@@ -11,6 +11,7 @@ import (
 	"pmail/config"
 	"pmail/dto/parsemail"
 	"pmail/hooks/framework"
+	"pmail/models"
 	"pmail/utils/context"
 	"strings"
 	"time"
@@ -31,23 +32,20 @@ type WeChatPushHook struct {
 	mainConfig   *config.Config
 }
 
-func (w *WeChatPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+func (w *WeChatPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
 	if w.appId == "" || w.secret == "" || w.pushUser == "" {
 		return
 	}
 
-	// 被标记为已读，或者是已删除，或是垃圾邮件 就不处理了
-	if email.IsRead == 1 || email.Status == 3 || email.MessageId <= 0 {
-		return
+	for _, u := range ue {
+		// 管理员（Uid=1）收到邮件且非已读、非已删除 触发通知
+		if u.UserID == 1 && u.IsRead == 0 && u.Status != 3 && email.MessageId > 0 {
+			content := "<<" + email.Subject + ">>  " + string(email.Text)
+
+			w.sendUserMsg(nil, w.pushUser, content)
+		}
 	}
 
-	content := string(email.Text)
-
-	if content == "" {
-		content = email.Subject
-	}
-
-	w.sendUserMsg(nil, w.pushUser, content)
 }
 
 func (w *WeChatPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
@@ -72,6 +70,7 @@ func (w *WeChatPushHook) getWxAccessToken() string {
 	if err != nil {
 		return ""
 	}
+	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 	var ret accessTokenRes
 	_ = json.Unmarshal(body, &ret)
@@ -131,7 +130,7 @@ func NewWechatPushHook() *WeChatPushHook {
 	var cfgData []byte
 	var err error
 
-	cfgData, err = os.ReadFile("../../config/config.json")
+	cfgData, err = os.ReadFile("./config/config.json")
 	if err != nil {
 		panic(err)
 	}

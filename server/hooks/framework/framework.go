@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"pmail/dto/parsemail"
+	"pmail/models"
 	"pmail/utils/context"
 	"time"
 )
@@ -25,7 +26,7 @@ type EmailHook interface {
 	// ReceiveParseAfter 接收到邮件，解析之后的结构化数据 (收信规则前，写数据库前执行)  同步执行
 	ReceiveParseAfter(ctx *context.Context, email *parsemail.Email)
 	// ReceiveSaveAfter 邮件落库以后执行（收信规则后执行） 异步执行
-	ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email)
+	ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail)
 }
 
 // HookDTO PMail 主程序和插件通信的结构体
@@ -35,6 +36,7 @@ type HookDTO struct {
 	Email         *parsemail.Email // 邮件内容
 	EmailByte     *[]byte          // 未解析前的文件内容
 	ErrMap        map[string]error // 错误信息
+	UserEmail     []*models.UserEmail
 }
 
 type Plugin struct {
@@ -153,7 +155,7 @@ func (p *Plugin) Run() {
 			log.Errorf("params error %+v", err)
 			return
 		}
-		p.hook.ReceiveSaveAfter(hookDTO.Ctx, hookDTO.Email)
+		p.hook.ReceiveSaveAfter(hookDTO.Ctx, hookDTO.Email, hookDTO.UserEmail)
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
 		log.Debugf("[%s] ReceiveSaveAfter End", p.name)

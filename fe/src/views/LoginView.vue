@@ -20,11 +20,14 @@
 <script setup>
 
 import { reactive } from 'vue'
-import $http from "../http/http";
 import { ElMessage } from 'element-plus'
 import router from "@/router";  //根路由对象
 import lang from '../i18n/i18n';
-
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
+const $isLogin = app.appContext.config.globalProperties.$isLogin
+const $userInfos = app.appContext.config.globalProperties.$userInfos
 
 const form = reactive({
     account: '',
@@ -36,6 +39,8 @@ const onSubmit = () => {
         if (res.errorNo != 0) {
             ElMessage.error(res.errorMsg)
         } else {
+            $isLogin.value = true
+            $userInfos.value = res.data
             router.replace({
                 path: '/',
                 query: {

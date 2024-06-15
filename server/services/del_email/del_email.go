@@ -1,35 +1,39 @@
 package del_email
 
 import (
+	log "github.com/sirupsen/logrus"
+	"pmail/consts"
 	"pmail/db"
 	"pmail/models"
-	"pmail/services/auth"
 	"pmail/utils/context"
-	"pmail/utils/errors"
-	"xorm.io/builder"
 )
+import . "xorm.io/builder"
 
 func DelEmail(ctx *context.Context, ids []int) error {
-	var emails []*models.Email
 
-	err := db.Instance.Table("email").Where(builder.In("id", ids)).Find(&emails)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	for _, email := range emails {
-		// 检查是否有权限
-		hasAuth := auth.HasAuth(ctx, email)
-		if !hasAuth {
-			return errors.New("No Auth!")
-		}
-		email.Status = 3
+	if len(ids) == 0 {
+		return nil
 	}
 
-	_, err = db.Instance.Table("email").Where(builder.In("id", ids)).Cols("status").Update(map[string]interface{}{"status": 3})
+	where, params, err := ToSQL(Eq{"user_id": ctx.UserID}.And(Eq{"email_id": ids}))
 
 	if err != nil {
-		return errors.Wrap(err)
+		log.Errorf("del email err: %v", err)
+		return err
 	}
 
-	return nil
+	_, err = db.Instance.Table(&models.UserEmail{}).Where(where, params...).Update(map[string]interface{}{"status": consts.EmailStatusDel})
+	if err != nil {
+		log.Errorf("del email err: %v", err)
+	}
+	return err
+}
+
+func DelEmailI64(ctx *context.Context, ids []int64) error {
+
+	_, err := db.Instance.Table(&models.UserEmail{}).Where("user_id =? and id in ?", ctx.UserID, ids).Update(map[string]interface{}{"status": consts.EmailStatusDel})
+	if err != nil {
+		log.Errorf("del email err: %v", err)
+	}
+	return err
 }

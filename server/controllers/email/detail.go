@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"pmail/dto/response"
-	"pmail/services/auth"
 	"pmail/services/detail"
 	"pmail/utils/context"
 )
@@ -34,13 +33,6 @@ func EmailDetail(ctx *context.Context, w http.ResponseWriter, req *http.Request)
 	email, err := detail.GetEmailDetail(ctx, retData.ID, true)
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
-		return
-	}
-
-	// 检查是否有权限
-	hasAuth := auth.HasAuth(ctx, email)
-	if !hasAuth {
-		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)
 		return
 	}
 

@@ -2,12 +2,11 @@ package setup
 
 import (
 	"pmail/signal"
-	"pmail/utils/context"
 	"pmail/utils/errors"
 )
 
 // Finish 标记初始化完成
-func Finish(ctx *context.Context) error {
+func Finish() error {
 	cfg, err := ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)

@@ -53,7 +53,12 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 ## 2、运行
 
-`./pmail` (通过`-p`参数指定初始化界面的http端口)
+`./pmail -p 80` 
+
+> `-p 指定引导设置界面的http端口，默认为80端口，注意该参数仅影响引导设置阶段，设置完成后如果需要修改端口请修改配置文件`
+
+> [!IMPORTANT]
+> 如果引导设置阶段使用非80端口，将无法自动设置SSL证书
 
 或者
 
@@ -78,7 +83,7 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "domain": "domain.com", // 你的域名
   "webDomain": "mail.domain.com", // web域名
   "dkimPrivateKeyPath": "config/dkim/dkim.priv", // dkim 私钥地址
-  "sslType": "0", // ssl证书更新模式，0自动，1手动
+  "sslType": "0", // ssl证书更新模式，0自动，HTTP模式，1手动、2自动，DNS模式
   "SSLPrivateKeyPath": "config/ssl/private.key", // ssl 证书地址
   "SSLPublicKeyPath": "config/ssl/public.crt", // ssl 证书地址
   "dbDSN": "./config/pmail.db", // 数据库连接DSN
@@ -144,4 +149,6 @@ SMTP端口： 25/465(SSL)
 
 [go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
 
+# 致谢
 
+感谢 [Jetbrains](http://jetbrains.com/) 为本项目免费提供开发工具。

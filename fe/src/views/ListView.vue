@@ -81,13 +81,22 @@
 
 
 <script setup>
-import $http from "../http/http";
+
 import { ArrowDown } from '@element-plus/icons-vue'
 import { RouterLink } from 'vue-router'
 import { reactive, ref, watch } from 'vue'
-import router from "@/router";  //根路由对象
 import useGroupStore from '../stores/group'
 import lang from '../i18n/i18n';
+import { useRouter } from 'vue-router';
+
+
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
+
+
+const router = useRouter(); 
+
 
 const groupStore = useGroupStore()
 

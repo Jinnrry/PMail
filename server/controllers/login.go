@@ -12,6 +12,7 @@ import (
 	"pmail/models"
 	"pmail/session"
 	"pmail/utils/context"
+	"pmail/utils/errors"
 	"pmail/utils/password"
 )
 
@@ -35,17 +36,25 @@ func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	var user models.User
 
 	encodePwd := password.Encode(reqData.Password)
-	
-	_, err = db.Instance.Where("account =? and password =?", reqData.Account, encodePwd).Get(&user)
-	if err != nil && err != sql.ErrNoRows {
+	_, err = db.Instance.Where("account =? and password =? and disabled=0", reqData.Account, encodePwd).Get(&user)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Errorf("%+v", err)
 	}
 
 	if user.ID != 0 {
 		userStr, _ := json.Marshal(user)
 		session.Instance.Put(req.Context(), "user", string(userStr))
-		response.NewSuccessResponse("").FPrint(w)
+		response.NewSuccessResponse(map[string]any{
+			"account":  user.Account,
+			"name":     user.Name,
+			"is_admin": user.IsAdmin,
+		}).FPrint(w)
 	} else {
 		response.NewErrorResponse(response.ParamsError, i18n.GetText(ctx.Lang, "aperror"), "").FPrint(w)
 	}
+}
+
+func Logout(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
+	session.Instance.Clear(ctx.Context)
+	response.NewSuccessResponse("Success").FPrint(w)
 }

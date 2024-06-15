@@ -10,7 +10,6 @@ import (
 type Email struct {
 	Id           int            `xorm:"id pk unsigned int autoincr notnull" json:"id"`
 	Type         int8           `xorm:"type tinyint(4) notnull default(0) comment('邮件类型，0:收到的邮件，1:发送的邮件')" json:"type"`
-	GroupId      int            `xorm:"group_id int notnull default(0) comment('分组id')'" json:"group_id"`
 	Subject      string         `xorm:"subject varchar(1000) notnull default('') comment('邮件标题')" json:"subject"`
 	ReplyTo      string         `xorm:"reply_to text comment('回复人')" json:"reply_to"`
 	FromName     string         `xorm:"from_name varchar(50) notnull default('') comment('发件人名称')" json:"from_name"`
@@ -24,17 +23,17 @@ type Email struct {
 	Attachments  string         `xorm:"attachments longtext comment('附件')" json:"attachments"`
 	SPFCheck     int8           `xorm:"spf_check tinyint(1) comment('spf校验是否通过')" json:"spf_check"`
 	DKIMCheck    int8           `xorm:"dkim_check tinyint(1) comment('dkim校验是否通过')" json:"dkim_check"`
-	Status       int8           `xorm:"status tinyint(4) notnull default(0) comment('0未发送，1已发送，2发送失败，3删除')" json:"status"` // 0未发送，1已发送，2发送失败，3删除
+	Status       int8           `xorm:"status tinyint(4) notnull default(0) comment('0未发送，1已发送，2发送失败')" json:"status"` // 0未发送，1已发送，2发送失败
 	CronSendTime time.Time      `xorm:"cron_send_time comment('定时发送时间')" json:"cron_send_time"`
 	UpdateTime   time.Time      `xorm:"update_time updated comment('更新时间')" json:"update_time"`
 	SendUserID   int            `xorm:"send_user_id unsigned int  notnull default(0) comment('发件人用户id')" json:"send_user_id"`
-	IsRead       int8           `xorm:"is_read tinyint(1) comment('是否已读')" json:"is_read"`
+	Size         int            `xorm:"size unsigned int  notnull default(1000) comment('邮件大小')" json:"size"`
 	Error        sql.NullString `xorm:"error text comment('投递错误信息')" json:"error"`
 	SendDate     time.Time      `xorm:"send_date comment('投递时间')" json:"send_date"`
 	CreateTime   time.Time      `xorm:"create_time created" json:"create_time"`
 }
 
-func (d Email) TableName() string {
+func (d *Email) TableName() string {
 	return "email"
 }
 
@@ -45,43 +44,43 @@ type attachments struct {
 	//Content     []byte
 }
 
-func (d Email) GetTos() []*parsemail.User {
+func (d *Email) GetTos() []*parsemail.User {
 	var ret []*parsemail.User
 	json.Unmarshal([]byte(d.To), &ret)
 	return ret
 }
 
-func (d Email) GetReplyTo() []*parsemail.User {
+func (d *Email) GetReplyTo() []*parsemail.User {
 	var ret []*parsemail.User
 	json.Unmarshal([]byte(d.ReplyTo), &ret)
 	return ret
 }
 
-func (d Email) GetSender() *parsemail.User {
+func (d *Email) GetSender() *parsemail.User {
 	var ret *parsemail.User
 	json.Unmarshal([]byte(d.Sender), &ret)
 	return ret
 }
 
-func (d Email) GetBcc() []*parsemail.User {
+func (d *Email) GetBcc() []*parsemail.User {
 	var ret []*parsemail.User
 	json.Unmarshal([]byte(d.Bcc), &ret)
 	return ret
 }
 
-func (d Email) GetCc() []*parsemail.User {
+func (d *Email) GetCc() []*parsemail.User {
 	var ret []*parsemail.User
 	json.Unmarshal([]byte(d.Cc), &ret)
 	return ret
 }
 
-func (d Email) GetAttachments() []*parsemail.Attachment {
+func (d *Email) GetAttachments() []*parsemail.Attachment {
 	var ret []*parsemail.Attachment
 	json.Unmarshal([]byte(d.Attachments), &ret)
 	return ret
 }
 
-func (d Email) MarshalJSON() ([]byte, error) {
+func (d *Email) MarshalJSON() ([]byte, error) {
 	type Alias Email
 
 	var allAtt = []attachments{}
@@ -108,7 +107,7 @@ func (d Email) MarshalJSON() ([]byte, error) {
 		Error        string        `json:"error"`
 		Attachments  []attachments `json:"attachments"`
 	}{
-		Alias:        (Alias)(d),
+		Alias:        (Alias)(*d),
 		CronSendTime: d.CronSendTime.Format("2006-01-02 15:04:05"),
 		UpdateTime:   d.UpdateTime.Format("2006-01-02 15:04:05"),
 		CreateTime:   d.CreateTime.Format("2006-01-02 15:04:05"),
@@ -120,7 +119,7 @@ func (d Email) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (d Email) ToTransObj() *parsemail.Email {
+func (d *Email) ToTransObj() *parsemail.Email {
 
 	return &parsemail.Email{
 		From: &parsemail.User{

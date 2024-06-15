@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"pmail/config"
+	"pmail/consts"
 	"pmail/db"
 	"pmail/dto"
 	"pmail/dto/parsemail"
@@ -14,13 +15,13 @@ import (
 	"strings"
 )
 
-func GetAllRules(ctx *context.Context) []*dto.Rule {
+func GetAllRules(ctx *context.Context, userId int) []*dto.Rule {
 	var res []*models.Rule
 	var err error
-	if ctx == nil || ctx.UserID == 0 {
-		err = db.Instance.Decr("sort").Find(&res)
+	if userId == 0 {
+		return nil
 	} else {
-		err = db.Instance.Where("user_id=?", ctx.UserID).Decr("sort").Find(&res)
+		err = db.Instance.Where("user_id=?", userId).Decr("sort").Find(&res)
 	}
 
 	if err != nil {
@@ -64,14 +65,16 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
 
 	switch rule.Action {
 	case dto.READ:
-		email.IsRead = 1
 		if email.MessageId > 0 {
-			db.Instance.Exec(db.WithContext(ctx, "update email set is_read=1 where id =?"), email.MessageId)
+			_, err := db.Instance.Table(&models.UserEmail{}).Where("email_id=? and user_id=?", email.MessageId, rule.UserId).Cols("is_read").Update(map[string]interface{}{"is_read": 1})
+			if err != nil {
+				log.WithContext(ctx).Errorf("sqlERror :%v", err)
+			}
 		}
 	case dto.DELETE:
-		email.Status = 3
-		if email.MessageId > 0 {
-			db.Instance.Exec(db.WithContext(ctx, "update email set status=3 where id =?"), email.MessageId)
+		_, err := db.Instance.Table(&models.UserEmail{}).Where("email_id=? and user_id=?", email.MessageId, rule.UserId).Cols("status").Update(map[string]interface{}{"status": consts.EmailStatusDel})
+		if err != nil {
+			log.WithContext(ctx).Errorf("sqlERror :%v", err)
 		}
 	case dto.FORWARD:
 		if strings.Contains(rule.Params, config.Instance.Domain) {
@@ -83,9 +86,9 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
 			log.WithContext(ctx).Errorf("Forward Error:%v", err)
 		}
 	case dto.MOVE:
-		email.GroupId = cast.ToInt(rule.Params)
-		if email.MessageId > 0 {
-			db.Instance.Exec(db.WithContext(ctx, "update email set group_id=? where id =?"), email.GroupId, email.MessageId)
+		_, err := db.Instance.Table(&models.UserEmail{}).Where("email_id=? and user_id=?", email.MessageId, rule.UserId).Cols("group_id").Update(map[string]interface{}{"group_id": cast.ToInt(rule.Params)})
+		if err != nil {
+			log.WithContext(ctx).Errorf("sqlERror :%v", err)
 		}
 	}
 

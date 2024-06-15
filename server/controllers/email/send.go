@@ -64,6 +64,11 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !ctx.IsAdmin && reqData.From.Name != ctx.UserAccount {
+		response.NewErrorResponse(response.ParamsError, "params error", "").FPrint(w)
+		return
+	}
+
 	if reqData.From.Email == "" && reqData.From.Name != "" {
 		reqData.From.Email = reqData.From.Name + "@" + config.Instance.Domain
 	}

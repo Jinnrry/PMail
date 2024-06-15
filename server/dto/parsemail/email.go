@@ -52,9 +52,7 @@ type Email struct {
 	Attachments []*Attachment
 	ReadReceipt []string
 	Date        string
-	IsRead      int
 	Status      int // 0未发送，1已发送，2发送失败，3删除
-	GroupId     int // 分组id
 	MessageId   int64
 }
 

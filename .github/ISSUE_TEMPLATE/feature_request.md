@@ -7,5 +7,4 @@ assignees: ''
 
 ---
 
-**有什么问题？ / Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## 请完整读完[README](https://github.com/Jinnrry/PMail/blob/master/README_CN.md)再提问! / Before asking questions, please read the [README](https://github.com/Jinnrry/PMail/blob/master/README.md) !

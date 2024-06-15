@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"pmail/dto/parsemail"
 	"pmail/hooks/framework"
+	"pmail/models"
 	"pmail/utils/context"
 	"strings"
 	"time"
@@ -26,12 +27,13 @@ type HookSender struct {
 	socket string
 }
 
-func (h *HookSender) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+func (h *HookSender) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
 	log.WithContext(ctx).Debugf("[%s]Plugin ReceiveSaveAfter Start", h.name)
 
 	dto := framework.HookDTO{
-		Ctx:   ctx,
-		Email: email,
+		Ctx:       ctx,
+		Email:     email,
+		UserEmail: ue,
 	}
 	body, _ := json.Marshal(dto)
 
