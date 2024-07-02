@@ -1,5 +1,8 @@
 <template>
     <el-form :model="ruleForm" :rules="rules" status-icon>
+
+        <el-divider content-position="left">{{lang.modify_pwd}}</el-divider>
+
         <el-form-item :label="lang.modify_pwd" prop="new_pwd">
             <el-input type="password" v-model="ruleForm.new_pwd" />
         </el-form-item>
@@ -13,14 +16,25 @@
                 {{ lang.submit }}
             </el-button>
         </el-form-item>
+
+        <el-divider content-position="left">{{lang.logout}}</el-divider>
+        <el-form-item>
+            <el-button type="primary" @click="logout">
+                {{ lang.logout }}
+            </el-button>
+        </el-form-item>
     </el-form>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue'
 import { ElNotification } from 'element-plus'
-import $http from "../http/http";
 import lang from '../i18n/i18n';
+
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance()
+const $http = app.appContext.config.globalProperties.$http
+
 const ruleForm = reactive({
     new_pwd: "",
     new_pwd2: ""
@@ -31,6 +45,12 @@ const rules = reactive({
     new_pwd2: [{ required: true, message: lang.err_required_pwd, trigger: 'blur' },],
 
 })
+
+const logout = function(){
+    $http.post("/api/logout", {  }).then(res => {
+        location.reload();
+    })
+}
 
 const submit = function () {
     if (ruleForm.new_pwd == ""){

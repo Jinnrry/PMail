@@ -5,9 +5,13 @@ import (
 	"github.com/Jinnrry/gopop"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
+	"pmail/consts"
 	"pmail/db"
+	"pmail/dto"
 	"pmail/models"
+	"pmail/services/del_email"
 	"pmail/services/detail"
+	"pmail/services/list"
 	"pmail/utils/array"
 	"pmail/utils/context"
 	"pmail/utils/errors"
@@ -100,7 +104,7 @@ func (a action) Pass(session *gopop.Session, pwd string) error {
 
 	encodePwd := password.Encode(pwd)
 
-	_, err := db.Instance.Where("account =? and password =?", session.User, encodePwd).Get(&user)
+	_, err := db.Instance.Where("account =? and password =? and disabled = 0", session.User, encodePwd).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 	}
@@ -136,7 +140,7 @@ func (a action) Apop(session *gopop.Session, username, digest string) error {
 
 	var user models.User
 
-	_, err := db.Instance.Where("account =? ", username).Get(&user)
+	_, err := db.Instance.Where("account =? and disabled = 0", username).Get(&user)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
 	}
@@ -156,26 +160,13 @@ func (a action) Apop(session *gopop.Session, username, digest string) error {
 
 }
 
-type statInfo struct {
-	Num  int64 `json:"num"`
-	Size int64 `json:"size"`
-}
-
 // Stat 查询邮件数量
 func (a action) Stat(session *gopop.Session) (msgNum, msgSize int64, err error) {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: STAT")
 
-	var si statInfo
-	_, err = db.Instance.Select("count(1) as `num`, sum(length(text)+length(html)) as `size`").Table("email").Where("type=0 and status=0").Get(&si)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
-		err = nil
-		log.WithContext(session.Ctx).Debugf("POP3 STAT RETURT :0,0")
-		return 0, 0, nil
-	}
-	log.WithContext(session.Ctx).Debugf("POP3 STAT RETURT : %d,%d", si.Num, si.Size)
-
-	return si.Num, si.Size, nil
+	num, size := list.Stat(session.Ctx.(*context.Context))
+	log.WithContext(session.Ctx).Debugf("POP3 STAT RETURT : %d,%d", num, size)
+	return num, size, nil
 }
 
 // Uidl 查询某封邮件的唯一标志符
@@ -223,26 +214,31 @@ type listItem struct {
 func (a action) List(session *gopop.Session, msg string) ([]gopop.MailInfo, error) {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: LIST ,Args:%s", msg)
 	var res []listItem
-	var listId int64
+	var listId int
 	if msg != "" {
-		listId = cast.ToInt64(msg)
+		listId = cast.ToInt(msg)
 		if listId == 0 {
 			return nil, errors.New("params error")
 		}
 	}
-	var err error
-	var ssql string
 
 	if listId != 0 {
-		err = db.Instance.Select("id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size`").Table("email").Where("id=?", listId).Find(&res)
+		info, err := detail.GetEmailDetail(session.Ctx.(*context.Context), listId, false)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, listItem{
+			Id:   cast.ToInt64(info.Id),
+			Size: cast.ToInt64(info.Size),
+		})
 	} else {
-		err = db.Instance.Select("id, ifnull(LENGTH(TEXT) , 0) + ifnull(LENGTH(html) , 0) AS `size`").Table("email").Where("type=0 and status=0").Find(&res)
-	}
-
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		log.WithContext(session.Ctx.(*context.Context)).Errorf("SQL:%s  Error: %+v", ssql, err)
-		err = nil
-		return []gopop.MailInfo{}, nil
+		emailList, _ := list.GetEmailList(session.Ctx.(*context.Context), dto.SearchTag{Type: consts.EmailTypeReceive, Status: -1, GroupId: -1}, "", true, 0, 99999)
+		for _, info := range emailList {
+			res = append(res, listItem{
+				Id:   cast.ToInt64(info.Id),
+				Size: cast.ToInt64(info.Size),
+			})
+		}
 	}
 	ret := []gopop.MailInfo{}
 	for _, re := range res {
@@ -316,11 +312,7 @@ func (a action) Noop(session *gopop.Session) error {
 func (a action) Quit(session *gopop.Session) error {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: QUIT ")
 	if len(session.DeleteIds) > 0 {
-
-		_, err := db.Instance.Exec(db.WithContext(session.Ctx.(*context.Context), "UPDATE email SET status=3 WHERE id in ?"), session.DeleteIds)
-		if err != nil {
-			log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
-		}
+		del_email.DelEmailI64(session.Ctx.(*context.Context), session.DeleteIds)
 	}
 
 	return nil

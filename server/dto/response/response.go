@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	NeedSetup   = 402
-	NeedLogin   = 403
-	ParamsError = 100
-	ServerError = 500
+	NeedSetup          = 402
+	NeedLogin          = 403
+	NoAccessPrivileges = 405
+	ParamsError        = 100
+	ServerError        = 500
 )
 
 type Response struct {

@@ -18,7 +18,7 @@ import (
 )
 
 func GetRule(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
-	res := rule.GetAllRules(ctx)
+	res := rule.GetAllRules(ctx, ctx.UserID)
 	response.NewSuccessResponse(res).FPrint(w)
 }
 

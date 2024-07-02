@@ -32,7 +32,7 @@ func Init(serverVersion string) {
 		// 启动前检查一遍证书
 		ssl.Update(false)
 		parsemail.Init()
-		err := db.Init()
+		err := db.Init(serverVersion)
 		if err != nil {
 			panic(err)
 		}

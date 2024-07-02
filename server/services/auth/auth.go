@@ -17,26 +17,17 @@ import (
 
 // HasAuth 检查当前用户是否有某个邮件的auth
 func HasAuth(ctx *context.Context, email *models.Email) bool {
-	// 获取当前用户的auth
-	var auth []models.UserAuth
-	err := db.Instance.Where("user_id = ?", ctx.UserID).Find(&auth)
+	if ctx.IsAdmin {
+		return true
+	}
+	var ue *models.UserEmail
+	err := db.Instance.Where("email_id = ?", email.Id).Find(&ue)
 	if err != nil {
-		log.WithContext(ctx).Errorf("SQL error:%+v", err)
+		log.Errorf("Error while checking user: %v", err)
 		return false
 	}
 
-	var hasAuth bool
-	for _, userAuth := range auth {
-		if userAuth.EmailAccount == "*" {
-			hasAuth = true
-			break
-		} else if strings.Contains(email.Bcc, ctx.UserAccount) || strings.Contains(email.Cc, ctx.UserAccount) || strings.Contains(email.To, ctx.UserAccount) {
-			hasAuth = true
-			break
-		}
-	}
-
-	return hasAuth
+	return ue != nil
 }
 
 func DkimGen() string {

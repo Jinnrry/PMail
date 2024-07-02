@@ -43,7 +43,7 @@ func testInit() {
 	config.Instance.DbDSN = "../config/pmail_temp.db"
 
 	parsemail2.Init()
-	db.Init()
+	db.Init("")
 	session.Init()
 	hooks.Init("dev")
 }

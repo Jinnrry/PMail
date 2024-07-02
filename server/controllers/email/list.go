@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/services/list"
 	"pmail/utils/context"
@@ -61,7 +62,14 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		retData.PageSize = 15
 	}
 
-	emailList, total := list.GetEmailList(ctx, retData.Tag, retData.Keyword, offset, retData.PageSize)
+	var tagInfo dto.SearchTag = dto.SearchTag{
+		Type:    -1,
+		Status:  -1,
+		GroupId: -1,
+	}
+	_ = json.Unmarshal([]byte(retData.Tag), &tagInfo)
+
+	emailList, total := list.GetEmailList(ctx, tagInfo, retData.Keyword, false, offset, retData.PageSize)
 
 	for _, email := range emailList {
 		var sender User

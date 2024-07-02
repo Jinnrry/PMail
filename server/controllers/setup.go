@@ -134,14 +134,39 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if reqData["step"] == "ssl" && reqData["action"] == "getParams" {
+		params, err := ssl.GetServerParamsList(reqData["serverName"])
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+			return
+		}
+		response.NewSuccessResponse(params).FPrint(w)
+		return
+	}
+
+	if reqData["step"] == "ssl" && reqData["action"] == "setParams" {
+		for key, v := range reqData {
+			if key != "step" && key != "action" {
+				ssl.SetDomainServerParams(key, v)
+			}
+		}
+		response.NewSuccessResponse("Succ").FPrint(w)
+		return
+	}
+
 	if reqData["step"] == "ssl" && reqData["action"] == "set" {
-		err := ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"])
+
+		serviceName, ok := reqData["serviceName"]
+		if !ok {
+			serviceName = ""
+		}
+		err := ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"], serviceName)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
 		}
 
-		if reqData["ssl_type"] == config.SSLTypeAuto {
+		if reqData["ssl_type"] == config.SSLTypeAutoHTTP || reqData["ssl_type"] == config.SSLTypeAutoDNS {
 			err = ssl.GenSSL(false)
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -150,7 +175,10 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		}
 
 		response.NewSuccessResponse("Succ").FPrint(w)
-		setup.Finish(ctx)
+
+		if reqData["ssl_type"] == config.SSLTypeUser {
+			setup.Finish()
+		}
 		return
 	}
 

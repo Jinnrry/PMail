@@ -146,3 +146,6 @@ The code is in `server` folder.
 
 [go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
 
+# Thanks
+
+A special thanks to [Jetbrains](http://jetbrains.com/) for donating licenses to the project.

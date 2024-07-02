@@ -9,6 +9,7 @@ import (
 	"pmail/config"
 	"pmail/dto/parsemail"
 	"pmail/hooks/framework"
+	"pmail/models"
 	"pmail/utils/context"
 )
 
@@ -17,7 +18,7 @@ type WebPushHook struct {
 	token string
 }
 
-func (w *WebPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+func (w *WebPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
 	if w.url == "" {
 		return
 	}
@@ -77,7 +78,8 @@ func (w *WebPushHook) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
 
 }
 
-func (w *WebPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {}
+func (w *WebPushHook) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
+}
 
 type Config struct {
 	WebPushUrl   string `json:"webPushUrl"`

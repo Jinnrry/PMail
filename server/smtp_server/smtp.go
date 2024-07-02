@@ -81,7 +81,7 @@ func (s *Session) AuthPlain(username, pwd string) error {
 		username = infos[0]
 	}
 
-	_, err := db.Instance.Where("account =? and password =?", username, encodePwd).Get(&user)
+	_, err := db.Instance.Where("account =? and password =? and disabled=0", username, encodePwd).Get(&user)
 	if err != nil && err != sql.ErrNoRows {
 		log.Errorf("%+v", err)
 	}
@@ -90,6 +90,7 @@ func (s *Session) AuthPlain(username, pwd string) error {
 		s.Ctx.UserAccount = user.Account
 		s.Ctx.UserID = user.ID
 		s.Ctx.UserName = user.Name
+		s.Ctx.IsAdmin = user.IsAdmin == 1
 
 		log.WithContext(s.Ctx).Debugf("Auth Success %+v", user)
 		return nil

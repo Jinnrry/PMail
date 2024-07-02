@@ -8,13 +8,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/go-acme/lego/v4/certificate"
+	"github.com/go-acme/lego/v4/challenge/dns01"
+	"github.com/go-acme/lego/v4/providers/dns"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"os"
 	"pmail/config"
 	"pmail/services/setup"
 	"pmail/signal"
+	"pmail/utils/async"
 	"pmail/utils/errors"
+	"strings"
 	"time"
 
 	"github.com/go-acme/lego/v4/certcrypto"
@@ -44,19 +48,20 @@ func GetSSL() string {
 		panic(err)
 	}
 	if cfg.SSLType == "" {
-		return config.SSLTypeAuto
+		return config.SSLTypeAutoHTTP
 	}
 
 	return cfg.SSLType
 }
 
-func SetSSL(sslType, priKey, crtKey string) error {
+func SetSSL(sslType, priKey, crtKey, serviceName string) error {
 	cfg, err := setup.ReadConfig()
 	if err != nil {
 		panic(err)
 	}
-	if sslType == config.SSLTypeAuto || sslType == config.SSLTypeUser {
+	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS {
 		cfg.SSLType = sslType
+		cfg.DomainServiceName = serviceName
 	} else {
 		return errors.New("SSL Type Error!")
 	}
@@ -101,19 +106,34 @@ func GenSSL(update bool) error {
 		key:   privateKey,
 	}
 
-	config := lego.NewConfig(&myUser)
-
-	config.Certificate.KeyType = certcrypto.RSA2048
+	conf := lego.NewConfig(&myUser)
+	conf.UserAgent = "PMail"
+	conf.Certificate.KeyType = certcrypto.RSA2048
 
 	// A client facilitates communication with the CA server.
-	client, err := lego.NewClient(config)
+	client, err := lego.NewClient(conf)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
-	err = client.Challenge.SetHTTP01Provider(GetHttpChallengeInstance())
-	if err != nil {
-		return errors.Wrap(err)
+	if cfg.SSLType == "0" {
+		err = client.Challenge.SetHTTP01Provider(GetHttpChallengeInstance())
+		if err != nil {
+			return errors.Wrap(err)
+		}
+	} else if cfg.SSLType == "2" {
+		err = os.Setenv(strings.ToUpper(cfg.DomainServiceName)+"_PROPAGATION_TIMEOUT", "900")
+		if err != nil {
+			log.Errorf("Set ENV Variable Error: %s", err.Error())
+		}
+		dnspodProvider, err := dns.NewDNSChallengeProviderByName(cfg.DomainServiceName)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		err = client.Challenge.SetDNS01Provider(dnspodProvider, dns01.AddDNSTimeout(15*time.Minute))
+		if err != nil {
+			return errors.Wrap(err)
+		}
 	}
 
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
@@ -126,25 +146,34 @@ func GenSSL(update bool) error {
 		Domains: []string{"smtp." + cfg.Domain, cfg.WebDomain, "pop." + cfg.Domain},
 		Bundle:  true,
 	}
-	certificates, err := client.Certificate.Obtain(request)
-	if err != nil {
-		return errors.Wrap(err)
-	}
 
-	err = os.WriteFile("./config/ssl/private.key", certificates.PrivateKey, 0666)
-	if err != nil {
-		return errors.Wrap(err)
-	}
+	as := async.New(nil)
 
-	err = os.WriteFile("./config/ssl/public.crt", certificates.Certificate, 0666)
-	if err != nil {
-		return errors.Wrap(err)
-	}
+	as.Process(func(params any) {
+		log.Infof("wait ssl")
+		certificates, err := client.Certificate.Obtain(request)
+		if err != nil {
+			panic(err)
+		}
 
-	err = os.WriteFile("./config/ssl/issuerCert.crt", certificates.IssuerCertificate, 0666)
-	if err != nil {
-		return errors.Wrap(err)
-	}
+		err = os.WriteFile("./config/ssl/private.key", certificates.PrivateKey, 0666)
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("./config/ssl/public.crt", certificates.Certificate, 0666)
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("./config/ssl/issuerCert.crt", certificates.IssuerCertificate, 0666)
+		if err != nil {
+			panic(err)
+		}
+
+		setup.Finish()
+
+	}, nil)
 
 	return nil
 }

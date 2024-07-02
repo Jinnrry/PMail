@@ -19,6 +19,14 @@ jobs:
   test:
     name: Docker tests
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql
+        env:
+          MYSQL_DATABASE: pmail
+          MYSQL_ROOT_PASSWORD: githubTest
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     container:
       image: golang
     env:
@@ -51,3 +59,13 @@ jobs:
 
       - name: Run Test
         run: make test
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dbfile
+          path: server/config/pmail_temp.db
+
+
+      - name: Run Test Mysql
+        run: make test_mysql
+

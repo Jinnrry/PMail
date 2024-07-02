@@ -15,6 +15,7 @@ type Context struct {
 	UserName        string
 	Values          map[string]any
 	Lang            string
+	IsAdmin         bool
 }
 
 func (c *Context) SetValue(key string, value any) {

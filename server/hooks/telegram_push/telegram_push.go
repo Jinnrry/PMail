@@ -3,15 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"pmail/config"
 	"pmail/dto/parsemail"
 	"pmail/hooks/framework"
+	"pmail/models"
 	"pmail/utils/context"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type TelegramPushHook struct {
@@ -21,15 +21,18 @@ type TelegramPushHook struct {
 	webDomain    string
 }
 
-func (w *TelegramPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email) {
+func (w *TelegramPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
 	if w.chatId == "" || w.botToken == "" {
 		return
 	}
-	// 被标记为已读，或者是已删除，或是垃圾邮件 就不处理了
-	if email.IsRead == 1 || email.Status == 3 || email.MessageId <= 0 {
-		return
+
+	for _, u := range ue {
+		// 管理员（Uid=1）收到邮件且非已读、非已删除 触发通知
+		if u.UserID == 1 && u.IsRead == 0 && u.Status != 3 && email.MessageId > 0 {
+			w.sendUserMsg(nil, email)
+		}
 	}
-	w.sendUserMsg(nil, email)
+
 }
 
 func (w *TelegramPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
