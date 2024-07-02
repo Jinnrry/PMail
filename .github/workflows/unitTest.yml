@@ -62,5 +62,12 @@ jobs:
       - name: Run Test
         run: make test
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dbfile
+          path: server/config/pmail_temp.db
+
+
       - name: Run Test Mysql
         run: make test_mysql
+

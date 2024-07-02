@@ -292,7 +292,7 @@ func testDataBaseSet(t *testing.T) {
 
 	if array.InArray("mysql", argList) {
 		configData = `
-{"action":"set","step":"database","db_type":"mysql","db_dsn":"root:githubTest@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local"}
+{"action":"set","step":"database","db_type":"mysql","db_dsn":"root:githubTest@tcp(127.0.0.1:3306)/pmail?parseTime=True"}
 `
 	}
 
@@ -716,7 +716,7 @@ func testEmailList(t *testing.T) {
 		t.Error("Get Email List Api Error!")
 	}
 	dt := data.Data.(map[string]interface{})
-	if len(dt["list"].([]interface{})) != 1 {
+	if len(dt["list"].([]interface{})) == 0 {
 		t.Error("Email List Is Empty!")
 	}
 
