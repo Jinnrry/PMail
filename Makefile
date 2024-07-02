@@ -50,3 +50,6 @@ package: clean
 
 test:
 	export setup_port=17888 && cd server && go test -v ./...
+
+test_mysql:
+	export setup_port=17888 && cd server && go test -args "mysql" -v ./...

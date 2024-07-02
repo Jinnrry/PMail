@@ -31,7 +31,18 @@ func DelEmail(ctx *context.Context, ids []int) error {
 
 func DelEmailI64(ctx *context.Context, ids []int64) error {
 
-	_, err := db.Instance.Table(&models.UserEmail{}).Where("user_id =? and id in ?", ctx.UserID, ids).Update(map[string]interface{}{"status": consts.EmailStatusDel})
+	if len(ids) == 0 {
+		return nil
+	}
+
+	where, params, err := ToSQL(Eq{"user_id": ctx.UserID}.And(Eq{"email_id": ids}))
+
+	if err != nil {
+		log.Errorf("del email err: %v", err)
+		return err
+	}
+
+	_, err = db.Instance.Table(&models.UserEmail{}).Where(where, params...).Update(map[string]interface{}{"status": consts.EmailStatusDel})
 	if err != nil {
 		log.Errorf("del email err: %v", err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/spf13/cast"
 	"io"
@@ -14,6 +15,7 @@ import (
 	"pmail/models"
 	"pmail/services/setup"
 	"pmail/signal"
+	"pmail/utils/array"
 	"strconv"
 	"strings"
 	"testing"
@@ -63,12 +65,12 @@ func TestMaster(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Run("testSSLSet", testSSLSet)
-	time.Sleep(3 * time.Second)
+	time.Sleep(8 * time.Second)
 	t.Run("testLogin", testLogin)           // 登录管理员账号
 	t.Run("testCreateUser", testCreateUser) // 创建3个测试用户
 	t.Run("testEditUser", testEditUser)     // 编辑user2，封禁user3
 	t.Run("testSendEmail", testSendEmail)
-	time.Sleep(3 * time.Second)
+	time.Sleep(8 * time.Second)
 	t.Run("testEmailList", testEmailList)
 	t.Run("testDelEmail", testDelEmail)
 
@@ -281,10 +283,21 @@ func testDataBaseSet(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Get Database Config Api Error!")
 	}
-	// 设置配置
-	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader(`
+
+	argList := flag.Args()
+
+	configData := `
 {"action":"set","step":"database","db_type":"sqlite","db_dsn":"./config/pmail_temp.db"}
-`))
+`
+
+	if array.InArray("mysql", argList) {
+		configData = `
+{"action":"set","step":"database","db_type":"mysql","db_dsn":"root:githubTest@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local"}
+`
+	}
+
+	// 设置配置
+	ret, err = http.Post(TestHost+"/api/setup", "application/json", strings.NewReader(configData))
 	if err != nil {
 		t.Error(err)
 	}
@@ -477,6 +490,7 @@ func testLogin(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Login Api Error!")
 	}
+	t.Logf("testLogin Success! Response: %+v", data)
 }
 
 func testLoginUser2(t *testing.T) {
@@ -491,6 +505,7 @@ func testLoginUser2(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Login User2 Api Error!", data)
 	}
+	t.Logf("testLoginUser2 Success! Response: %+v", data)
 }
 
 func testLoginUser3(t *testing.T) {
@@ -505,6 +520,7 @@ func testLoginUser3(t *testing.T) {
 	if data.ErrorNo != 100 {
 		t.Error("Login User3 Api Error!", data)
 	}
+	t.Logf("testLoginUser3 Success! Response: %+v", data)
 }
 
 func testSendEmail(t *testing.T) {
@@ -539,6 +555,7 @@ func testSendEmail(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Send Email Api Error!")
 	}
+	t.Logf("testSendEmail Success! Response: %+v", data)
 }
 
 func testSendEmail2User2ForMove(t *testing.T) {
@@ -573,6 +590,9 @@ func testSendEmail2User2ForMove(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Send Email Api Error!")
 	}
+
+	t.Logf("testSendEmail2User2ForMove Success! Response: %+v", data)
+
 }
 
 func testSendEmail2User1(t *testing.T) {
@@ -607,6 +627,8 @@ func testSendEmail2User1(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Send Email Api Error!")
 	}
+
+	t.Logf("testSendEmail2User1 Success! Response: %+v", data)
 }
 
 func testSendEmail2User2(t *testing.T) {
@@ -641,6 +663,8 @@ func testSendEmail2User2(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Send Email Api Error!")
 	}
+
+	t.Logf("testSendEmail2User2 Success! Response: %+v", data)
 }
 
 func testSendEmail2User3(t *testing.T) {
@@ -675,6 +699,9 @@ func testSendEmail2User3(t *testing.T) {
 	if data.ErrorNo != 0 {
 		t.Error("Send Email Api Error!")
 	}
+
+	t.Logf("testSendEmail2User3 Success! Response: %+v", data)
+
 }
 func testEmailList(t *testing.T) {
 	ret, err := httpClient.Post(TestHost+"/api/email/list", "application/json", strings.NewReader(`{}`))
@@ -700,6 +727,7 @@ func testEmailList(t *testing.T) {
 		t.Error("Email List Data Error!")
 	}
 
+	t.Logf("testEmailList Success! Response: %+v", data)
 }
 
 func testUser2EmailList(t *testing.T) {
@@ -719,6 +747,9 @@ func testUser2EmailList(t *testing.T) {
 	if dt["list"] == nil || len(dt["list"].([]interface{})) != 1 {
 		t.Error("Email List Is Empty!")
 	}
+
+	t.Logf("testUser2EmailList Success! Response: %+v", data)
+
 }
 
 func testDelEmail(t *testing.T) {
@@ -760,6 +791,7 @@ func testDelEmail(t *testing.T) {
 		t.Error("Email Delete Api Error!")
 	}
 
+	t.Logf("testDelEmail Success! Response: %+v", data)
 }
 
 // portCheck 检查端口是占用
