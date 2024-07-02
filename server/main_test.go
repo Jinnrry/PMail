@@ -292,7 +292,7 @@ func testDataBaseSet(t *testing.T) {
 
 	if array.InArray("mysql", argList) {
 		configData = `
-{"action":"set","step":"database","db_type":"mysql","db_dsn":"root:githubTest@tcp(127.0.0.1:3306)/pmail?parseTime=True"}
+{"action":"set","step":"database","db_type":"mysql","db_dsn":"root:githubTest@tcp(mysql:3306)/pmail?parseTime=True"}
 `
 	}
 
