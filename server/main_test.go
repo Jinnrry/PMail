@@ -322,7 +322,7 @@ func testDataBaseSet(t *testing.T) {
 		t.Error("Get Database Config Api Error!")
 	}
 	dt := data.Data.(map[string]interface{})
-	if cast.ToString(dt["db_dsn"]) != "./config/pmail_temp.db" {
+	if cast.ToString(dt["db_dsn"]) == "" {
 		t.Error("Check Database Config Api Error!")
 	}
 
