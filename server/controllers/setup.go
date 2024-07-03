@@ -134,25 +134,25 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "ssl" && reqData["action"] == "getParams" {
-		params, err := ssl.GetServerParamsList(reqData["serverName"])
-		if err != nil {
-			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
-			return
-		}
-		response.NewSuccessResponse(params).FPrint(w)
-		return
-	}
+	//if reqData["step"] == "ssl" && reqData["action"] == "getParams" {
+	//	params, err := ssl.GetServerParamsList(reqData["serverName"])
+	//	if err != nil {
+	//		response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+	//		return
+	//	}
+	//	response.NewSuccessResponse(params).FPrint(w)
+	//	return
+	//}
 
-	if reqData["step"] == "ssl" && reqData["action"] == "setParams" {
-		for key, v := range reqData {
-			if key != "step" && key != "action" {
-				ssl.SetDomainServerParams(key, v)
-			}
-		}
-		response.NewSuccessResponse("Succ").FPrint(w)
-		return
-	}
+	//if reqData["step"] == "ssl" && reqData["action"] == "setParams" {
+	//	for key, v := range reqData {
+	//		if key != "step" && key != "action" {
+	//			ssl.SetDomainServerParams(key, v)
+	//		}
+	//	}
+	//	response.NewSuccessResponse("Succ").FPrint(w)
+	//	return
+	//}
 
 	if reqData["step"] == "ssl" && reqData["action"] == "set" {
 
@@ -166,7 +166,8 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if reqData["ssl_type"] == config.SSLTypeAutoHTTP || reqData["ssl_type"] == config.SSLTypeAutoDNS {
+		//if reqData["ssl_type"] == config.SSLTypeAutoHTTP || reqData["ssl_type"] == config.SSLTypeAutoDNS {
+		if reqData["ssl_type"] == config.SSLTypeAutoHTTP {
 			err = ssl.GenSSL(false)
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)

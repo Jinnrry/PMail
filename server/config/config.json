@@ -4,7 +4,6 @@
   "webDomain": "mail.domain.com",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",
   "sslType": "0",
-  "domainServerName": "",
   "SSLPrivateKeyPath": "config/ssl/private.key",
   "SSLPublicKeyPath": "config/ssl/public.crt",
   "dbDSN": "./config/pmail.db",
