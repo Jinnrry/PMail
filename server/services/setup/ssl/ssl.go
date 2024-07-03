@@ -8,8 +8,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/go-acme/lego/v4/certificate"
-	"github.com/go-acme/lego/v4/challenge/dns01"
-	"github.com/go-acme/lego/v4/providers/dns"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"os"
@@ -18,7 +16,6 @@ import (
 	"pmail/signal"
 	"pmail/utils/async"
 	"pmail/utils/errors"
-	"strings"
 	"time"
 
 	"github.com/go-acme/lego/v4/certcrypto"
@@ -59,9 +56,10 @@ func SetSSL(sslType, priKey, crtKey, serviceName string) error {
 	if err != nil {
 		panic(err)
 	}
-	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS {
+	//if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS {
+	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser {
 		cfg.SSLType = sslType
-		cfg.DomainServiceName = serviceName
+		//cfg.DomainServiceName = serviceName
 	} else {
 		return errors.New("SSL Type Error!")
 	}
@@ -121,20 +119,21 @@ func GenSSL(update bool) error {
 		if err != nil {
 			return errors.Wrap(err)
 		}
-	} else if cfg.SSLType == "2" {
-		err = os.Setenv(strings.ToUpper(cfg.DomainServiceName)+"_PROPAGATION_TIMEOUT", "900")
-		if err != nil {
-			log.Errorf("Set ENV Variable Error: %s", err.Error())
-		}
-		dnspodProvider, err := dns.NewDNSChallengeProviderByName(cfg.DomainServiceName)
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		err = client.Challenge.SetDNS01Provider(dnspodProvider, dns01.AddDNSTimeout(15*time.Minute))
-		if err != nil {
-			return errors.Wrap(err)
-		}
 	}
+	//else if cfg.SSLType == "2" {
+	//	err = os.Setenv(strings.ToUpper(cfg.DomainServiceName)+"_PROPAGATION_TIMEOUT", "900")
+	//	if err != nil {
+	//		log.Errorf("Set ENV Variable Error: %s", err.Error())
+	//	}
+	//	dnspodProvider, err := dns.NewDNSChallengeProviderByName(cfg.DomainServiceName)
+	//	if err != nil {
+	//		return errors.Wrap(err)
+	//	}
+	//	err = client.Challenge.SetDNS01Provider(dnspodProvider, dns01.AddDNSTimeout(15*time.Minute))
+	//	if err != nil {
+	//		return errors.Wrap(err)
+	//	}
+	//}
 
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {

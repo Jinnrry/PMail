@@ -142,7 +142,7 @@
                     <el-form-item :label="lang.ssl_challenge_type" v-if="sslSettings.type == '0'">
                         <el-select :placeholder="lang.ssl_auto_http" v-model="sslSettings.challenge">
                             <el-option :label="lang.ssl_auto_http" value="http" />
-                            <el-option :label="lang.ssl_auto_dns" value="dns" />
+                            <!-- <el-option :label="lang.ssl_auto_dns" value="dns" /> -->
                         </el-select>
 
                         <el-tooltip class="box-item" effect="dark" :content="lang.challenge_typ_desc"
