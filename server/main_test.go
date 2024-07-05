@@ -72,6 +72,7 @@ func TestMaster(t *testing.T) {
 	t.Run("testSendEmail", testSendEmail)
 	time.Sleep(8 * time.Second)
 	t.Run("testEmailList", testEmailList)
+	t.Run("testGetDetail", testGetEmailDetail)
 	t.Run("testDelEmail", testDelEmail)
 
 	t.Run("testSendEmail2User1", testSendEmail2User1)
@@ -106,6 +107,23 @@ func testCheckRule(t *testing.T) {
 	if ue.GroupId == 0 {
 		t.Error("邮件规则执行失败！")
 	}
+}
+
+func testGetEmailDetail(t *testing.T) {
+	ret, err := httpClient.Post(TestHost+"/api/email/detail", "application/json", strings.NewReader(`{
+	"id":1
+}`))
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := readResponse(ret.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if data.ErrorNo != 0 {
+		t.Error("GetEmailDetail Error! ", data)
+	}
+
 }
 
 func testCreateRule(t *testing.T) {
@@ -703,6 +721,7 @@ func testSendEmail2User3(t *testing.T) {
 	t.Logf("testSendEmail2User3 Success! Response: %+v", data)
 
 }
+
 func testEmailList(t *testing.T) {
 	ret, err := httpClient.Post(TestHost+"/api/email/list", "application/json", strings.NewReader(`{}`))
 	if err != nil {

@@ -1,7 +1,12 @@
 package config
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"os"
 )
 
@@ -48,8 +53,8 @@ func (c *Config) SetSetupPort(setupPort int) {
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"
 const SSLTypeAutoHTTP = "0" //自动生成证书
-// const SSLTypeAutoDNS = "2"  //自动生成证书，DNS api验证
-const SSLTypeUser = "1" //用户上传证书
+const SSLTypeAutoDNS = "2"  //自动生成证书，DNS api验证
+const SSLTypeUser = "1"     //用户上传证书
 
 var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite}
 
@@ -85,4 +90,34 @@ func Init() {
 		IsInit = true
 	}
 
+}
+
+func ReadPrivateKey() (*ecdsa.PrivateKey, bool) {
+	key, err := os.ReadFile("./config/ssl/account_private.pem")
+	if err != nil {
+		return createNewPrivateKey(), true
+	}
+
+	block, _ := pem.Decode(key)
+	x509Encoded := block.Bytes
+	privateKey, _ := x509.ParseECPrivateKey(x509Encoded)
+
+	return privateKey, false
+}
+
+func createNewPrivateKey() *ecdsa.PrivateKey {
+	// Create a user. New accounts need an email and private key to start.
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+	x509Encoded, _ := x509.MarshalECPrivateKey(privateKey)
+
+	// 将ec 密钥写入到 pem文件里
+	keypem, _ := os.OpenFile("./config/ssl/account_private.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	err = pem.Encode(keypem, &pem.Block{Type: "EC PRIVATE KEY", Bytes: x509Encoded})
+	if err != nil {
+		panic(err)
+	}
+	return privateKey
 }

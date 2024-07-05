@@ -3,11 +3,10 @@ package ssl
 import (
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/go-acme/lego/v4/certificate"
+	"github.com/go-acme/lego/v4/challenge/dns01"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"os"
@@ -51,15 +50,13 @@ func GetSSL() string {
 	return cfg.SSLType
 }
 
-func SetSSL(sslType, priKey, crtKey, serviceName string) error {
+func SetSSL(sslType, priKey, crtKey string) error {
 	cfg, err := setup.ReadConfig()
 	if err != nil {
 		panic(err)
 	}
-	//if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS {
-	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser {
+	if sslType == config.SSLTypeAutoHTTP || sslType == config.SSLTypeUser || sslType == config.SSLTypeAutoDNS {
 		cfg.SSLType = sslType
-		//cfg.DomainServiceName = serviceName
 	} else {
 		return errors.New("SSL Type Error!")
 	}
@@ -67,6 +64,8 @@ func SetSSL(sslType, priKey, crtKey, serviceName string) error {
 	if cfg.SSLType == config.SSLTypeUser {
 		cfg.SSLPrivateKeyPath = priKey
 		cfg.SSLPublicKeyPath = crtKey
+		// 手动设置证书的情况下后台地址默认不启用https
+		cfg.HttpsEnabled = 2
 	}
 
 	err = setup.WriteConfig(cfg)
@@ -77,27 +76,7 @@ func SetSSL(sslType, priKey, crtKey, serviceName string) error {
 	return nil
 }
 
-func GenSSL(update bool) error {
-
-	cfg, err := setup.ReadConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	if !update {
-		privateFile, errpi := os.ReadFile(cfg.SSLPrivateKeyPath)
-		public, errpu := os.ReadFile(cfg.SSLPublicKeyPath)
-		// 当前存在证书数据，就不生成了
-		if errpi == nil && errpu == nil && len(privateFile) > 0 && len(public) > 0 {
-			return nil
-		}
-	}
-
-	// Create a user. New accounts need an email and private key to start.
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return errors.Wrap(err)
-	}
+func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 
 	myUser := MyUser{
 		Email: "i@" + cfg.Domain,
@@ -114,31 +93,86 @@ func GenSSL(update bool) error {
 		return errors.Wrap(err)
 	}
 
-	if cfg.SSLType == "0" {
+	var reg *registration.Resource
+
+	reg, err = client.Registration.ResolveAccountByKey()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	myUser.Registration = reg
+
+	request := certificate.ObtainRequest{
+		Domains: []string{"smtp." + cfg.Domain, cfg.WebDomain, "pop." + cfg.Domain},
+		Bundle:  true,
+	}
+
+	log.Infof("wait ssl renew")
+	certificates, err := client.Certificate.Obtain(request)
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile("./config/ssl/private.key", certificates.PrivateKey, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile("./config/ssl/public.crt", certificates.Certificate, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile("./config/ssl/issuerCert.crt", certificates.IssuerCertificate, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
+func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAccount bool) error {
+
+	myUser := MyUser{
+		Email: "i@" + cfg.Domain,
+		key:   privateKey,
+	}
+
+	conf := lego.NewConfig(&myUser)
+	conf.UserAgent = "PMail"
+	conf.Certificate.KeyType = certcrypto.RSA2048
+
+	// A client facilitates communication with the CA server.
+	client, err := lego.NewClient(conf)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	if cfg.SSLType == config.SSLTypeAutoHTTP {
 		err = client.Challenge.SetHTTP01Provider(GetHttpChallengeInstance())
 		if err != nil {
 			return errors.Wrap(err)
 		}
+	} else if cfg.SSLType == config.SSLTypeAutoDNS {
+		err = client.Challenge.SetDNS01Provider(GetDnsChallengeInstance(), dns01.AddDNSTimeout(60*time.Minute))
+		if err != nil {
+			return errors.Wrap(err)
+		}
 	}
-	//else if cfg.SSLType == "2" {
-	//	err = os.Setenv(strings.ToUpper(cfg.DomainServiceName)+"_PROPAGATION_TIMEOUT", "900")
-	//	if err != nil {
-	//		log.Errorf("Set ENV Variable Error: %s", err.Error())
-	//	}
-	//	dnspodProvider, err := dns.NewDNSChallengeProviderByName(cfg.DomainServiceName)
-	//	if err != nil {
-	//		return errors.Wrap(err)
-	//	}
-	//	err = client.Challenge.SetDNS01Provider(dnspodProvider, dns01.AddDNSTimeout(15*time.Minute))
-	//	if err != nil {
-	//		return errors.Wrap(err)
-	//	}
-	//}
 
-	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
-	if err != nil {
-		return errors.Wrap(err)
+	var reg *registration.Resource
+
+	if newAccount {
+		reg, err = client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+		if err != nil {
+			return errors.Wrap(err)
+		}
+	} else {
+		reg, err = client.Registration.ResolveAccountByKey()
+		if err != nil {
+			return errors.Wrap(err)
+		}
 	}
+
 	myUser.Registration = reg
 
 	request := certificate.ObtainRequest{
@@ -154,7 +188,7 @@ func GenSSL(update bool) error {
 		if err != nil {
 			panic(err)
 		}
-
+		log.Infof("证书校验通过！")
 		err = os.WriteFile("./config/ssl/private.key", certificates.PrivateKey, 0666)
 		if err != nil {
 			panic(err)
@@ -175,6 +209,31 @@ func GenSSL(update bool) error {
 	}, nil)
 
 	return nil
+}
+
+func GenSSL(update bool) error {
+
+	cfg, err := setup.ReadConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	if !update {
+		privateFile, errpi := os.ReadFile(cfg.SSLPrivateKeyPath)
+		public, errpu := os.ReadFile(cfg.SSLPublicKeyPath)
+		// 当前存在证书数据，就不生成了
+		if errpi == nil && errpu == nil && len(privateFile) > 0 && len(public) > 0 {
+			return nil
+		}
+	}
+
+	privateKey, newAccount := config.ReadPrivateKey()
+
+	if !update {
+		return generateCertificate(privateKey, cfg, newAccount)
+	}
+
+	return renewCertificate(privateKey, cfg)
 }
 
 // CheckSSLCrtInfo 返回证书过期剩余天数
@@ -207,7 +266,7 @@ func CheckSSLCrtInfo() (int, time.Time, error) {
 }
 
 func Update(needRestart bool) {
-	if config.Instance != nil && config.Instance.IsInit && config.Instance.SSLType == "0" {
+	if config.Instance != nil && config.Instance.IsInit && (config.Instance.SSLType == config.SSLTypeAutoHTTP || config.Instance.SSLType == config.SSLTypeAutoDNS) {
 		days, _, err := CheckSSLCrtInfo()
 		if days < 30 || err != nil {
 			if err != nil {
