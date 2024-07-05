@@ -22,7 +22,7 @@ func Start() {
 		}
 	}
 
-	if config.Instance.SSLType == "0" {
+	if config.Instance.SSLType == config.SSLTypeAutoHTTP || config.Instance.SSLType == config.SSLTypeAutoDNS {
 		go sslUpdateLoop()
 	} else {
 		go sslCheck()
@@ -45,6 +45,7 @@ func sslCheck() {
 			log.Errorf("SSL Check Error! %+v", err)
 		}
 		if newExpTime != expiredTime {
+			expiredTime = newExpTime
 			log.Infoln("SSL certificate had update! restarting")
 			signal.RestartChan <- true
 		}
