@@ -1,16 +1,17 @@
 {
-  "logLevel": "debug",
-  "domain": "domain.com",
-  "webDomain": "mail.domain.com",
+  "logLevel": "",
+  "domain": "test.domain",
+  "domains": null,
+  "webDomain": "mail.test.domain",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",
-  "sslType": "0",
-  "SSLPrivateKeyPath": "config/ssl/private.key",
-  "SSLPublicKeyPath": "config/ssl/public.crt",
-  "dbDSN": "./config/pmail.db",
+  "sslType": "1",
+  "SSLPrivateKeyPath": "./config/ssl/private.key",
+  "SSLPublicKeyPath": "./config/ssl/public.crt",
+  "dbDSN": "./config/pmail_temp.db",
   "dbType": "sqlite",
-  "spamFilterLevel": 1,
+  "httpsEnabled": 1,
+  "spamFilterLevel": 0,
   "httpPort": 80,
   "httpsPort": 443,
-  "isInit": true,
-  "httpsEnabled": 1
+  "isInit": true
 }

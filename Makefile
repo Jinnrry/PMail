@@ -6,6 +6,7 @@ clean:
 
 build_fe:
 	cd fe && yarn && yarn build
+	rm -rf server/http_server/dist
 	cd server && cp -rf ../fe/dist http_server
 
 build_server:
