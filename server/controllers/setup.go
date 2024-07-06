@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"os"
 	"pmail/config"
 	"pmail/dto/response"
 	"pmail/services/setup"
@@ -134,40 +135,36 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//if reqData["step"] == "ssl" && reqData["action"] == "getParams" {
-	//	params, err := ssl.GetServerParamsList(reqData["serverName"])
-	//	if err != nil {
-	//		response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
-	//		return
-	//	}
-	//	response.NewSuccessResponse(params).FPrint(w)
-	//	return
-	//}
+	if reqData["step"] == "ssl" && reqData["action"] == "getParams" {
+		dnsChallenge := ssl.GetDnsChallengeInstance()
 
-	//if reqData["step"] == "ssl" && reqData["action"] == "setParams" {
-	//	for key, v := range reqData {
-	//		if key != "step" && key != "action" {
-	//			ssl.SetDomainServerParams(key, v)
-	//		}
-	//	}
-	//	response.NewSuccessResponse("Succ").FPrint(w)
-	//	return
-	//}
+		response.NewSuccessResponse(dnsChallenge.GetDNSSettings(ctx)).FPrint(w)
+		return
+	}
 
 	if reqData["step"] == "ssl" && reqData["action"] == "set" {
+		keyPath := reqData["key_path"]
+		crtPath := reqData["crt_path"]
 
-		serviceName, ok := reqData["serviceName"]
-		if !ok {
-			serviceName = ""
-		}
-		err := ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"], serviceName)
+		_, err := os.Stat(keyPath)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
 		}
 
-		//if reqData["ssl_type"] == config.SSLTypeAutoHTTP || reqData["ssl_type"] == config.SSLTypeAutoDNS {
-		if reqData["ssl_type"] == config.SSLTypeAutoHTTP {
+		_, err = os.Stat(crtPath)
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+			return
+		}
+
+		err = ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"])
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+			return
+		}
+
+		if reqData["ssl_type"] == config.SSLTypeAutoHTTP || reqData["ssl_type"] == config.SSLTypeAutoDNS {
 			err = ssl.GenSSL(false)
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)

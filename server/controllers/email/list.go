@@ -27,6 +27,7 @@ type emilItem struct {
 	IsRead    bool   `json:"is_read"`
 	Sender    User   `json:"sender"`
 	Dangerous bool   `json:"dangerous"`
+	Error     string `json:"error"`
 }
 
 type User struct {
@@ -83,6 +84,7 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			IsRead:    email.IsRead == 1,
 			Sender:    sender,
 			Dangerous: email.SPFCheck == 0 && email.DKIMCheck == 0,
+			Error:     email.Error.String,
 		})
 	}
 

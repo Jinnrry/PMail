@@ -213,11 +213,28 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
+
+			ue := models.UserEmail{
+				UserID:  ctx.UserID,
+				EmailID: modelEmail.Id,
+				Status:  2,
+				IsRead:  1,
+			}
+			db.Instance.Insert(&ue)
+
 		} else {
 			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), modelEmail.Id)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
+
+			ue := models.UserEmail{
+				UserID:  ctx.UserID,
+				EmailID: modelEmail.Id,
+				Status:  1,
+				IsRead:  1,
+			}
+			db.Instance.Insert(&ue)
 		}
 
 	}, nil)

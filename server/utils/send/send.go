@@ -76,24 +76,28 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 		tos := tos
 		as.WaitProcess(func(p any) {
 			err := smtp.SendMail("", domain.mxHost+":25", nil, e.From.EmailAddress, buildAddress(tos), b)
-			if err != nil {
-				log.WithContext(ctx).Warnf("SMTP Send Error! Error:%+v", err)
-			} else {
-				log.WithContext(ctx).Infof("SMTP Send Success !")
-			}
 
-			// 重新选取证书域名
+			// 使用其他方式发送
 			if err != nil {
+				// EOF 表示未知错误，此时降级为非tls连接发送（目前仅139邮箱有这个问题）
+				if errors.Is(err, smtp.NoSupportSTARTTLSError) || err.Error() == "EOF" {
+					err = smtp.SendMailWithTls("", domain.mxHost+":465", nil, e.From.EmailAddress, buildAddress(tos), b)
+					if err != nil {
+						log.WithContext(ctx).Warnf("Unsafe! %s Server Not Support SMTPS & STARTTLS", domain.domain)
+						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, e.From.EmailAddress, buildAddress(tos), b)
+					}
+				}
+
+				// 证书错误，从新选取证书发送
 				if certificateErr, ok := err.(*tls.CertificateVerificationError); ok {
-					if hostnameErr, is := certificateErr.Err.(x509.HostnameError); is {
+					// 单测使用
+					if domain.domain == "localhost" {
+						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, e.From.EmailAddress, buildAddress(tos), b)
+					} else if hostnameErr, is := certificateErr.Err.(x509.HostnameError); is {
 						if hostnameErr.Certificate != nil {
 							certificateHostName := hostnameErr.Certificate.DNSNames
+							// 重新选取证书发送
 							err = smtp.SendMail(domainMatch(domain.domain, certificateHostName), domain.mxHost+":25", nil, e.From.EmailAddress, buildAddress(tos), b)
-							if err != nil {
-								log.WithContext(ctx).Warnf("SMTP Send Error! Error:%+v", err)
-							} else {
-								log.WithContext(ctx).Infof("SMTP Send Success !")
-							}
 						}
 					}
 				}
@@ -185,7 +189,10 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 
 				// 证书错误，从新选取证书发送
 				if certificateErr, ok := err.(*tls.CertificateVerificationError); ok {
-					if hostnameErr, is := certificateErr.Err.(x509.HostnameError); is {
+					// 单测使用
+					if domain.domain == "localhost" {
+						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, e.From.EmailAddress, buildAddress(tos), b)
+					} else if hostnameErr, is := certificateErr.Err.(x509.HostnameError); is {
 						if hostnameErr.Certificate != nil {
 							certificateHostName := hostnameErr.Certificate.DNSNames
 							// 重新选取证书发送

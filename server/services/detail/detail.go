@@ -27,7 +27,7 @@ func GetEmailDetail(ctx *context.Context, id int, markRead bool) (*response.Emai
 
 	//获取邮件内容
 	var email response.EmailResponseData
-	_, err = db.Instance.ID(id).Get(&email)
+	_, err = db.Instance.Select("*,1 as is_read").Table("email").Where("id=?", id).Get(&email)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		return nil, err
@@ -37,7 +37,7 @@ func GetEmailDetail(ctx *context.Context, id int, markRead bool) (*response.Emai
 
 	if markRead && ue.IsRead == 0 {
 		ue.IsRead = 1
-		_, err = db.Instance.Update(&ue)
+		_, err = db.Instance.Where("id=?", ue.ID).Update(&ue)
 		if err != nil {
 			log.WithContext(ctx).Errorf("SQL error:%+v", err)
 		}
