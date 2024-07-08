@@ -143,19 +143,22 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "ssl" && reqData["action"] == "set" {
-		keyPath := reqData["key_path"]
-		crtPath := reqData["crt_path"]
 
-		_, err := os.Stat(keyPath)
-		if err != nil {
-			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
-			return
-		}
+		if reqData["ssl_type"] == config.SSLTypeUser {
+			keyPath := reqData["key_path"]
+			crtPath := reqData["crt_path"]
 
-		_, err = os.Stat(crtPath)
-		if err != nil {
-			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
-			return
+			_, err := os.Stat(keyPath)
+			if err != nil {
+				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+				return
+			}
+
+			_, err = os.Stat(crtPath)
+			if err != nil {
+				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+				return
+			}
 		}
 
 		err = ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"])
