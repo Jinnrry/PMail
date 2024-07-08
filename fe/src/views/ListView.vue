@@ -40,6 +40,14 @@
                                 </el-tooltip>
                                 
                             </span>
+                            <span style="font-weight: 900;color: #FF0000;" v-if="scope.row.error != ''">
+                                <el-tooltip effect="dark" 
+                                :content="scope.row.error"
+                                    placement="top-start">
+                                    !
+                                </el-tooltip>
+                                
+                            </span>
                         </div>
                     </template>
                 </el-table-column>

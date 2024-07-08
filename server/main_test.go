@@ -735,8 +735,9 @@ func testEmailList(t *testing.T) {
 		t.Error("Get Email List Api Error!")
 	}
 	dt := data.Data.(map[string]interface{})
-	if len(dt["list"].([]interface{})) == 0 {
+	if dt["list"] == nil || len(dt["list"].([]interface{})) == 0 {
 		t.Error("Email List Is Empty!")
+		return
 	}
 
 	lst := dt["list"].([]interface{})
