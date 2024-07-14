@@ -16,6 +16,7 @@ import (
 	"pmail/hooks/framework"
 	"pmail/i18n"
 	"pmail/models"
+	"pmail/utils/array"
 	"pmail/utils/async"
 	"pmail/utils/context"
 	"pmail/utils/send"
@@ -67,6 +68,14 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	if !ctx.IsAdmin && reqData.From.Name != ctx.UserAccount {
 		response.NewErrorResponse(response.ParamsError, "params error", "").FPrint(w)
 		return
+	}
+
+	if reqData.From.Email != "" {
+		infos := strings.Split(reqData.From.Email, "@")
+		if len(infos) != 2 || !array.InArray(infos[1], config.Instance.Domains) {
+			response.NewErrorResponse(response.ParamsError, "params error", "").FPrint(w)
+			return
+		}
 	}
 
 	if reqData.From.Email == "" && reqData.From.Name != "" {

@@ -54,3 +54,6 @@ test:
 
 test_mysql:
 	export setup_port=17888 && cd server && go test -args "mysql" -v ./...
+
+test_postgres:
+	export setup_port=17888 && cd server && go test -args "postgres" -v ./...

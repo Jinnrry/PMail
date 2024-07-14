@@ -9,6 +9,7 @@ import (
 	"pmail/dto"
 	"pmail/dto/response"
 	"pmail/i18n"
+	"pmail/models"
 	"pmail/services/group"
 	"pmail/utils/array"
 	"pmail/utils/context"
@@ -66,17 +67,19 @@ func AddGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		log.WithContext(ctx).Errorf("%+v", err)
 	}
 
-	res, err := db.Instance.Exec(db.WithContext(ctx, "insert into `group` (name,parent_id,user_id) values (?,?,?)"), reqData.Name, reqData.ParentId, ctx.UserID)
+	var newGroup models.Group = models.Group{
+		Name:     reqData.Name,
+		ParentId: reqData.ParentId,
+		UserId:   ctx.UserID,
+	}
+
+	_, err = db.Instance.Insert(&newGroup)
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, "DBError", err.Error()).FPrint(w)
 		return
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		response.NewErrorResponse(response.ServerError, "DBError", err.Error()).FPrint(w)
-		return
-	}
-	response.NewSuccessResponse(id).FPrint(w)
+
+	response.NewSuccessResponse(newGroup.ID).FPrint(w)
 }
 
 type delGroupRequest struct {

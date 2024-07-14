@@ -26,6 +26,7 @@ type emilItem struct {
 	Datetime  string `json:"datetime"`
 	IsRead    bool   `json:"is_read"`
 	Sender    User   `json:"sender"`
+	To        []User `json:"to"`
 	Dangerous bool   `json:"dangerous"`
 	Error     string `json:"error"`
 }
@@ -76,6 +77,9 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		var sender User
 		_ = json.Unmarshal([]byte(email.Sender), &sender)
 
+		var tos []User
+		_ = json.Unmarshal([]byte(email.To), &tos)
+
 		lst = append(lst, &emilItem{
 			ID:        email.Id,
 			Title:     email.Subject,
@@ -83,6 +87,7 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			Datetime:  email.SendDate.Format("2006-01-02 15:04:05"),
 			IsRead:    email.IsRead == 1,
 			Sender:    sender,
+			To:        tos,
 			Dangerous: email.SPFCheck == 0 && email.DKIMCheck == 0,
 			Error:     email.Error.String,
 		})

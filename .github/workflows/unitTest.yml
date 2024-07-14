@@ -26,7 +26,10 @@ jobs:
           MYSQL_DATABASE: pmail
           MYSQL_ROOT_PASSWORD: githubTest
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
+      postgres:
+        image: postgres
+        env:
+          POSTGRESQL_PASSWORD: githubTest
     container:
       image: golang
     env:

@@ -243,6 +243,7 @@ func testCreateUser(t *testing.T) {
 		t.Error(err)
 	}
 	if data.ErrorNo != 0 {
+		t.Error(data)
 		t.Error("Create User Api Error!")
 	}
 
@@ -311,6 +312,10 @@ func testDataBaseSet(t *testing.T) {
 	if array.InArray("mysql", argList) {
 		configData = `
 {"action":"set","step":"database","db_type":"mysql","db_dsn":"root:githubTest@tcp(mysql:3306)/pmail?parseTime=True"}
+`
+	} else if array.InArray("postgres", argList) {
+		configData = `
+{"action":"set","step":"database","db_type":"postgres","db_dsn":"postgres://postgres:githubTest@127.0.0.1:5432/pmail?sslmode=disable"}
 `
 	}
 

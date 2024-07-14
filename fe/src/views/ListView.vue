@@ -17,7 +17,7 @@
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item @click="move(group.id)" v-for="group in groupList">{{ group.name
-                        }}</el-dropdown-item>
+                            }}</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -26,43 +26,43 @@
             <el-table ref="taskTableDataRef" @selection-change="selectionLineChange" :data="data" :show-header="true"
                 :border="false" @row-click="rowClick" :row-style="rowStyle">
                 <el-table-column type="selection" width="30" />
-                <el-table-column prop="title" label="" width="50">
+                <el-table-column prop="is_read" label="" width="50">
                     <template #default="scope">
                         <div>
                             <span v-if="!scope.row.is_read">
                                 {{ lang.new }}
                             </span>
                             <span style="font-weight: 900;color: #FF0000;" v-if="scope.row.dangerous">
-                                <el-tooltip effect="dark" 
-                                :content="lang.dangerous"
-                                    placement="top-start">
+                                <el-tooltip effect="dark" :content="lang.dangerous" placement="top-start">
                                     !
                                 </el-tooltip>
-                                
+
                             </span>
                             <span style="font-weight: 900;color: #FF0000;" v-if="scope.row.error != ''">
-                                <el-tooltip effect="dark" 
-                                :content="scope.row.error"
-                                    placement="top-start">
+                                <el-tooltip effect="dark" :content="scope.row.error" placement="top-start">
                                     !
                                 </el-tooltip>
-                                
+
                             </span>
                         </div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="title" :label="lang.sender" width="150">
                     <template #default="scope">
-                        <span v-if="scope.row.is_read">
-                            <div v-if="scope.row.sender.Name != ''">{{ scope.row.sender.Name }}</div>
-                            {{ scope.row.sender.EmailAddress }}
-                        </span>
-                        <span v-else style="font-weight:bolder;">
-                            <div v-if="scope.row.sender.Name != ''">{{ scope.row.sender.Name }}</div>
-                            {{ scope.row.sender.EmailAddress }}
-                        </span>
+                        <el-tooltip class="box-item" effect="dark" :content="scope.row.sender.EmailAddress" placement="top">
+                            <el-tag size="small" type="info">{{scope.row.sender.Name != '' ? scope.row.sender.Name : scope.row.sender.EmailAddress }}</el-tag>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
+
+                <el-table-column prop="title" :label="lang.to" width="150">
+                    <template #default="scope">
+                        <el-tooltip v-for="toInfo in scope.row.to" class="box-item" effect="dark" :content="toInfo.EmailAddress" placement="top">
+                            <el-tag size="small" type="info">{{toInfo.Name != '' ? toInfo.Name : toInfo.EmailAddress }}</el-tag>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
+
                 <el-table-column prop="desc" :label="lang.title">
                     <template #default="scope">
                         <div v-if="scope.row.is_read">{{ scope.row.title }}</div>
@@ -103,7 +103,7 @@ const app = getCurrentInstance()
 const $http = app.appContext.config.globalProperties.$http
 
 
-const router = useRouter(); 
+const router = useRouter();
 
 
 const groupStore = useGroupStore()
@@ -222,6 +222,9 @@ const del = function () {
         ids.push(element.id)
     });
 
+    let groupTag = JSON.parse(tag)
+
+
     ElMessageBox.confirm(
         lang.del_email_confirm,
         'Warning',
@@ -232,7 +235,7 @@ const del = function () {
         }
     )
         .then(() => {
-            $http.post("/api/email/del", { "ids": ids }).then(res => {
+            $http.post("/api/email/del", { "ids": ids ,"forcedDel":groupTag.status == 3 }).then(res => {
                 if (res.errorNo == 0) {
                     updateList()
                     ElMessage({

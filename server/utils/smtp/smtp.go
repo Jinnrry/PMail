@@ -16,7 +16,7 @@
 //
 //	https://godoc.org/?q=smtp
 //
-// 在go原始SMTP协议的基础上修复了TLS验证错误、支持了SMTPS协议
+// 在go原始SMTP协议的基础上修复了TLS验证错误、支持了SMTPS协议、 支持自定义HELLO命令的域名信息
 package smtp
 
 import (
@@ -58,17 +58,17 @@ type Client struct {
 
 // Dial returns a new Client connected to an SMTP server at addr.
 // The addr must include a port, as in "mail.example.com:smtp".
-func Dial(addr string) (*Client, error) {
+func Dial(addr, fromDomain string) (*Client, error) {
 	conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
 	if err != nil {
 		return nil, err
 	}
 	host, _, _ := net.SplitHostPort(addr)
-	return NewClient(conn, host)
+	return NewClient(conn, host, fromDomain)
 }
 
 // with tls
-func DialTls(addr, domain string) (*Client, error) {
+func DialTls(addr, domain, fromDomain string) (*Client, error) {
 	// TLS config
 	tlsconfig := &tls.Config{
 		InsecureSkipVerify: true,
@@ -80,20 +80,24 @@ func DialTls(addr, domain string) (*Client, error) {
 		return nil, err
 	}
 	host, _, _ := net.SplitHostPort(addr)
-	return NewClient(conn, host)
+	return NewClient(conn, host, fromDomain)
 }
 
 // NewClient returns a new Client using an existing connection and host as a
 // server name to be used when authenticating.
-func NewClient(conn net.Conn, host string) (*Client, error) {
+func NewClient(conn net.Conn, host, fromDomain string) (*Client, error) {
 	text := textproto.NewConn(conn)
 	_, _, err := text.ReadResponse(220)
 	if err != nil {
 		text.Close()
 		return nil, err
 	}
+
 	localName := "domain.com"
-	if config.Instance != nil && config.Instance.Domain != "" {
+
+	if fromDomain != "" {
+		localName = fromDomain
+	} else if config.Instance != nil && config.Instance.Domain != "" {
 		localName = config.Instance.Domain
 	}
 
@@ -333,7 +337,7 @@ func (c *Client) Data() (io.WriteCloser, error) {
 	return &dataCloser{c, c.Text.DotWriter()}, nil
 }
 
-func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, to []string, msg []byte) error {
+func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, fromDomain string, to []string, msg []byte) error {
 	if err := validateLine(from); err != nil {
 		return err
 	}
@@ -342,7 +346,7 @@ func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, to []
 			return err
 		}
 	}
-	c, err := DialTls(addr, domain)
+	c, err := DialTls(addr, domain, fromDomain)
 	if err != nil {
 		return err
 	}
@@ -402,7 +406,7 @@ func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, to []
 // functionality. Higher-level packages exist outside of the standard
 // library.
 // 修复TSL验证问题
-func SendMail(domain string, addr string, a smtp.Auth, from string, to []string, msg []byte) error {
+func SendMail(domain string, addr string, a smtp.Auth, from string, fromDomain string, to []string, msg []byte) error {
 	if err := validateLine(from); err != nil {
 		return err
 	}
@@ -411,7 +415,7 @@ func SendMail(domain string, addr string, a smtp.Auth, from string, to []string,
 			return err
 		}
 	}
-	c, err := Dial(addr)
+	c, err := Dial(addr, fromDomain)
 	if err != nil {
 		return err
 	}
@@ -465,7 +469,7 @@ func SendMail(domain string, addr string, a smtp.Auth, from string, to []string,
 }
 
 // SendMailUnsafe 无TLS加密的邮件发送方式
-func SendMailUnsafe(domain string, addr string, a smtp.Auth, from string, to []string, msg []byte) error {
+func SendMailUnsafe(domain string, addr string, a smtp.Auth, from string, fromDomain string, to []string, msg []byte) error {
 	if err := validateLine(from); err != nil {
 		return err
 	}
@@ -474,7 +478,7 @@ func SendMailUnsafe(domain string, addr string, a smtp.Auth, from string, to []s
 			return err
 		}
 	}
-	c, err := Dial(addr)
+	c, err := Dial(addr, fromDomain)
 	if err != nil {
 		return err
 	}

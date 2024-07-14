@@ -13,13 +13,12 @@ import (
 var IsInit bool
 
 type Config struct {
-	LogLevel           string   `json:"logLevel"` // 日志级别
-	Domain             string   `json:"domain"`
-	Domains            []string `json:"domains"` //多域名设置，把所有收信域名都填进去
-	WebDomain          string   `json:"webDomain"`
-	DkimPrivateKeyPath string   `json:"dkimPrivateKeyPath"`
-	SSLType            string   `json:"sslType"` // 0表示自动生成证书，HTTP挑战模式，1表示用户上传证书，2表示自动-DNS挑战模式
-	//DomainServiceName    string            `json:"domainServerName"` // 域名服务商名称
+	LogLevel             string            `json:"logLevel"` // 日志级别
+	Domain               string            `json:"domain"`
+	Domains              []string          `json:"domains"` //多域名设置，把所有收信域名都填进去
+	WebDomain            string            `json:"webDomain"`
+	DkimPrivateKeyPath   string            `json:"dkimPrivateKeyPath"`
+	SSLType              string            `json:"sslType"` // 0表示自动生成证书，HTTP挑战模式，1表示用户上传证书，2表示自动-DNS挑战模式
 	SSLPrivateKeyPath    string            `json:"SSLPrivateKeyPath"`
 	SSLPublicKeyPath     string            `json:"SSLPublicKeyPath"`
 	DbDSN                string            `json:"dbDSN"`
@@ -52,11 +51,12 @@ func (c *Config) SetSetupPort(setupPort int) {
 
 const DBTypeMySQL = "mysql"
 const DBTypeSQLite = "sqlite"
+const DBTypePostgres = "postgres"
 const SSLTypeAutoHTTP = "0" //自动生成证书
 const SSLTypeAutoDNS = "2"  //自动生成证书，DNS api验证
 const SSLTypeUser = "1"     //用户上传证书
 
-var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite}
+var DBTypes []string = []string{DBTypeMySQL, DBTypeSQLite, DBTypePostgres}
 
 var Instance *Config = &Config{}
 

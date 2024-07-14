@@ -7,9 +7,11 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"pmail/config"
 	"pmail/db"
 	"pmail/dto/response"
 	"pmail/models"
+	"pmail/utils/array"
 	"pmail/utils/context"
 	"pmail/utils/password"
 )
@@ -104,10 +106,16 @@ func UserList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 }
 
 func Info(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
+
+	domains := config.Instance.Domains
+	domains = array.Difference(domains, []string{config.Instance.Domain})
+	domains = append([]string{config.Instance.Domain}, domains...)
+
 	response.NewSuccessResponse(map[string]any{
 		"account":  ctx.UserAccount,
 		"name":     ctx.UserName,
 		"is_admin": ctx.IsAdmin,
+		"domains":  domains,
 	}).FPrint(w)
 }
 
