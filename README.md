@@ -32,7 +32,7 @@ beautiful and cute Logo for this project!
 > service doesn't use the certificate anymore, the smtp protocol still needs the certificate)
 
 * Support pop3, smtp protocol, you can use any mail client you like.
-
+* Support multi-domain, multi-user and complete support for sending and receiving e-mail.
 
 
 # How to run

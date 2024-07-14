@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite"
 	"pmail/config"
@@ -27,6 +28,10 @@ func Init(version string) error {
 		Instance, err = xorm.NewEngine("sqlite", dsn)
 		Instance.SetMaxOpenConns(1)
 		Instance.SetMaxIdleConns(1)
+	case "postgres":
+		Instance, err = xorm.NewEngine("postgres", dsn)
+		Instance.SetMaxOpenConns(100)
+		Instance.SetMaxIdleConns(10)
 	default:
 		return errors.New("Database Type Error!")
 	}

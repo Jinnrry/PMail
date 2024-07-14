@@ -4,13 +4,27 @@
         <el-divider />
 
         <div>
-            <span>{{ lang.to }}：
-                <span class="userItem" v-for="to in tos">{{ to.Name }} {{ to.EmailAddress }} ;</span>
-            </span>
+            <div>{{ lang.to }}：
+                <el-tooltip v-for="to in tos" class="box-item" effect="dark" :content="to.EmailAddress" placement="top">
+                    <el-tag size="small" type="info">{{to.Name != '' ? to.Name : to.EmailAddress }}</el-tag>
+                </el-tooltip>
+            </div>
 
-            <span v-if="showCC">{{ lang.cc }}：
-                <span class="userItem" v-for="ccs in cc">{{ cc.Name }} {{ cc.EmailAddress }} ;</span>
-            </span>
+            <div v-if="showCC">{{ lang.cc }}：
+                <el-tooltip v-for="item in ccs" class="box-item" effect="dark" :content="item.EmailAddress" placement="top">
+                    <el-tag size="small" type="info">{{item.Name != '' ? item.Name : item.EmailAddress }}</el-tag>
+                </el-tooltip>
+            </div>
+
+            <div>{{ lang.sender }}：
+                <el-tooltip class="box-item" effect="dark" :content="detailData.from_address" placement="top">
+                    <el-tag size="small" type="info">{{detailData.from_name != '' ? detailData.from_name : detailData.from_address }}</el-tag>
+                </el-tooltip>
+            </div>
+
+            <div>{{ lang.date }}：
+                {{ detailData.send_date }}
+            </div>
         </div>
         <el-divider />
         <div class="content" id="text" v-if="detailData.html == ''">

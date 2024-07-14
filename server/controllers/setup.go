@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"io"
 	"net/http"
 	"os"
@@ -41,9 +42,8 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 	var reqData map[string]string
 	err = json.Unmarshal(reqBytes, &reqData)
-
 	if err != nil {
-		response.NewSuccessResponse("").FPrint(w)
+		response.NewErrorResponse(response.ServerError, "", err.Error()).FPrint(w)
 		return
 	}
 
@@ -62,7 +62,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "database" && reqData["action"] == "set" {
-		err := setup.SetDatabaseSettings(ctx, reqData["db_type"], reqData["db_dsn"])
+		err := setup.SetDatabaseSettings(ctx, cast.ToString(reqData["db_type"]), cast.ToString(reqData["db_dsn"]))
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
@@ -83,7 +83,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "password" && reqData["action"] == "set" {
-		err := setup.SetAdminPassword(ctx, reqData["account"], reqData["password"])
+		err := setup.SetAdminPassword(ctx, cast.ToString(reqData["account"]), cast.ToString(reqData["password"]))
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
@@ -93,20 +93,21 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "domain" && reqData["action"] == "get" {
-		smtpDomain, webDomain, err := setup.GetDomainSettings()
+		smtpDomain, webDomain, domains, err := setup.GetDomainSettings()
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
 		}
-		response.NewSuccessResponse(map[string]string{
+		response.NewSuccessResponse(map[string]any{
 			"smtp_domain": smtpDomain,
 			"web_domain":  webDomain,
+			"domains":     domains,
 		}).FPrint(w)
 		return
 	}
 
 	if reqData["step"] == "domain" && reqData["action"] == "set" {
-		err := setup.SetDomainSettings(reqData["smtp_domain"], reqData["web_domain"])
+		err := setup.SetDomainSettings(cast.ToString(reqData["smtp_domain"]), cast.ToString(reqData["web_domain"]), reqData["multi_domain"])
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
@@ -148,20 +149,20 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			keyPath := reqData["key_path"]
 			crtPath := reqData["crt_path"]
 
-			_, err := os.Stat(keyPath)
+			_, err := os.Stat(cast.ToString(keyPath))
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 				return
 			}
 
-			_, err = os.Stat(crtPath)
+			_, err = os.Stat(cast.ToString(crtPath))
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 				return
 			}
 		}
 
-		err = ssl.SetSSL(reqData["ssl_type"], reqData["key_path"], reqData["crt_path"])
+		err = ssl.SetSSL(cast.ToString(reqData["ssl_type"]), cast.ToString(reqData["key_path"]), cast.ToString(reqData["crt_path"]))
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return

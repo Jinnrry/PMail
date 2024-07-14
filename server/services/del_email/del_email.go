@@ -1,50 +1,55 @@
 package del_email
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"pmail/consts"
 	"pmail/db"
 	"pmail/models"
 	"pmail/utils/context"
+	"xorm.io/xorm"
 )
-import . "xorm.io/builder"
 
-func DelEmail(ctx *context.Context, ids []int) error {
-
-	if len(ids) == 0 {
-		return nil
-	}
-
-	where, params, err := ToSQL(Eq{"user_id": ctx.UserID}.And(Eq{"email_id": ids}))
-
-	if err != nil {
-		log.Errorf("del email err: %v", err)
+func DelEmail(ctx *context.Context, ids []int64, forcedDel bool) error {
+	session := db.Instance.NewSession()
+	defer session.Close()
+	if err := session.Begin(); err != nil {
 		return err
 	}
-
-	_, err = db.Instance.Table(&models.UserEmail{}).Where(where, params...).Update(map[string]interface{}{"status": consts.EmailStatusDel})
-	if err != nil {
-		log.Errorf("del email err: %v", err)
+	for _, id := range ids {
+		err := deleteOne(ctx, session, cast.ToInt64(id), forcedDel)
+		if err != nil {
+			session.Rollback()
+			return err
+		}
 	}
-	return err
+	return session.Commit()
 }
 
-func DelEmailI64(ctx *context.Context, ids []int64) error {
+type num struct {
+	Num int `xorm:"num"`
+}
 
-	if len(ids) == 0 {
-		return nil
-	}
-
-	where, params, err := ToSQL(Eq{"user_id": ctx.UserID}.And(Eq{"email_id": ids}))
-
-	if err != nil {
-		log.Errorf("del email err: %v", err)
+func deleteOne(ctx *context.Context, session *xorm.Session, id int64, forcedDel bool) error {
+	if !forcedDel {
+		_, err := session.Table(&models.UserEmail{}).Where("email_id=? and user_id=?", id, ctx.UserID).Update(map[string]interface{}{"status": consts.EmailStatusDel})
 		return err
 	}
-
-	_, err = db.Instance.Table(&models.UserEmail{}).Where(where, params...).Update(map[string]interface{}{"status": consts.EmailStatusDel})
+	// 先删除关联关系
+	var ue models.UserEmail
+	_, err := session.Table(&models.UserEmail{}).Where("email_id=? and user_id=?", id, ctx.UserID).Delete(&ue)
 	if err != nil {
-		log.Errorf("del email err: %v", err)
+		return err
+	}
+	// 检查email是否还有人有权限
+	var Num num
+	_, err = session.Table(&models.UserEmail{}).Select("count(1) as num").Where("email_id=? ", id).Get(&Num)
+	if err != nil {
+		return err
+	}
+	if Num.Num == 0 {
+		var email models.Email
+		_, err = session.Table(&email).Where("id=?", id).Delete(&email)
+
 	}
 	return err
 }

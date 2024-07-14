@@ -2,7 +2,15 @@
     <div id="main">
         <el-form label-width="100px" :rules="rules" ref="ruleFormRef" :model="ruleForm" status-icon>
             <el-form-item :label="lang.sender" prop="sender">
-                <el-input :disabled="!$userInfos.is_admin" v-model="ruleForm.sender" :placeholder="lang.sender_desc"></el-input>
+
+                <div style="display: flex;">
+                    <el-input style="max-width: 300px" :disabled="!$userInfos.is_admin" v-model="ruleForm.sender" :placeholder="lang.sender_desc" />
+                    <div>@</div>
+                    <el-select v-model="ruleForm.pickDomain">
+                        <el-option :value="item" v-for="item in ruleForm.domains">{{ item }}</el-option>
+                    </el-select>
+                </div>
+
             </el-form-item>
 
 
@@ -84,7 +92,7 @@ import lang from '../i18n/i18n';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { i18nChangeLanguage } from '@wangeditor/editor'
 import { useRouter } from 'vue-router';
-const router = useRouter(); 
+const router = useRouter();
 import useGroupStore from '../stores/group'
 const groupStore = useGroupStore()
 import { getCurrentInstance } from 'vue'
@@ -93,9 +101,9 @@ const $http = app.appContext.config.globalProperties.$http
 const $isLogin = app.appContext.config.globalProperties.$isLogin
 const $userInfos = app.appContext.config.globalProperties.$userInfos
 
-if (lang.lang == "zhCn"){
+if (lang.lang == "zhCn") {
     i18nChangeLanguage('zh-CN')
-}else{
+} else {
     i18nChangeLanguage('en')
 }
 
@@ -123,15 +131,20 @@ const ruleForm = reactive({
     receivers: '',
     cc: '',
     subject: '',
+    domains:[],
+    pickDomain:""
 })
 const fileList = reactive([]);
 
 
-const init =function(){
+const init = function () {
     if (Object.keys($userInfos.value).length == 0) {
         $http.post("/api/user/info", {}).then(res => {
             if (res.errorNo == 0) {
                 $userInfos.value = res.data
+                ruleForm.sender = res.data.account
+                ruleForm.domains = res.data.domains
+                ruleForm.pickDomain = res.data.domains[0]
             } else {
                 ElMessage({
                     type: 'error',
@@ -139,10 +152,14 @@ const init =function(){
                 })
             }
         })
+    }else{
+        ruleForm.sender = $userInfos.value.account
+        ruleForm.domains = $userInfos.value.domains
+        ruleForm.pickDomain = $userInfos.value.domains[0]
     }
+
 }
 init()
-ruleForm.sender = $userInfos.value.account
 
 
 const validateSender = function (rule, value, callback) {
@@ -240,7 +257,7 @@ const send = function (formEl) {
             let text = editorRef.value.getText()
 
             $http.post("/api/email/send", {
-                from: { name: ruleForm.sender, email: "" },
+                from: { name: ruleForm.sender, email: ruleForm.sender + "@" +ruleForm.pickDomain },
                 to: objectTos,
                 cc: objectCcs,
                 subject: ruleForm.subject,

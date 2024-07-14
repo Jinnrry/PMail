@@ -6,11 +6,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"pmail/config"
 	"pmail/db"
 	"pmail/dto/response"
 	"pmail/i18n"
 	"pmail/models"
 	"pmail/session"
+	"pmail/utils/array"
 	"pmail/utils/context"
 	"pmail/utils/errors"
 	"pmail/utils/password"
@@ -44,10 +46,16 @@ func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	if user.ID != 0 {
 		userStr, _ := json.Marshal(user)
 		session.Instance.Put(req.Context(), "user", string(userStr))
+
+		domains := config.Instance.Domains
+		domains = array.Difference(domains, []string{config.Instance.Domain})
+		domains = append([]string{config.Instance.Domain}, domains...)
+
 		response.NewSuccessResponse(map[string]any{
 			"account":  user.Account,
 			"name":     user.Name,
 			"is_admin": user.IsAdmin,
+			"domains":  domains,
 		}).FPrint(w)
 	} else {
 		response.NewErrorResponse(response.ParamsError, i18n.GetText(ctx.Lang, "aperror"), "").FPrint(w)

@@ -1,19 +1,21 @@
 package setup
 
 import (
+	"pmail/utils/array"
 	"pmail/utils/errors"
+	"strings"
 )
 
-func GetDomainSettings() (string, string, error) {
+func GetDomainSettings() (string, string, []string, error) {
 	configData, err := ReadConfig()
 	if err != nil {
-		return "", "", errors.Wrap(err)
+		return "", "", []string{}, errors.Wrap(err)
 	}
 
-	return configData.Domain, configData.WebDomain, nil
+	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), nil
 }
 
-func SetDomainSettings(smtpDomain, webDomain string) error {
+func SetDomainSettings(smtpDomain, webDomain, multiDomains string) error {
 	configData, err := ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)
@@ -25,6 +27,17 @@ func SetDomainSettings(smtpDomain, webDomain string) error {
 
 	if webDomain == "" {
 		return errors.New("web domain must not empty!")
+	}
+
+	configData.Domains = []string{}
+
+	if multiDomains != "" {
+		domains := strings.Split(multiDomains, ",")
+		configData.Domains = domains
+	}
+
+	if !array.InArray(smtpDomain, configData.Domains) {
+		configData.Domains = append(configData.Domains, smtpDomain)
 	}
 
 	configData.Domain = smtpDomain

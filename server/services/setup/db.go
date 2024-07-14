@@ -43,7 +43,14 @@ func GetAdminPassword(ctx *context.Context) (string, error) {
 
 func SetAdminPassword(ctx *context.Context, account, pwd string) error {
 	encodePwd := password.Encode(pwd)
-	_, err := db.Instance.Exec(db.WithContext(ctx, "INSERT INTO user (account, name, password,is_admin) VALUES (?, 'admin',?,1)"), account, encodePwd)
+	var user models.User = models.User{
+		Account:  account,
+		Name:     "admin",
+		Password: encodePwd,
+		IsAdmin:  1,
+	}
+
+	_, err := db.Instance.Insert(&user)
 	if err != nil {
 		return errors.Wrap(err)
 	}

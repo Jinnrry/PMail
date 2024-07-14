@@ -32,12 +32,18 @@
                             @change="dbSettings.dsn = ''">
                             <el-option label="MySQL" value="mysql" />
                             <el-option label="SQLite3" value="sqlite" />
+                            <el-option label="PostgreSQL" value="postgres" />
                         </el-select>
                     </el-form-item>
 
                     <el-form-item :label="lang.mysql_dsn" v-if="dbSettings.type == 'mysql'">
                         <el-input :rows="2" type="textarea" v-model="dbSettings.dsn"
                             placeholder="root:12345@tcp(127.0.0.1:3306)/pmail?parseTime=True&loc=Local"></el-input>
+                    </el-form-item>
+
+                    <el-form-item :label="lang.pg_dsn" v-if="dbSettings.type == 'postgres'">
+                        <el-input :rows="2" type="textarea" v-model="dbSettings.dsn"
+                            placeholder="postgres://postgres:12345@127.0.0.1:5432/pmail?sslmode=disable"></el-input>
                     </el-form-item>
 
                     <el-form-item :label="lang.sqlite_db_path" v-if="dbSettings.type == 'sqlite'">
@@ -92,6 +98,15 @@
                     <el-form-item :label="lang.web_domain">
                         <el-input placeholder="pmail.domain.com" v-model="domainSettings.web_domain"></el-input>
                     </el-form-item>
+
+                    <el-form-item :label="lang.multi_domain_setting">
+                        <span>{{ lang.multi_domain_setting_desc }} <el-button @click="addDomain" size="small"
+                                type="success" :icon="Plus" circle></el-button></span>
+                        <el-input :placeholder="'domain' + i + '.com'" v-for="(item, i) in domainSettings.multi_domain"
+                            v-model="domainSettings.multi_domain[i]"></el-input>
+                    </el-form-item>
+
+
                 </el-form>
             </div>
         </div>
@@ -102,9 +117,19 @@
                 <h2>{{ lang.setDNS }}</h2>
                 <div style="margin-top: 10px;">{{ lang.dns_desc }}</div>
             </div>
-            <div class="form" width="600px">
-                <el-table :data="dnsInfos" border style="width: 100%">
-                    <el-table-column prop="host" label="HOSTNAME" width="110px" />
+            <div class="form" width="600px" v-for="(info,domain) in dnsInfos">
+                <h3>{{ domain }}</h3>
+                <el-table :data="info" border style="width: 100%">
+                    <el-table-column prop="host" label="HOSTNAME" width="110px" >
+                        <template #default="scope">
+                            <div style="display: flex; align-items: center">
+                                <el-tooltip :content="lang.dns_root_desc" placement="top" v-if="scope.row.host == '' || scope.row.host == '@' ">
+                                    {{ scope.row.host }}
+                                </el-tooltip>
+                                <span v-else>{{ scope.row.host }}</span>
+                            </div>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="type" label="TYPE" width="110px" />
                     <el-table-column prop="value" label="VALUE">
                         <template #default="scope">
@@ -115,7 +140,6 @@
                                 <span v-else>{{ scope.row.value }}</span>
                             </div>
                         </template>
-
                     </el-table-column>
                     <el-table-column prop="ttl" label="TTL" width="110px" />
                 </el-table>
@@ -205,6 +229,11 @@ import { ElMessage } from 'element-plus'
 import lang from '../i18n/i18n';
 import axios from 'axios'
 import { getCurrentInstance } from 'vue'
+import {
+    Plus
+} from '@element-plus/icons-vue'
+
+
 const app = getCurrentInstance()
 const $http = app.appContext.config.globalProperties.$http
 const waitDesc = ref(lang.wait_desc)
@@ -225,7 +254,8 @@ const dbSettings = reactive({
 
 const domainSettings = reactive({
     "web_domain": "",
-    "smtp_domain": ""
+    "smtp_domain": "",
+    "multi_domain": []
 })
 
 const sslSettings = reactive({
@@ -241,10 +271,14 @@ const active = ref(0)
 const fullscreenLoading = ref(false)
 const dnsChecking = ref(false)
 
-const dnsInfos = ref([
-])
+const dnsInfos = ref({})
 
 const port = ref(80)
+
+
+const addDomain = () => {
+    domainSettings.multi_domain.push([])
+}
 
 const setPassword = () => {
     if (adminSettings.hadSeted) {
@@ -302,6 +336,7 @@ const getDomainConfig = () => {
         } else {
             domainSettings.web_domain = res.data.web_domain;
             domainSettings.smtp_domain = res.data.smtp_domain;
+            domainSettings.multi_domain = res.data.domains;
         }
     })
 }
@@ -385,7 +420,11 @@ const checkStatus = () => {
                 checkStatus()
             }, 1000);
         } else {
-            window.location.href = "https://" + domainSettings.web_domain;
+            if(sslSettings.type == 1){
+                window.location.href = "http://" + domainSettings.web_domain;
+            }else{
+                window.location.href = "https://" + domainSettings.web_domain;
+            }
         }
     }).catch((error) => {
         setTimeout(function () {
@@ -396,7 +435,13 @@ const checkStatus = () => {
 
 
 const setDomainConfig = () => {
-    $http.post("/api/setup", { "action": "set", "step": "domain", "web_domain": domainSettings.web_domain, "smtp_domain": domainSettings.smtp_domain }).then((res) => {
+    $http.post("/api/setup", {
+        "action": "set",
+        "step": "domain",
+        "web_domain": domainSettings.web_domain,
+        "smtp_domain": domainSettings.smtp_domain,
+        "multi_domain": domainSettings.multi_domain.join(",")
+    }).then((res) => {
         if (res.errorNo != 0) {
             ElMessage.error(res.errorMsg)
         } else {

@@ -102,8 +102,14 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 
 	myUser.Registration = reg
 
+	domains := []string{cfg.WebDomain}
+	for _, domain := range cfg.Domains {
+		domains = append(domains, "smtp."+domain)
+		domains = append(domains, "pop."+domain)
+	}
+
 	request := certificate.ObtainRequest{
-		Domains: []string{"smtp." + cfg.Domain, cfg.WebDomain, "pop." + cfg.Domain},
+		Domains: domains,
 		Bundle:  true,
 	}
 
@@ -175,8 +181,14 @@ func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAc
 
 	myUser.Registration = reg
 
+	domains := []string{cfg.WebDomain}
+	for _, domain := range cfg.Domains {
+		domains = append(domains, "smtp."+domain)
+		domains = append(domains, "pop."+domain)
+	}
+
 	request := certificate.ObtainRequest{
-		Domains: []string{"smtp." + cfg.Domain, cfg.WebDomain, "pop." + cfg.Domain},
+		Domains: domains,
 		Bundle:  true,
 	}
 

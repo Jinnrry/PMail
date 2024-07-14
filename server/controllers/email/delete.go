@@ -11,7 +11,8 @@ import (
 )
 
 type emailDeleteRequest struct {
-	IDs []int `json:"ids"`
+	IDs       []int64 `json:"ids"`
+	ForcedDel bool    `json:"forcedDel"`
 }
 
 func EmailDelete(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
@@ -30,7 +31,7 @@ func EmailDelete(ctx *context.Context, w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	err = del_email.DelEmail(ctx, reqData.IDs)
+	err = del_email.DelEmail(ctx, reqData.IDs, reqData.ForcedDel)
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 		return
