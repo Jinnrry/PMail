@@ -2,19 +2,19 @@ package res_init
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/hooks"
+	"github.com/Jinnrry/pmail/http_server"
+	"github.com/Jinnrry/pmail/pop3_server"
+	"github.com/Jinnrry/pmail/services/setup/ssl"
+	"github.com/Jinnrry/pmail/session"
+	"github.com/Jinnrry/pmail/signal"
+	"github.com/Jinnrry/pmail/smtp_server"
+	"github.com/Jinnrry/pmail/utils/file"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"pmail/config"
-	"pmail/db"
-	"pmail/dto/parsemail"
-	"pmail/hooks"
-	"pmail/http_server"
-	"pmail/pop3_server"
-	"pmail/services/setup/ssl"
-	"pmail/session"
-	"pmail/signal"
-	"pmail/smtp_server"
-	"pmail/utils/file"
 )
 
 func Init(serverVersion string) {

@@ -3,13 +3,13 @@ package http_server
 import (
 	"errors"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/controllers"
+	"github.com/Jinnrry/pmail/controllers/email"
+	"github.com/Jinnrry/pmail/session"
 	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"net/http"
-	"pmail/config"
-	"pmail/controllers"
-	"pmail/controllers/email"
-	"pmail/session"
 	"time"
 )
 

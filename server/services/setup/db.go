@@ -2,15 +2,15 @@ package setup
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
+	"github.com/Jinnrry/pmail/utils/file"
+	"github.com/Jinnrry/pmail/utils/password"
 	"os"
-	"pmail/config"
-	"pmail/db"
-	"pmail/models"
-	"pmail/utils/array"
-	"pmail/utils/context"
-	"pmail/utils/errors"
-	"pmail/utils/file"
-	"pmail/utils/password"
 )
 
 func GetDatabaseSettings(ctx *context.Context) (string, string, error) {

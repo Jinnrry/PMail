@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/setup"
+	"github.com/Jinnrry/pmail/signal"
+	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/spf13/cast"
 	"io"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
-	"pmail/db"
-	"pmail/dto/response"
-	"pmail/models"
-	"pmail/services/setup"
-	"pmail/signal"
-	"pmail/utils/array"
 	"strconv"
 	"strings"
 	"testing"
@@ -94,6 +94,9 @@ func TestMaster(t *testing.T) {
 
 	// 再次发邮件
 	t.Run("testMoverEmailSend", testSendEmail2User2ForMove)
+	time.Sleep(4 * time.Second)
+
+	t.Run("testMoverEmailSend", testSendEmail2User2ForSpam)
 	time.Sleep(3 * time.Second)
 
 	// 检查规则执行
@@ -579,6 +582,43 @@ func testSendEmail(t *testing.T) {
 		t.Error("Send Email Api Error!")
 	}
 	t.Logf("testSendEmail Success! Response: %+v", data)
+}
+
+func testSendEmail2User2ForSpam(t *testing.T) {
+	ret, err := httpClient.Post(TestHost+"/api/email/send", "application/json", strings.NewReader(`
+		{
+    "from": {
+        "name": "user2",
+        "email": "user2@test.domain"
+    },
+    "to": [
+        {
+            "name": "y",
+            "email": "admin@test.domain"
+        }
+    ],
+    "cc": [
+        
+    ],
+    "subject": "spam",
+    "text": "NeedMove",
+    "html": "<div>text</div>"
+}
+
+`))
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := readResponse(ret.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if data.ErrorNo != 0 {
+		t.Error("Send Email Api Error!")
+	}
+
+	t.Logf("testSendEmail2User2ForMove Success! Response: %+v", data)
+
 }
 
 func testSendEmail2User2ForMove(t *testing.T) {

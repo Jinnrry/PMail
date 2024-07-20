@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"github.com/Jinnrry/gopop"
+	"github.com/Jinnrry/pmail/config"
 	log "github.com/sirupsen/logrus"
-	"pmail/config"
 	"time"
 )
 

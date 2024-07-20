@@ -2,19 +2,19 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/rule"
+	"github.com/Jinnrry/pmail/utils/address"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/db"
-	"pmail/dto"
-	"pmail/dto/response"
-	"pmail/i18n"
-	"pmail/models"
-	"pmail/services/rule"
-	"pmail/utils/address"
-	"pmail/utils/array"
-	"pmail/utils/context"
-	"pmail/utils/errors"
 )
 
 func GetRule(ctx *context.Context, w http.ResponseWriter, req *http.Request) {

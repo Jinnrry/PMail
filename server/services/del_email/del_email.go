@@ -1,11 +1,11 @@
 package del_email
 
 import (
+	"github.com/Jinnrry/pmail/consts"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/spf13/cast"
-	"pmail/consts"
-	"pmail/db"
-	"pmail/models"
-	"pmail/utils/context"
 	"xorm.io/xorm"
 )
 

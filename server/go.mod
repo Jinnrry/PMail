@@ -1,4 +1,4 @@
-module pmail
+module github.com/Jinnrry/pmail
 
 go 1.22.0
 
@@ -8,6 +8,7 @@ require (
 	github.com/alexedwards/scs/postgresstore v0.0.0-20240316134038-7e11d57e8885
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20240316134038-7e11d57e8885
 	github.com/alexedwards/scs/v2 v2.8.0
+	github.com/dlclark/regexp2 v1.11.2
 	github.com/emersion/go-message v0.18.1
 	github.com/emersion/go-msgauth v0.6.8
 	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43

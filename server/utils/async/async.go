@@ -2,9 +2,9 @@ package async
 
 import (
 	"errors"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"pmail/utils/context"
 	"runtime/debug"
 	"sync"
 )

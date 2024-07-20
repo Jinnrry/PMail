@@ -1,8 +1,8 @@
 package setup
 
 import (
-	"pmail/utils/array"
-	"pmail/utils/errors"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/errors"
 	"strings"
 )
 

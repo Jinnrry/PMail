@@ -2,13 +2,13 @@ package group
 
 import (
 	"fmt"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
 	log "github.com/sirupsen/logrus"
-	"pmail/db"
-	"pmail/dto"
-	"pmail/models"
-	"pmail/utils/array"
-	"pmail/utils/context"
-	"pmail/utils/errors"
 )
 
 type GroupItem struct {

@@ -1,8 +1,8 @@
 package setup
 
 import (
-	"pmail/signal"
-	"pmail/utils/errors"
+	"github.com/Jinnrry/pmail/signal"
+	"github.com/Jinnrry/pmail/utils/errors"
 )
 
 // Finish 标记初始化完成

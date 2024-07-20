@@ -2,12 +2,12 @@ package email
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/del_email"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/dto/response"
-	"pmail/services/del_email"
-	"pmail/utils/context"
 )
 
 type emailDeleteRequest struct {

@@ -2,7 +2,7 @@ package dto
 
 import (
 	"encoding/json"
-	"pmail/models"
+	"github.com/Jinnrry/pmail/models"
 )
 
 type RuleType int

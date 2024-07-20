@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/attachments"
+	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/spf13/cast"
 	"net/http"
-	"pmail/dto/response"
-	"pmail/services/attachments"
-	"pmail/utils/context"
 	"strings"
 )
 

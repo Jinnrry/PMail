@@ -33,6 +33,14 @@ wechat_push:
 	cd server/hooks/wechat_push && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o output/wechat_push_mac_amd64  wechat_push.go
 	cd server/hooks/wechat_push && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o output/wechat_push_mac_arm64  wechat_push.go
 
+spam_block:
+	cd server/hooks/spam_block && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o output/spam_block_linux_amd64  spam_block.go
+	cd server/hooks/spam_block && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o output/spam_block_windows_amd64.exe  spam_block.go
+	cd server/hooks/spam_block && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o output/spam_block_mac_amd64  spam_block.go
+	cd server/hooks/spam_block && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o output/spam_block_mac_arm64  spam_block.go
+
+
+
 plugin: telegram_push wechat_push web_push
 
 

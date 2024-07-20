@@ -2,14 +2,14 @@ package db
 
 import (
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite"
-	"pmail/config"
-	"pmail/models"
-	"pmail/utils/context"
-	"pmail/utils/errors"
 	"xorm.io/xorm"
 )
 

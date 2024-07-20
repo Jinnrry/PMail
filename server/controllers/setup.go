@@ -2,16 +2,16 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/setup"
+	"github.com/Jinnrry/pmail/services/setup/ssl"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
 	"net/http"
 	"os"
-	"pmail/config"
-	"pmail/dto/response"
-	"pmail/services/setup"
-	"pmail/services/setup/ssl"
-	"pmail/utils/context"
 	"strings"
 )
 

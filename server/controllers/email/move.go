@@ -2,12 +2,12 @@ package email
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/group"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/dto/response"
-	"pmail/services/group"
-	"pmail/utils/context"
 )
 
 type moveRequest struct {

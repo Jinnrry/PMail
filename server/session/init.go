@@ -1,12 +1,12 @@
 package session
 
 import (
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
 	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/alexedwards/scs/postgresstore"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
-	"pmail/config"
-	"pmail/db"
 
 	"time"
 )

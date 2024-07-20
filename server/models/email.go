@@ -3,7 +3,7 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
-	"pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/dto/parsemail"
 	"time"
 )
 
@@ -89,9 +89,9 @@ func (d *Email) MarshalJSON() ([]byte, error) {
 		_ = json.Unmarshal([]byte(d.Attachments), &allAtt)
 		for i, att := range allAtt {
 			att.Index = i
-			if att.ContentType == "application/octet-stream" {
-				showAtt = append(showAtt, att)
-			}
+			//if att.ContentType == "application/octet-stream" {
+			showAtt = append(showAtt, att)
+			//}
 
 		}
 	}

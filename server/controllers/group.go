@@ -2,17 +2,17 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/group"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/db"
-	"pmail/dto"
-	"pmail/dto/response"
-	"pmail/i18n"
-	"pmail/models"
-	"pmail/services/group"
-	"pmail/utils/array"
-	"pmail/utils/context"
 )
 
 func GetUserGroupList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
