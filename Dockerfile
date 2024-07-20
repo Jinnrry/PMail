@@ -16,7 +16,7 @@ RUN cd /work/server && go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 
 RUN cd /work/server/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
 RUN cd /work/server/hooks/web_push && go build -ldflags "-s -w" -o output/web_push web_push.go
 RUN cd /work/server/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push wechat_push.go
-RUN cd /work/server/hooks/spam_blcok && go build -ldflags "-s -w" -o output/spam_blcok spam_blcok.go
+RUN cd /work/server/hooks/spam_block && go build -ldflags "-s -w" -o output/spam_block spam_block.go
 
 
 FROM alpine
