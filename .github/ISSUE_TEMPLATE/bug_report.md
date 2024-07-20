@@ -1,47 +1,70 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+name: bug反馈 / bug report
+description: "提交 bug反馈/ bug report"
+body:
+  - type: checkboxes
+    attributes:
+      label: 完整性要求 / Integrity requirements
+      description: |-
+        请勾选以下所有选项以证明您已经阅读并理解了以下要求，否则该 issue 将被关闭。
+      options:
+        - label: 我保证阅读了文档，了解所有我编写的配置文件项的含义，而不是大量堆砌看似有用的选项或默认值。
+          required: true
+        - label: 我提供了完整的配置文件和日志，而不是出于自己的判断只给出截取的部分。
+          required: true
+        - label: 我搜索了issues，没有发现已提出的类似问题。
+          required: true
+  - type: input
+    attributes:
+      label: 版本
+      description: 使用的PMail版本
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 描述
+      description: 请提供错误的详细描述。以及你认为有价值的信息。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 重现方式
+      description: |-
+        基于你下面提供的配置，提供重现BUG方法。
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |-
+        ## 配置与日志部分
+        
+        ### 对于配置文件
+        请提供可以重现问题的配置文件。
+        
+        ### 对于日志
+        请先将日志等级设置为 debug.
+        重启 PMail ，再按复现方式操作，尽量减少日志中的无关部分。
+        记得删除有关个人信息的部分。
+        提供 PMail 的日志，而不是面板或者别的东西输出的日志。
 
----
+        ### 最后
+        在去掉不影响复现的部分后，提供实际运行的**完整**文件，不要出于自己的判断只提供入站出站或者几行日志。
+        把内容放在文本框预置的 ```<details><pre><code>``` 和 ```</code></pre></details>``` 中间。
+        如果问题十分明确只出现在某一端(如按文档正确编写配置后核心启动失败/崩溃)，可以在下面不需要的项目填入N/A.
+  - type: textarea
+    attributes:
+      label: 服务端配置
+      value: |-
+        <details><pre><code>
 
-## 请完整读完[README](https://github.com/Jinnrry/PMail/blob/master/README_CN.md)再提问! / Before asking questions, please read the [README](https://github.com/Jinnrry/PMail/blob/master/README.md) !
+        </code></pre></details>
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 服务端日志
+      value: |-
+        <details><pre><code>
 
-**请说明问题 / Describe the bug**
-A clear and concise description of what the bug is.
-
-**如何复现 / To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**你预期的行为 / Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**贴上你的配置文件 / Program configuration file contents**
-<details>
-  <summary>config.json</summary>
-
-```
-这里贴上你的配置文件内容。
-Copy the contents of your configuration file here.
-```
-
-</details>
-
-
-**日志信息 / Log**
-<details>
-  <summary>log</summary>
-
-```
-这里贴上问题相关日志
-Copy the contents of your log here.
-
-```
-
-</details>
+        </code></pre></details>
+    validations:
+      required: true
