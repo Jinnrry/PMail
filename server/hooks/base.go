@@ -4,22 +4,22 @@ import (
 	oContext "context"
 	"encoding/json"
 	"fmt"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/hooks/framework"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"pmail/dto/parsemail"
-	"pmail/hooks/framework"
-	"pmail/models"
-	"pmail/utils/context"
 	"strings"
 	"time"
 )
 
 // HookList
-var HookList []framework.EmailHook
+var HookList map[string]framework.EmailHook
 
 type HookSender struct {
 	httpc  http.Client
@@ -158,6 +158,7 @@ var processList []*os.Process
 // Init 注册hook对象
 func Init(serverVersion string) {
 
+	HookList = map[string]framework.EmailHook{}
 	env := os.Environ()
 	procAttr := &os.ProcAttr{
 		Env: env,
@@ -178,6 +179,8 @@ func Init(serverVersion string) {
 
 			os.Remove(socketPath)
 
+			//socketPath = "/PMail/server/hooks/spam_block/1555.socket"  //debug
+
 			log.Infof("[%s] Plugin Load", info.Name())
 			p, err := os.StartProcess(path, []string{
 				info.Name(),
@@ -195,6 +198,8 @@ func Init(serverVersion string) {
 			go func() {
 				stat, err := p.Wait()
 				log.Errorf("[%s] Plugin Stop. Error:%v Stat:%v", info.Name(), err, stat.String())
+				delete(HookList, info.Name())
+				os.Remove(socketPath)
 			}()
 
 			loadSucc := false
@@ -209,7 +214,7 @@ func Init(serverVersion string) {
 				}
 			}
 			if loadSucc {
-				HookList = append(HookList, NewHookSender(socketPath, info.Name(), serverVersion))
+				HookList[info.Name()] = NewHookSender(socketPath, info.Name(), serverVersion)
 				log.Infof("[%s] Plugin Load Success!", info.Name())
 			}
 

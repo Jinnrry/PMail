@@ -2,15 +2,15 @@ package email
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/list"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
 	"math"
 	"net/http"
-	"pmail/dto"
-	"pmail/dto/response"
-	"pmail/services/list"
-	"pmail/utils/context"
 )
 
 type emailListResponse struct {

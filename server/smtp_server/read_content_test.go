@@ -2,16 +2,16 @@ package smtp_server
 
 import (
 	"bytes"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	parsemail2 "github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/hooks"
+	"github.com/Jinnrry/pmail/session"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"net/netip"
 	"os"
-	"pmail/config"
-	"pmail/db"
-	parsemail2 "pmail/dto/parsemail"
-	"pmail/hooks"
-	"pmail/session"
-	"pmail/utils/context"
 	"testing"
 	"time"
 )

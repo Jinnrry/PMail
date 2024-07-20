@@ -6,13 +6,13 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/utils/consts"
 	"github.com/emersion/go-msgauth/dkim"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ed25519"
 	"io"
 	"os"
-	"pmail/config"
-	"pmail/utils/consts"
 	"strings"
 )
 

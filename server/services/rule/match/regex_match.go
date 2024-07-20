@@ -1,10 +1,10 @@
 package match
 
 import (
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/dlclark/regexp2"
 	log "github.com/sirupsen/logrus"
-	"pmail/dto/parsemail"
-	"pmail/utils/context"
-	"regexp"
 )
 
 type RegexMatch struct {
@@ -21,8 +21,8 @@ func NewRegexMatch(field, rule string) *RegexMatch {
 
 func (r *RegexMatch) Match(ctx *context.Context, email *parsemail.Email) bool {
 	content := getFieldContent(r.Field, email)
-
-	match, err := regexp.MatchString(r.Rule, content)
+	re := regexp2.MustCompile(r.Rule, 0)
+	match, err := re.MatchString(content)
 
 	if err != nil {
 		log.WithContext(ctx).Errorf("rule regex error %v", err)

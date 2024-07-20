@@ -2,12 +2,12 @@ package attachments
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/auth"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
-	"pmail/db"
-	"pmail/dto/parsemail"
-	"pmail/models"
-	"pmail/services/auth"
-	"pmail/utils/context"
 )
 
 func GetAttachments(ctx *context.Context, emailId int, cid string) (string, []byte) {

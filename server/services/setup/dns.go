@@ -2,11 +2,11 @@ package setup
 
 import (
 	"fmt"
-	"pmail/i18n"
-	"pmail/services/auth"
-	"pmail/utils/context"
-	"pmail/utils/errors"
-	"pmail/utils/ip"
+	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/services/auth"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
+	"github.com/Jinnrry/pmail/utils/ip"
 )
 
 type DNSItem struct {

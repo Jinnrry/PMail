@@ -3,14 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/hooks/framework"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
-	"pmail/config"
-	"pmail/dto/parsemail"
-	"pmail/hooks/framework"
-	"pmail/models"
-	"pmail/utils/context"
 )
 
 type WebPushHook struct {

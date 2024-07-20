@@ -2,11 +2,11 @@ package list
 
 import (
 	"fmt"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
-	"pmail/db"
-	"pmail/dto"
-	"pmail/dto/response"
-	"pmail/utils/context"
 )
 
 func GetEmailList(ctx *context.Context, tagInfo dto.SearchTag, keyword string, pop3List bool, offset, limit int) (emailList []*response.EmailResponseData, total int64) {

@@ -3,17 +3,17 @@ package smtp_server
 import (
 	"crypto/tls"
 	"database/sql"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
+	"github.com/Jinnrry/pmail/utils/id"
+	"github.com/Jinnrry/pmail/utils/password"
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
 	log "github.com/sirupsen/logrus"
 	"net"
-	"pmail/config"
-	"pmail/db"
-	"pmail/models"
-	"pmail/utils/context"
-	"pmail/utils/errors"
-	"pmail/utils/id"
-	"pmail/utils/password"
 	"strings"
 	"time"
 )
@@ -131,7 +131,7 @@ func StartWithTLS() {
 	instanceTls.Domain = config.Instance.Domain
 	instanceTls.ReadTimeout = 10 * time.Second
 	instanceTls.WriteTimeout = 10 * time.Second
-	instanceTls.MaxMessageBytes = 1024 * 1024
+	instanceTls.MaxMessageBytes = 1024 * 1024 * 30
 	instanceTls.MaxRecipients = 50
 	// force TLS for auth
 	instanceTls.AllowInsecureAuth = true
@@ -159,7 +159,7 @@ func Start() {
 	instance.Domain = config.Instance.Domain
 	instance.ReadTimeout = 10 * time.Second
 	instance.WriteTimeout = 10 * time.Second
-	instance.MaxMessageBytes = 1024 * 1024
+	instance.MaxMessageBytes = 1024 * 1024 * 30
 	instance.MaxRecipients = 50
 	// force TLS for auth
 	instance.AllowInsecureAuth = false

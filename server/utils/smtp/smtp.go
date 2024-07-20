@@ -24,11 +24,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
 	"io"
 	"net"
 	"net/smtp"
 	"net/textproto"
-	"pmail/config"
 	"strings"
 	"time"
 )

@@ -2,14 +2,14 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/password"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"pmail/db"
-	"pmail/dto/response"
-	"pmail/i18n"
-	"pmail/utils/context"
-	"pmail/utils/password"
 )
 
 type modifyPasswordRequest struct {

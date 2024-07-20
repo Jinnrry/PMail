@@ -3,14 +3,14 @@ package http_server
 import (
 	"flag"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/controllers"
+	"github.com/Jinnrry/pmail/utils/ip"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io/fs"
 	"net/http"
 	"os"
-	"pmail/config"
-	"pmail/controllers"
-	"pmail/utils/ip"
 	"strings"
 	"time"
 )

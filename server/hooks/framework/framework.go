@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"pmail/dto/parsemail"
-	"pmail/models"
-	"pmail/utils/context"
 	"time"
 )
 
@@ -167,7 +167,8 @@ func (p *Plugin) Run() {
 		Handler:      mux,
 	}
 
-	unixListener, err := net.Listen("unix", getExePath()+"/"+os.Args[1])
+	filePath := getExePath() + "/" + os.Args[1]
+	unixListener, err := net.Listen("unix", filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -178,6 +179,8 @@ func (p *Plugin) Run() {
 }
 
 func getExePath() string {
+	//return "/PMail/server/hooks/spam_block" //debug socket path
+
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)

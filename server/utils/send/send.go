@@ -4,14 +4,14 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/async"
+	"github.com/Jinnrry/pmail/utils/consts"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/smtp"
 	log "github.com/sirupsen/logrus"
 	"net"
-	"pmail/dto/parsemail"
-	"pmail/utils/array"
-	"pmail/utils/async"
-	"pmail/utils/consts"
-	"pmail/utils/context"
-	"pmail/utils/smtp"
 	"strings"
 	"sync"
 )
@@ -125,8 +125,6 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 	_, fromDomain := e.From.GetDomainAccount()
 
 	b := e.BuildBytes(ctx, true)
-
-	log.WithContext(ctx).Debugf("Message Infos : %s", string(b))
 
 	var to []*parsemail.User
 	to = append(append(append(to, e.To...), e.Cc...), e.Bcc...)

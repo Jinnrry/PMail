@@ -1,17 +1,17 @@
 package rule
 
 import (
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/consts"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/rule/match"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/send"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"pmail/config"
-	"pmail/consts"
-	"pmail/db"
-	"pmail/dto"
-	"pmail/dto/parsemail"
-	"pmail/models"
-	"pmail/services/rule/match"
-	"pmail/utils/context"
-	"pmail/utils/send"
 	"strings"
 )
 

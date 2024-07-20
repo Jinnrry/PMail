@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/cron_server"
+	"github.com/Jinnrry/pmail/res_init"
+	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"pmail/config"
-	"pmail/cron_server"
-	"pmail/res_init"
-	"pmail/utils/context"
 	"time"
 )
 

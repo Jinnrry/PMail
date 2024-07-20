@@ -1,10 +1,10 @@
 package cron_server
 
 import (
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/services/setup/ssl"
+	"github.com/Jinnrry/pmail/signal"
 	log "github.com/sirupsen/logrus"
-	"pmail/config"
-	"pmail/services/setup/ssl"
-	"pmail/signal"
 	"time"
 )
 

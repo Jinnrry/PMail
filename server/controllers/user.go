@@ -2,18 +2,18 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/password"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
 	"math"
 	"net/http"
-	"pmail/config"
-	"pmail/db"
-	"pmail/dto/response"
-	"pmail/models"
-	"pmail/utils/array"
-	"pmail/utils/context"
-	"pmail/utils/password"
 )
 
 type userCreateRequest struct {

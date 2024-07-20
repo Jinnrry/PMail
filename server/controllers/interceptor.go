@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"github.com/Jinnrry/pmail/config"
 	"net/http"
-	"pmail/config"
 )
 
 func Interceptor(w http.ResponseWriter, r *http.Request) {

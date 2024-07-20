@@ -4,22 +4,22 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/hooks"
+	"github.com/Jinnrry/pmail/hooks/framework"
+	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/Jinnrry/pmail/utils/async"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/send"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
 	"net/http"
-	"pmail/config"
-	"pmail/db"
-	"pmail/dto/parsemail"
-	"pmail/dto/response"
-	"pmail/hooks"
-	"pmail/hooks/framework"
-	"pmail/i18n"
-	"pmail/models"
-	"pmail/utils/array"
-	"pmail/utils/async"
-	"pmail/utils/context"
-	"pmail/utils/send"
 	"strings"
 	"time"
 )
@@ -168,30 +168,31 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	log.WithContext(ctx).Debugf("插件执行--SendBefore End")
 
 	modelEmail := models.Email{
-		Type:        1,
-		Subject:     e.Subject,
-		ReplyTo:     json2string(e.ReplyTo),
-		FromName:    e.From.Name,
-		FromAddress: e.From.EmailAddress,
-		To:          json2string(e.To),
-		Bcc:         json2string(e.Bcc),
-		Cc:          json2string(e.Cc),
-		Text:        sql.NullString{String: string(e.Text), Valid: true},
-		Html:        sql.NullString{String: string(e.HTML), Valid: true},
-		Sender:      json2string(e.Sender),
-		Attachments: json2string(e.Attachments),
-		SPFCheck:    1,
-		DKIMCheck:   1,
-		SendUserID:  ctx.UserID,
-		SendDate:    time.Now(),
-		Status:      1,
-		CreateTime:  time.Now(),
+		Type:         1,
+		Subject:      e.Subject,
+		ReplyTo:      json2string(e.ReplyTo),
+		FromName:     e.From.Name,
+		FromAddress:  e.From.EmailAddress,
+		To:           json2string(e.To),
+		Bcc:          json2string(e.Bcc),
+		Cc:           json2string(e.Cc),
+		Text:         sql.NullString{String: string(e.Text), Valid: true},
+		Html:         sql.NullString{String: string(e.HTML), Valid: true},
+		Sender:       json2string(e.Sender),
+		Attachments:  json2string(e.Attachments),
+		SPFCheck:     1,
+		DKIMCheck:    1,
+		SendUserID:   ctx.UserID,
+		SendDate:     time.Now(),
+		CronSendTime: time.Now(),
+		Status:       1,
+		CreateTime:   time.Now(),
 	}
 
 	_, err = db.Instance.Insert(&modelEmail)
 
 	if err != nil || modelEmail.Id <= 0 {
-		log.Println("mysql insert error:", err.Error())
+		log.Println("insert error:", err.Error())
 		response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "send_fail"), err.Error()).FPrint(w)
 		return
 	}

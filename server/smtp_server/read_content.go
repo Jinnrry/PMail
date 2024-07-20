@@ -4,23 +4,23 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/hooks"
+	"github.com/Jinnrry/pmail/hooks/framework"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/rule"
+	"github.com/Jinnrry/pmail/utils/async"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/errors"
+	"github.com/Jinnrry/pmail/utils/send"
 	"github.com/mileusna/spf"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
 	"net"
 	"net/netip"
-	"pmail/config"
-	"pmail/db"
-	"pmail/dto/parsemail"
-	"pmail/hooks"
-	"pmail/hooks/framework"
-	"pmail/models"
-	"pmail/services/rule"
-	"pmail/utils/async"
-	"pmail/utils/context"
-	"pmail/utils/errors"
-	"pmail/utils/send"
 	"strings"
 	"time"
 	. "xorm.io/builder"
@@ -45,8 +45,6 @@ func (s *Session) Data(r io.Reader) error {
 		hook.ReceiveParseBefore(ctx, &emailData)
 	}
 	log.WithContext(ctx).Debugf("开始执行插件ReceiveParseBefore End！")
-
-	log.WithContext(ctx).Infof("邮件原始内容: %s", emailData)
 
 	email := parsemail.NewEmailFromReader(s.To, bytes.NewReader(emailData))
 
@@ -263,7 +261,7 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 
 		if len(users) > 0 {
 			for _, user := range users {
-				ue := models.UserEmail{EmailID: modelEmail.Id, UserID: user.ID}
+				ue := models.UserEmail{EmailID: modelEmail.Id, UserID: user.ID, Status: cast.ToInt8(email.Status)}
 				_, err = db.Instance.Insert(&ue)
 				if err != nil {
 					log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
@@ -273,7 +271,7 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 			users = append(users, &models.User{ID: 1})
 			// 当邮件找不到收件人的时候，邮件全部丢给管理员账号
 			// id = 1的账号直接当成管理员账号处理
-			ue := models.UserEmail{EmailID: modelEmail.Id, UserID: 1}
+			ue := models.UserEmail{EmailID: modelEmail.Id, UserID: 1, Status: cast.ToInt8(email.Status)}
 			_, err = db.Instance.Insert(&ue)
 			if err != nil {
 				log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())

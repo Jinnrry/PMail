@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"github.com/Jinnrry/pmail/dto/response"
 	"net/http"
-	"pmail/dto/response"
 )
 
 func Ping(w http.ResponseWriter, req *http.Request) {

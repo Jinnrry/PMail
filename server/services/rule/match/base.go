@@ -2,8 +2,8 @@ package match
 
 import (
 	"encoding/json"
-	"pmail/dto/parsemail"
-	"pmail/utils/context"
+	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/utils/context"
 )
 
 const (
