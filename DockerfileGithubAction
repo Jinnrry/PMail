@@ -10,7 +10,7 @@ RUN go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(g
 RUN cd /work/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
 RUN cd /work/hooks/web_push && go build -ldflags "-s -w" -o output/web_push web_push.go
 RUN cd /work/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push wechat_push.go
-RUN cd /work/hooks/spam_blcok && go build -ldflags "-s -w" -o output/spam_blcok spam_blcok.go
+RUN cd /work/hooks/spam_block && go build -ldflags "-s -w" -o output/spam_block spam_block.go
 
 
 FROM alpine
