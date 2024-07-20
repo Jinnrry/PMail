@@ -13,6 +13,8 @@ body:
           required: true
         - label: 我搜索了issues，没有发现已提出的类似问题。
           required: true
+        - label: 我已经阅读了项目[Readme](https://github.com/Jinnrry/PMail/blob/master/README_CN.md)和[常见问题](https://github.com/Jinnrry/PMail/discussions/170)
+          required: true
   - type: input
     attributes:
       label: 版本
