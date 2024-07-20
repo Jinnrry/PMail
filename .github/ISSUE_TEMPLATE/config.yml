@@ -1,0 +1,4 @@
+contact_links:
+  - name: 部署错误及使用讨论 / Community Support and Questions
+    url: https://github.com/Jinnrry/PMail/discussions
+    about: 非程序异常请前往Discussions讨论 / Please ask and answer questions there. The issue tracker is for issues with core.
