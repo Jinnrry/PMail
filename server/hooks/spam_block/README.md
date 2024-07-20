@@ -10,11 +10,11 @@ Request的形式提交机器学习的各类样本数据。
 
 你可以给testData和trainData这两个文件夹下面的csv文件提交PR，CSV文件每行的第一个数字表示数据类型，0表示正常邮件，1表示广告邮件，2表示诈骗邮件。
 
-你可以使用export.go这个脚本导出你全部的邮件数据，过滤掉隐私内容并且标记好分类后提交上来。
+你可以使用export.go这个脚本或者从Release中下载[email_export工具](https://github.com/Jinnrry/PMail/releases/tag/v2.6.1)导出你全部的邮件数据，过滤掉隐私内容并且标记好分类后提交上来。
 
 # 如何运行
 
-1、下载或者自己训练模型
+1、下载[emotion_model.zip](https://github.com/Jinnrry/PMail/releases/tag/v2.6.1)或者自己训练模型
 
 2、使用docker运行tensorflow模型
 `docker run -d -p 127.0.0.1:8501:8501   \
