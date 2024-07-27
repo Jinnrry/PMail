@@ -20,14 +20,14 @@ func HasAuth(ctx *context.Context, email *models.Email) bool {
 	if ctx.IsAdmin {
 		return true
 	}
-	var ue *models.UserEmail
-	err := db.Instance.Where("email_id = ?", email.Id).Find(&ue)
+	var ue []models.UserEmail
+	err := db.Instance.Table(&models.UserEmail{}).Where("email_id = ? and user_id = ?", email.Id, ctx.UserID).Find(&ue)
 	if err != nil {
 		log.Errorf("Error while checking user: %v", err)
 		return false
 	}
 
-	return ue != nil
+	return len(ue) != 0
 }
 
 func DkimGen() string {

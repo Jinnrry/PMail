@@ -35,6 +35,20 @@ func (w *TelegramPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsema
 
 }
 
+// GetName 获取插件名称
+func (w *TelegramPushHook) GetName(ctx *context.Context) string {
+	return "TgPush"
+}
+
+// SettingsHtml 插件页面
+func (w *TelegramPushHook) SettingsHtml(ctx *context.Context, url string, requestData string) string {
+	return fmt.Sprintf(`
+<div>
+	 TG push No Settings Page
+</div>
+`)
+}
+
 func (w *TelegramPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 }

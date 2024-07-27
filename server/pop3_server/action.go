@@ -185,15 +185,12 @@ func (a action) Uidl(session *gopop.Session, msg string) ([]gopop.UidlItem, erro
 
 	var res []listItem
 
-	var err error
-	var ssql string
-
-	err = db.Instance.Where("type=0 and status=0").Select("id").Table("email").Find(&res)
-
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		log.WithContext(session.Ctx.(*context.Context)).Errorf("SQL:%s  Error: %+v", ssql, err)
-		err = nil
-		return []gopop.UidlItem{}, nil
+	emailList, _ := list.GetEmailList(session.Ctx.(*context.Context), dto.SearchTag{Type: consts.EmailTypeReceive, Status: -1, GroupId: -1}, "", true, 0, 99999)
+	for _, info := range emailList {
+		res = append(res, listItem{
+			Id:   cast.ToInt64(info.Id),
+			Size: cast.ToInt64(info.Size),
+		})
 	}
 	ret := []gopop.UidlItem{}
 	for _, re := range res {

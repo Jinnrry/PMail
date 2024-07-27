@@ -25,6 +25,11 @@
                 <el-tab-pane v-if="$userInfos.is_admin" :label="lang.user_management">
                     <UserManagement />
                 </el-tab-pane>
+
+                <el-tab-pane :label="lang.plugin_settings">
+                    <PluginSettings />
+                </el-tab-pane>
+
             </el-tabs>
         </el-drawer>
 
@@ -41,6 +46,7 @@ import GroupSettings from './GroupSettings.vue';
 import RuleSettings from './RuleSettings.vue';
 import UserManagement from './UserManagement.vue';
 import { getCurrentInstance } from 'vue'
+import PluginSettings from './PluginSettings.vue';
 const app = getCurrentInstance()
 const $http = app.appContext.config.globalProperties.$http
 const $isLogin = app.appContext.config.globalProperties.$isLogin

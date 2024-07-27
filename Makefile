@@ -21,11 +21,6 @@ telegram_push:
 	cd server/hooks/telegram_push && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o output/telegram_push_mac_amd64  telegram_push.go
 	cd server/hooks/telegram_push && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o output/telegram_push_mac_arm64  telegram_push.go
 
-web_push:
-	cd server/hooks/web_push && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o output/web_push_linux_amd64  web_push.go
-	cd server/hooks/web_push && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o output/web_push_windows_amd64.exe  web_push.go
-	cd server/hooks/web_push && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o output/web_push_mac_amd64  web_push.go
-	cd server/hooks/web_push && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o output/web_push_mac_arm64  web_push.go
 
 wechat_push:
 	cd server/hooks/wechat_push && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o output/wechat_push_linux_amd64  wechat_push.go
@@ -41,7 +36,7 @@ spam_block:
 
 
 
-plugin: telegram_push wechat_push web_push
+plugin: telegram_push wechat_push
 
 
 package: clean
@@ -53,7 +48,6 @@ package: clean
 	cp -r server/config/ssl output/config/
 	cp -r server/config/config.json output/config/
 	mv server/hooks/telegram_push/output/* output/plugins
-	mv server/hooks/web_push/output/* output/plugins
 	mv server/hooks/wechat_push/output/* output/plugins
 	cp README.md output/
 

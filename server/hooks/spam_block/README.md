@@ -52,16 +52,11 @@ curl -X POST http://localhost:8501/v1/models/emotion_model:predict -d '{
 
 4、将spam_block插件移动到pmail插件目录
 
-5、在插件位置新建配置文件`spam_block_config.json`内容类似
+5、设置插件
 
-```json
-{
-  "apiURL": "http://localhost:8501/v1/models/emotion_model:predict",
-  "apiTimeout": 3000
-}
-```
+PMail后台->右上角设置按钮->插件设置->SpamBlock
 
-apiURL表示模型api访问地址，如果你是使用Docker部署，PMail和tensorflow/serving容器需要设置为相同网络才能通信，并且需要把localhost替换为tensorflow/serving的容器名称
+接口地址表示模型api访问地址，如果你是使用Docker部署，PMail和tensorflow/serving容器需要设置为相同网络才能通信，并且需要把localhost替换为tensorflow/serving的容器名称
 
 # 模型效果
 

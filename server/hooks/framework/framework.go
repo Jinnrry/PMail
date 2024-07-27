@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -27,6 +28,10 @@ type EmailHook interface {
 	ReceiveParseAfter(ctx *context.Context, email *parsemail.Email)
 	// ReceiveSaveAfter 邮件落库以后执行（收信规则后执行） 异步执行
 	ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail)
+	// GetName 获取插件名称
+	GetName(ctx *context.Context) string
+	// SettingsHtml 插件页面
+	SettingsHtml(ctx *context.Context, url string, requestData string) string
 }
 
 // HookDTO PMail 主程序和插件通信的结构体
@@ -37,6 +42,12 @@ type HookDTO struct {
 	EmailByte     *[]byte          // 未解析前的文件内容
 	ErrMap        map[string]error // 错误信息
 	UserEmail     []*models.UserEmail
+}
+
+type SettingsHtmlRequest struct {
+	Ctx         *context.Context // 上下文
+	URL         string
+	RequestData string
 }
 
 type Plugin struct {
@@ -159,6 +170,32 @@ func (p *Plugin) Run() {
 		body, _ = json.Marshal(hookDTO)
 		writer.Write(body)
 		log.Debugf("[%s] ReceiveSaveAfter End", p.name)
+	})
+	mux.HandleFunc("/GetName", func(writer http.ResponseWriter, request *http.Request) {
+		log.Debugf("[%s] GetName Start", p.name)
+		var hookDTO HookDTO
+		body, _ := io.ReadAll(request.Body)
+		err := json.Unmarshal(body, &hookDTO)
+		if err != nil {
+			log.Errorf("params error %+v", err)
+			return
+		}
+		name := strings.ReplaceAll(p.hook.GetName(hookDTO.Ctx), " ", "")
+		writer.Write([]byte(name))
+		log.Debugf("[%s] GetName End", p.name)
+	})
+	mux.HandleFunc("/SettingsHtml", func(writer http.ResponseWriter, request *http.Request) {
+		log.Debugf("[%s] SettingsHtml Start", p.name)
+		var hookDTO SettingsHtmlRequest
+		body, _ := io.ReadAll(request.Body)
+		err := json.Unmarshal(body, &hookDTO)
+		if err != nil {
+			log.Errorf("params error %+v", err)
+			return
+		}
+		html := p.hook.SettingsHtml(hookDTO.Ctx, hookDTO.URL, hookDTO.RequestData)
+		writer.Write([]byte(html))
+		log.Debugf("[%s] SettingsHtml End", p.name)
 	})
 
 	server := http.Server{

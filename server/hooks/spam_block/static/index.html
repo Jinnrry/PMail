@@ -1,0 +1,53 @@
+<html>
+<header>
+    <script src="/api/plugin/settings/SpamBlock/jquery.js"></script>
+    <script>
+        $(function () {
+            $("#submit").click(function () {
+                let data = {};
+                let value = $('#form').serializeArray();
+                $.each(value, function (index, item) {
+                    data[item.name] = item.value;
+                });
+                let jsonData = JSON.stringify(data);
+                console.log(jsonData);
+
+                $.post("/api/plugin/settings/SpamBlock/save", jsonData, function (data) {
+                    alert(data)
+                })
+            })
+        })
+    </script>
+</header>
+<body>
+
+<div>
+    <form id="form" action="/api/plugin/settings/SpamBlock/save" method="post">
+
+        <div>
+            <label for="url"> 模型API接口地址： </label>
+            <input id="url" style="width: 600px;" name="url" value="%s"
+                   placeholder="http://localhost:8501/v1/models/emotion_model:predict">
+        </div>
+
+        <div>
+            <label for="timeout"> 超时时间： </label>
+            <input id="timeout" style="width: 600px;" name="timeout" value="%d" placeholder="单位毫秒">
+        </div>
+
+        <div>
+            <label for="threshold"> 识别阈值： </label>
+            <input id="threshold" name="threshold" type="number" value="%f" style="width: 600px;"
+                   step=".01" max="100" min="0" placeholder="识别阈值，值越低过滤越严格，越容易误判">
+        </div>
+
+        <input id="submit" type="button" value="Submit"/>
+
+    </form>
+</div>
+
+
+</body>
+
+
+</html>
