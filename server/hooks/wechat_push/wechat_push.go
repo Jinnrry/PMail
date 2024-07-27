@@ -32,6 +32,19 @@ type WeChatPushHook struct {
 	mainConfig   *config.Config
 }
 
+func (w *WeChatPushHook) GetName(ctx *context.Context) string {
+	return "WeChatPushHook"
+}
+
+// SettingsHtml 插件页面
+func (w *WeChatPushHook) SettingsHtml(ctx *context.Context, url string, requestData string) string {
+	return fmt.Sprintf(`
+<div>
+	 TG push No Settings Page
+</div>
+`)
+}
+
 func (w *WeChatPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
 	if w.appId == "" || w.secret == "" || w.pushUser == "" {
 		return

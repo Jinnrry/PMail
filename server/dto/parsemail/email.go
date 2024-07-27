@@ -54,15 +54,17 @@ type Email struct {
 	Date        string
 	Status      int // 0未发送，1已发送，2发送失败，3删除
 	MessageId   int64
+	Size        int
 }
 
-func NewEmailFromReader(to []string, r io.Reader) *Email {
+func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	ret := &Email{}
 	m, err := message.Read(r)
 	if err != nil {
 		log.Errorf("email解析错误！ Error %+v", err)
 	}
 
+	ret.Size = size
 	ret.From = buildUser(m.Header.Get("From"))
 
 	if len(to) > 0 {

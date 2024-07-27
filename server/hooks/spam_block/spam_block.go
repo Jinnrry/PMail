@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"github.com/Jinnrry/pmail/dto/parsemail"
@@ -9,6 +10,7 @@ import (
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"io"
 	"net/http"
 	"os"
@@ -21,15 +23,64 @@ type SpamBlock struct {
 	hc  *http.Client
 }
 
-func (s SpamBlock) SendBefore(ctx *context.Context, email *parsemail.Email) {
+func (s *SpamBlock) SendBefore(ctx *context.Context, email *parsemail.Email) {
 
 }
 
-func (s SpamBlock) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
+func (s *SpamBlock) SendAfter(ctx *context.Context, email *parsemail.Email, err map[string]error) {
 
 }
 
-func (s SpamBlock) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
+func (s *SpamBlock) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
+
+}
+
+// GetName 获取插件名称
+func (s *SpamBlock) GetName(ctx *context.Context) string {
+	return "SpamBlock"
+}
+
+//go:embed static/index.html
+var index string
+
+//go:embed static/jquery.js
+var jquery string
+
+// SettingsHtml 插件页面
+func (s *SpamBlock) SettingsHtml(ctx *context.Context, url string, requestData string) string {
+
+	if strings.Contains(url, "jquery.js") {
+		return jquery
+	}
+
+	if strings.Contains(url, "index.html") {
+		if !ctx.IsAdmin {
+			return fmt.Sprintf(`
+<div>
+	Please contact the administrator for configuration.
+</div>
+`)
+		}
+		return fmt.Sprintf(index, s.cfg.ApiURL, s.cfg.ApiTimeout, s.cfg.Threshold)
+	}
+
+	var cfg SpamBlockConfig
+	var tempCfg map[string]string
+	err := json.Unmarshal([]byte(requestData), &tempCfg)
+	if err != nil {
+		return err.Error()
+	}
+	cfg.ApiURL = tempCfg["url"]
+	cfg.Threshold = cast.ToFloat64(tempCfg["threshold"])
+	cfg.ApiTimeout = cast.ToInt(tempCfg["timeout"])
+	err = saveConfig(cfg)
+	if err != nil {
+		return err.Error()
+	}
+
+	s.cfg = cfg
+
+	return "success"
 
 }
 
@@ -45,7 +96,11 @@ type InstanceItem struct {
 	Token []string `json:"token"`
 }
 
-func (s SpamBlock) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
+func (s *SpamBlock) ReceiveParseAfter(ctx *context.Context, email *parsemail.Email) {
+
+	if s.cfg.ApiURL == "" {
+		return
+	}
 
 	reqData := ApiRequest{
 		Instances: []InstanceItem{
@@ -94,25 +149,26 @@ func (s SpamBlock) ReceiveParseAfter(ctx *context.Context, email *parsemail.Emai
 
 	switch maxClass {
 	case 0:
-		log.WithContext(ctx).Infof("[Spam Check Result: Normal] %s", email.Subject)
+		log.WithContext(ctx).Infof("[Spam Check Result: %f Normal] %s", maxScore, email.Subject)
 	case 1:
-		log.WithContext(ctx).Infof("[Spam Check Result: Spam ] %s", email.Subject)
+		log.WithContext(ctx).Infof("[Spam Check Result: %f Spam ] %s", maxScore, email.Subject)
 	case 2:
-		log.WithContext(ctx).Infof("[Spam Check Result: Blackmail ] %s", email.Subject)
+		log.WithContext(ctx).Infof("[Spam Check Result: %f Blackmail ] %s", maxScore, email.Subject)
 	}
 
-	if maxClass != 0 {
+	if maxClass != 0 && maxScore > s.cfg.Threshold/100 {
 		email.Status = 3
 	}
 }
 
-func (s SpamBlock) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
+func (s *SpamBlock) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Email, ue []*models.UserEmail) {
 
 }
 
 type SpamBlockConfig struct {
-	ApiURL     string `json:"apiURL"`
-	ApiTimeout int    `json:"apiTimeout"` // 单位毫秒
+	ApiURL     string  `json:"apiURL"`
+	ApiTimeout int     `json:"apiTimeout"` // 单位毫秒
+	Threshold  float64 `json:"threshold"`
 }
 
 func NewSpamBlockHook() *SpamBlock {
@@ -123,18 +179,16 @@ func NewSpamBlockHook() *SpamBlock {
 		if err == nil {
 			json.Unmarshal(cfgData, &pluginConfig)
 		}
-	} else {
-		log.Infof("No Config file found")
-		return nil
 	}
 
 	log.Infof("Config: %+v", pluginConfig)
-	if pluginConfig.ApiURL == "" {
-		pluginConfig.ApiURL = "http://localhost:8501/v1/models/emotion_model:predict"
-	}
 
 	if pluginConfig.ApiTimeout == 0 {
 		pluginConfig.ApiTimeout = 3000
+	}
+
+	if pluginConfig.Threshold == 0 {
+		pluginConfig.Threshold = 80
 	}
 
 	hc := &http.Client{
@@ -145,6 +199,12 @@ func NewSpamBlockHook() *SpamBlock {
 		cfg: pluginConfig,
 		hc:  hc,
 	}
+}
+
+func saveConfig(cfg SpamBlockConfig) error {
+	data, _ := json.Marshal(cfg)
+	err := os.WriteFile("./plugins/spam_block_config.json", data, 0777)
+	return err
 }
 
 func main() {

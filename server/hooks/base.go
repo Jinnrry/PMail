@@ -137,6 +137,47 @@ func (h *HookSender) ReceiveParseAfter(ctx *context.Context, email *parsemail.Em
 
 }
 
+// GetName 获取插件名称
+func (h *HookSender) GetName(ctx *context.Context) string {
+
+	dto := framework.HookDTO{
+		Ctx: ctx,
+	}
+	body, _ := json.Marshal(dto)
+
+	ret, errL := h.httpc.Post("http://plugin/GetName", "application/json", strings.NewReader(string(body)))
+	if errL != nil {
+		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
+		return ""
+	}
+
+	body, _ = io.ReadAll(ret.Body)
+
+	return string(body)
+}
+
+// SettingsHtml 插件页面
+func (h *HookSender) SettingsHtml(ctx *context.Context, url string, requestData string) string {
+
+	dto := framework.SettingsHtmlRequest{
+		Ctx:         ctx,
+		URL:         url,
+		RequestData: requestData,
+	}
+	body, _ := json.Marshal(dto)
+
+	ret, errL := h.httpc.Post("http://plugin/SettingsHtml", "application/json", strings.NewReader(string(body)))
+	if errL != nil {
+		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
+		return ""
+	}
+
+	body, _ = io.ReadAll(ret.Body)
+
+	return string(body)
+
+}
+
 func NewHookSender(socketPath string, name string, serverVersion string) *HookSender {
 	httpc := http.Client{
 		Timeout: time.Second * 10,
@@ -214,8 +255,10 @@ func Init(serverVersion string) {
 				}
 			}
 			if loadSucc {
-				HookList[info.Name()] = NewHookSender(socketPath, info.Name(), serverVersion)
-				log.Infof("[%s] Plugin Load Success!", info.Name())
+				hk := NewHookSender(socketPath, info.Name(), serverVersion)
+				hkName := hk.GetName(&context.Context{})
+				HookList[hkName] = hk
+				log.Infof("[%s] Plugin Load Success!", hkName)
 			}
 
 		}

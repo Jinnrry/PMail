@@ -1,4 +1,6 @@
 datasets==2.20.0
 numpy==1.20.3
 retvec==1.0.1
-tensorflow==2.8.4
+tensorflow==2.12.1
+beautifulsoup4
+lxml

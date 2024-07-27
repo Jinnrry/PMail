@@ -9,7 +9,7 @@
   "SSLPublicKeyPath": "./config/ssl/public.crt",
   "dbDSN": "./config/pmail_temp.db",
   "dbType": "sqlite",
-  "httpsEnabled": 1,
+  "httpsEnabled": 2,
   "spamFilterLevel": 0,
   "httpPort": 80,
   "httpsPort": 443,

@@ -24,6 +24,8 @@ def getData(folder_path):
                 # 读取csv文件内容
                 with open(file_path, 'r', errors='ignore') as csv_file:
                     for line in csv_file:
+                        if line[0] == '' or line[0]==' ':
+                            continue
                         labels.append([int(str.strip(line[0]))])
                         msgs.append(line[3:])
     return np.array(msgs), np.array(labels)

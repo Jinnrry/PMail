@@ -46,7 +46,7 @@ func (s *Session) Data(r io.Reader) error {
 	}
 	log.WithContext(ctx).Debugf("开始执行插件ReceiveParseBefore End！")
 
-	email := parsemail.NewEmailFromReader(s.To, bytes.NewReader(emailData))
+	email := parsemail.NewEmailFromReader(s.To, bytes.NewReader(emailData), len(emailData))
 
 	if s.From != "" {
 		from := parsemail.BuilderUser(s.From)
@@ -209,24 +209,26 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 	}
 
 	modelEmail := models.Email{
-		Type:        cast.ToInt8(emailType),
-		Subject:     email.Subject,
-		ReplyTo:     json2string(email.ReplyTo),
-		FromName:    email.From.Name,
-		FromAddress: email.From.EmailAddress,
-		To:          json2string(email.To),
-		Bcc:         json2string(email.Bcc),
-		Cc:          json2string(email.Cc),
-		Text:        sql.NullString{String: string(email.Text), Valid: true},
-		Html:        sql.NullString{String: string(email.HTML), Valid: true},
-		Sender:      json2string(email.Sender),
-		Attachments: json2string(email.Attachments),
-		SPFCheck:    spfV,
-		DKIMCheck:   dkimV,
-		SendUserID:  sendUserID,
-		SendDate:    time.Now(),
-		Status:      cast.ToInt8(email.Status),
-		CreateTime:  time.Now(),
+		Type:         cast.ToInt8(emailType),
+		Subject:      email.Subject,
+		ReplyTo:      json2string(email.ReplyTo),
+		FromName:     email.From.Name,
+		FromAddress:  email.From.EmailAddress,
+		To:           json2string(email.To),
+		Bcc:          json2string(email.Bcc),
+		Cc:           json2string(email.Cc),
+		Text:         sql.NullString{String: string(email.Text), Valid: true},
+		Html:         sql.NullString{String: string(email.HTML), Valid: true},
+		Sender:       json2string(email.Sender),
+		Attachments:  json2string(email.Attachments),
+		Size:         email.Size,
+		SPFCheck:     spfV,
+		DKIMCheck:    dkimV,
+		SendUserID:   sendUserID,
+		SendDate:     time.Now(),
+		Status:       cast.ToInt8(email.Status),
+		CreateTime:   time.Now(),
+		CronSendTime: time.Now(),
 	}
 
 	_, err := db.Instance.Insert(&modelEmail)
