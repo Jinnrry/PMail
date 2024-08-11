@@ -1,15 +1,38 @@
 <template>
     <div id="main">
         <el-form label-width="100px" :rules="rules" ref="ruleFormRef" :model="ruleForm" status-icon>
-            <el-form-item :label="lang.sender" prop="sender">
 
-                <div style="display: flex;">
-                    <el-input style="max-width: 300px" :disabled="!$userInfos.is_admin" v-model="ruleForm.sender" :placeholder="lang.sender_desc" />
-                    <div>@</div>
-                    <el-select v-model="ruleForm.pickDomain">
-                        <el-option :value="item" v-for="item in ruleForm.domains">{{ item }}</el-option>
-                    </el-select>
-                </div>
+            <el-form-item :label="lang.sender" prop="sender">
+                <el-popover trigger="click" :width="600">
+                    <template #reference>
+                        <div
+                            style="border: 1px solid #dcdfe6; border-radius:3px;height: 30px; line-height: 30px; padding: 0 5px 0 5px;">
+                            <span style="font-size: 16px; font-weight: bolder;">{{ ruleForm.nickName }}</span>
+                            <span> &lt;{{ ruleForm.sender }}@{{ ruleForm.pickDomain }}&gt;</span>
+                        </div>
+                    </template>
+                    <template #default>
+                        <div style="display: flex; flex-direction:column;">
+                            <div style=" margin-bottom: 10px;">
+                                <el-form-item :label="lang.sender" prop="sender">
+                                    <el-input style="max-width: 200px" :disabled="!$userInfos.is_admin"
+                                        v-model="ruleForm.sender" :placeholder="lang.sender_desc" />
+                                    <div>@</div>
+                                    <el-select v-model="ruleForm.pickDomain">
+                                        <el-option :value="item" v-for="item in ruleForm.domains">{{ item }}</el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </div>
+
+                            <div>
+                                <el-form-item :label="lang.nick_name" >
+                                    <el-input style="max-width: 300px" v-model="ruleForm.nickName" />
+                                </el-form-item>
+                            </div>
+
+                        </div>
+                    </template>
+                </el-popover>
 
             </el-form-item>
 
@@ -127,12 +150,13 @@ const fileRef = ref();
 const pickFile = ref();
 const ruleFormRef = ref()
 const ruleForm = reactive({
+    nickName: '',
     sender: '',
     receivers: '',
     cc: '',
     subject: '',
-    domains:[],
-    pickDomain:""
+    domains: [],
+    pickDomain: ""
 })
 const fileList = reactive([]);
 
@@ -145,6 +169,7 @@ const init = function () {
                 ruleForm.sender = res.data.account
                 ruleForm.domains = res.data.domains
                 ruleForm.pickDomain = res.data.domains[0]
+                ruleForm.nickName = res.data.name
             } else {
                 ElMessage({
                     type: 'error',
@@ -152,10 +177,11 @@ const init = function () {
                 })
             }
         })
-    }else{
+    } else {
         ruleForm.sender = $userInfos.value.account
         ruleForm.domains = $userInfos.value.domains
         ruleForm.pickDomain = $userInfos.value.domains[0]
+        ruleForm.nickName = $userInfos.value.name
     }
 
 }
@@ -257,7 +283,7 @@ const send = function (formEl) {
             let text = editorRef.value.getText()
 
             $http.post("/api/email/send", {
-                from: { name: ruleForm.sender, email: ruleForm.sender + "@" +ruleForm.pickDomain },
+                from: { name: ruleForm.nickName, email: ruleForm.sender + "@" + ruleForm.pickDomain },
                 to: objectTos,
                 cc: objectCcs,
                 subject: ruleForm.subject,

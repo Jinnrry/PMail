@@ -6,10 +6,18 @@ import (
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/hooks/spam_block/tools"
 	"github.com/Jinnrry/pmail/models"
+	"github.com/spf13/cast"
 	"os"
 )
 
 func main() {
+	args := os.Args
+
+	var id int
+	if len(args) >= 2 {
+		id = cast.ToInt(args[1])
+	}
+
 	config.Init()
 	err := db.Init("test")
 	if err != nil {
@@ -27,7 +35,11 @@ func main() {
 	defer file.Close()
 	for {
 		var emails []models.Email
-		db.Instance.Table(&models.Email{}).Where("id > ?", start).OrderBy("id").Find(&emails)
+		if id > 0 {
+			db.Instance.Table(&models.Email{}).Where("id = ?", id).OrderBy("id").Find(&emails)
+		} else {
+			db.Instance.Table(&models.Email{}).Where("id > ?", start).OrderBy("id").Find(&emails)
+		}
 		if len(emails) == 0 {
 			break
 		}
@@ -39,6 +51,10 @@ func main() {
 			}
 			//fmt.Printf("0 \t%s %s\n", email.Subject, trim(trimHtml(email.Html.String)))
 		}
+		if id > 0 {
+			break
+		}
+
 	}
 
 }
