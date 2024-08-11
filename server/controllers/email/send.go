@@ -87,6 +87,10 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if reqData.From.Name == "" {
+		reqData.From.Name = ctx.UserName
+	}
+
 	if reqData.Subject == "" {
 		response.NewErrorResponse(response.ParamsError, "邮件标题必填", "邮件标题必填").FPrint(w)
 		return
