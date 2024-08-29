@@ -55,7 +55,7 @@ func HttpsStart() {
 			WriteTimeout: time.Second * 90,
 			ErrorLog:     nullLog,
 		}
-		err := httpsServer.ListenAndServeTLS("config/ssl/public.crt", "config/ssl/private.key")
+		err := httpsServer.ListenAndServeTLS(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 		if err != nil {
 			panic(err)
 		}
