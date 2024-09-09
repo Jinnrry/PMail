@@ -342,6 +342,13 @@ const getDomainConfig = () => {
 }
 
 const setDbConfig = () => {
+    // 切换数据库类型为sqlite时，数据库路径为空，则使用默认路径
+    if (dbSettings.type === "sqlite" && !dbSettings.dsn) dbSettings.dsn = "./config/pmail.db";
+    else if (!dbSettings.dsn) ElMessage({
+        title: "Error",
+        message: lang.err_db_dsn_empty,
+        type: "error",
+    });
     $http.post("/api/setup", { "action": "set", "step": "database", "db_type": dbSettings.type, "db_dsn": dbSettings.dsn }).then((res) => {
         if (res.errorNo != 0) {
             ElMessage.error(res.errorMsg)
