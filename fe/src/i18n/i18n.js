@@ -105,7 +105,8 @@ var lang = {
     "move":"Move to group",
     "del_rule_confirm":"Are you sure to delete this?",
     "rule_params":"Executed params",
-    "autoSSLWarn":"PMail is not currently running on port 80. If you want PMail to manage SSL certificates automatically, please forward the /.well-known/* route to PMail. See https://github.com/Jinnrry/PMail/issues/94 for details."
+    "autoSSLWarn": "PMail is not currently running on port 80. If you want PMail to manage SSL certificates automatically, please forward the /.well-known/* route to PMail. See https://github.com/Jinnrry/PMail/issues/94 for details.",
+    "err_db_dsn_empty": "Database path cannot be empty!",
 };
 
 
@@ -217,7 +218,8 @@ var zhCN = {
     "move":"移动分组",
     "del_rule_confirm":"确定要删除吗？",
     "rule_params":"执行参数",
-    "autoSSLWarn":"PMail当前未使用80端口启动，如果想要PMail自动管理SSL证书，请将/.well-known/*路由转发到PMail。 详见https://github.com/Jinnrry/PMail/issues/94"
+    "autoSSLWarn": "PMail当前未使用80端口启动，如果想要PMail自动管理SSL证书，请将/.well-known/*路由转发到PMail。 详见https://github.com/Jinnrry/PMail/issues/94",
+    "err_db_dsn_empty": "数据库路径不能为空!",
 }
 
 switch (navigator.language) {
@@ -230,7 +232,5 @@ switch (navigator.language) {
     default:
         break
 }
-
-
 
 export default lang;
