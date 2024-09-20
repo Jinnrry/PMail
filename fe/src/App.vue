@@ -1,31 +1,31 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import {RouterView, useRoute} from 'vue-router'
 import HomeHeader from '@/components/HomeHeader.vue'
 import HomeAside from '@/components/HomeAside.vue';
-import { watch, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {ref, watch} from 'vue'
+
 const route = useRoute()
 
 const pageName = ref(route.name)
 
 watch(
-  () => route.fullPath,
-  (n, o) => {
-    pageName.value = route.name
-  }
+    () => route.fullPath,
+    () => {
+      pageName.value = route.name
+    }
 )
 
 </script>
 
 <template>
   <div id="main">
-    <HomeHeader />
+    <HomeHeader/>
     <div id="content">
-      <div id="aside" v-if="pageName != 'login' && pageName != 'setup'">
-        <HomeAside />
+      <div id="aside" v-if="pageName !== 'login' && pageName !== 'setup'">
+        <HomeAside/>
       </div>
       <div id="body">
-        <RouterView />
+        <RouterView/>
       </div>
     </div>
   </div>

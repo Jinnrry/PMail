@@ -1,33 +1,26 @@
 <template>
   <div id="main">
     <input id="search" :placeholder="lang.search">
-    <el-tree :data="data" :props="defaultProps" :defaultExpandAll="true" @node-click="handleNodeClick" :class="node" />
+    <el-tree :data="data" :props="defaultProps" :defaultExpandAll="true" @node-click="handleNodeClick"/>
   </div>
 </template>
 
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { reactive, ref } from 'vue'
+import {useRouter} from 'vue-router'
+import {ref} from 'vue'
 import useGroupStore from '../stores/group'
 import lang from '../i18n/i18n';
-import { getCurrentInstance } from 'vue'
-const app = getCurrentInstance()
-const $http = app.appContext.config.globalProperties.$http
+import {http} from "@/utils/axios";
+import {defaultProps} from "element-plus/es/components/select-v2/src/useProps";
 
 const groupStore = useGroupStore()
 const router = useRouter()
-
-
 const data = ref([])
 
-
-$http.get('/api/group').then(res => {
-  data.value = res.data
+http.get('/api/group').then(res => {
+  if (res.data) data.value = res.data
 })
-
-
-
 
 const handleNodeClick = function (data) {
   if (data.tag != null) {
@@ -38,9 +31,6 @@ const handleNodeClick = function (data) {
     })
   }
 }
-
-
-
 </script>
 
 
@@ -65,7 +55,7 @@ const handleNodeClick = function (data) {
   background-color: #F1F1F1;
 }
 
-.add_group{
+.add_group {
   font-size: 14px;
   text-align: left;
   padding-left: 15px;
