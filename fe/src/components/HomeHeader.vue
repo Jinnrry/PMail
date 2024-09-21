@@ -2,7 +2,7 @@
   <div id="header_main">
     <div id="logo">
       <router-link to="/">
-        <el-text><h1>Pmail</h1></el-text>
+        <el-text :line-clamp="1" size="large"><h1>Pmail</h1></el-text>
       </router-link>
     </div>
     <div id="settings" @click="settings" v-if="isLogin">
