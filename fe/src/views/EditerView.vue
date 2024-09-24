@@ -15,7 +15,7 @@
             <div style="display: flex; flex-direction:column;">
               <div style=" margin-bottom: 10px;">
                 <el-form-item :label="lang.sender" prop="sender">
-                  <el-input style="max-width: 200px" :disabled="!userInfos.is_admin"
+                  <el-input style="max-width: 200px" :disabled="!(globalStatus.userInfos.is_admin)"
                             v-model="ruleForm.sender" :placeholder="lang.sender_desc"/>
                   <div>@</div>
                   <el-select v-model="ruleForm.pickDomain">
@@ -124,7 +124,6 @@ const router = useRouter();
 const groupStore = useGroupStore()
 
 const globalStatus = useGlobalStatusStore();
-const userInfos = globalStatus.userInfos
 
 if (lang.lang === "zhCn") {
   i18nChangeLanguage('zh-CN')
@@ -162,28 +161,20 @@ const fileList = reactive([]);
 
 
 const init = function () {
-  if (Object.keys(userInfos.value).length === 0) {
-    http.post("/api/user/info", {}).then(res => {
-      if (res.errorNo === 0) {
-        userInfos.value = res.data
-        ruleForm.sender = res.data.account
-        ruleForm.domains = res.data.domains
-        ruleForm.pickDomain = res.data.domains[0]
-        ruleForm.nickName = res.data.name
-      } else {
-        ElMessage({
-          type: 'error',
-          message: res.errorMsg,
-        })
-      }
-    })
-  } else {
-    ruleForm.sender = userInfos.value.account
-    ruleForm.domains = userInfos.value.domains
-    ruleForm.pickDomain = userInfos.value.domains[0]
-    ruleForm.nickName = userInfos.value.name
-  }
-
+    if ( Object.keys(globalStatus.userInfos)==0 || globalStatus.userInfos === null || globalStatus.userInfos == undefined ){
+      globalStatus.init(()=>{
+        ruleForm.sender = globalStatus.userInfos.account
+        ruleForm.domains = globalStatus.userInfos.domains
+        ruleForm.pickDomain = globalStatus.userInfos.domains[0]
+        ruleForm.nickName = globalStatus.userInfos.name
+      })
+    }else{
+      console.log(globalStatus.userInfos)
+      ruleForm.sender = globalStatus.userInfos.account
+      ruleForm.domains = globalStatus.userInfos.domains
+      ruleForm.pickDomain = globalStatus.userInfos.domains[0]
+      ruleForm.nickName = globalStatus.userInfos.name
+    }
 }
 init()
 

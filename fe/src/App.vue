@@ -5,8 +5,10 @@ import HomeAside from '@/components/HomeAside.vue';
 import {ref, watch} from 'vue'
 
 const route = useRoute()
-
 const pageName = ref(route.name)
+
+
+
 
 watch(
     () => route.fullPath,
