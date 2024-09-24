@@ -1,8 +1,8 @@
 <template>
   <div id="header_main">
     <div id="logo">
-      <router-link to="/" style="text-underline: none">
-        <el-text :line-clamp="1" size="large"><h1>Pmail</h1></el-text>
+      <router-link to="/" style="text-decoration: none">
+        <el-text :line-clamp="1" size="large"><h1>PMail</h1></el-text>
       </router-link>
     </div>
     <div id="settings" @click="settings" v-if="isLogin">
@@ -41,14 +41,12 @@
 <script setup>
 import {TbSettings} from "vue-icons-plus/tb";
 import {ref} from 'vue'
-import {ElMessage} from 'element-plus'
 import SecuritySettings from '@/components/SecuritySettings.vue'
 import lang from '../i18n/i18n';
 import GroupSettings from './GroupSettings.vue';
 import RuleSettings from './RuleSettings.vue';
 import UserManagement from './UserManagement.vue';
 import PluginSettings from './PluginSettings.vue';
-import {http} from "@/utils/axios";
 import {useGlobalStatusStore} from "@/stores/useGlobalStatusStore";
 
 const globalStatus = useGlobalStatusStore();
@@ -59,16 +57,9 @@ const userInfos = globalStatus.userInfos;
 const openSettings = ref(false)
 const settings = function () {
   if (Object.keys(userInfos).length === 0) {
-    http.post("/api/user/info", {}).then(res => {
-      if (res.errorNo === 0) {
-        userInfos.value = res.data
-        openSettings.value = true;
-      } else {
-        ElMessage({
-          type: 'error',
-          message: res.errorMsg,
-        })
-      }
+    globalStatus.init(()=>{
+      Object.assign(userInfos,globalStatus.userInfos)
+      openSettings.value = true;
     })
   } else {
     openSettings.value = true;
