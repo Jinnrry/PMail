@@ -28,8 +28,6 @@ import {useGlobalStatusStore} from "@/stores/useGlobalStatusStore";
 
 const globalStatus = useGlobalStatusStore();
 // eslint-disable-next-line no-unused-vars
-let isLogin = globalStatus.isLogin
-const userInfos = globalStatus.userInfos
 
 const form = reactive({
   account: '',
@@ -41,8 +39,7 @@ const onSubmit = () => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)
     } else {
-      isLogin = true
-      userInfos.value = res.data
+      Object.assign(globalStatus.userInfos , res.data) 
       router.replace({
         path: '/',
         query: {

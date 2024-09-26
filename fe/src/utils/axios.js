@@ -26,10 +26,8 @@ http.interceptors.request.use((config) => {
 
 //响应拦截器
 http.interceptors.response.use(async (response) => {
-    const globalStatus = useGlobalStatusStore();
     //响应成功
     if (response.data.errorNo === 403) {
-        globalStatus.isLogin = false
 
         await router.replace({
             path: '/login',
