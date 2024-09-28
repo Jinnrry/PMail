@@ -149,7 +149,7 @@ func Send(ctx *context.Context, e *parsemail.Email) (error, map[string]error) {
 					mxHost: "smtp." + args[1],
 				}
 				if err != nil {
-					log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败")
+					log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败，检查邮箱是否存在！")
 				}
 				if len(mxInfo) > 0 {
 					address = mxDomain{
