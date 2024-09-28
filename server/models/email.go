@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/spf13/cast"
 	"time"
 )
 
@@ -122,6 +123,7 @@ func (d *Email) MarshalJSON() ([]byte, error) {
 func (d *Email) ToTransObj() *parsemail.Email {
 
 	return &parsemail.Email{
+		MessageId: cast.ToInt64(d.Id),
 		From: &parsemail.User{
 			Name:         d.FromName,
 			EmailAddress: d.FromAddress,
