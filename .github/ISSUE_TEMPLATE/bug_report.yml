@@ -21,19 +21,6 @@ body:
       description: 使用的PMail版本
     validations:
       required: true
-  - type: textarea
-    attributes:
-      label: 描述
-      description: 请提供错误的详细描述。以及你认为有价值的信息。
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: 重现方式
-      description: |-
-        基于你下面提供的配置，提供重现BUG方法。
-    validations:
-      required: true
   - type: markdown
     attributes:
       value: |-
@@ -68,5 +55,18 @@ body:
         <details><pre><code>
 
         </code></pre></details>
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 描述
+      description: 请提供错误的详细描述。以及你认为有价值的信息。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 重现方式
+      description: |-
+        基于你下面提供的配置，提供重现BUG方法。
     validations:
       required: true
