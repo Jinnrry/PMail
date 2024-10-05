@@ -93,6 +93,24 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 		return errors.Wrap(err)
 	}
 
+	if cfg.SSLType == config.SSLTypeAutoHTTP {
+		err = client.Challenge.SetHTTP01Provider(GetHttpChallengeInstance())
+		if err != nil {
+			return errors.Wrap(err)
+		}
+	} else if cfg.SSLType == config.SSLTypeAutoDNS {
+		err = client.Challenge.SetDNS01Provider(GetDnsChallengeInstance(), dns01.AddDNSTimeout(60*time.Minute))
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		log.Errorf("Please Set DNS Record/请将以下内容添加到DNS记录中:\n")
+		for _, item := range GetDnsChallengeInstance().GetDNSSettings(nil) {
+			log.Errorf("Type:%s\tHost:%s\tValue:%s\n", item.Type, item.Host, item.Value)
+		}
+
+	}
+
 	var reg *registration.Resource
 
 	reg, err = client.Registration.ResolveAccountByKey()

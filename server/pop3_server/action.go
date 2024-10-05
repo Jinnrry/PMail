@@ -6,6 +6,7 @@ import (
 	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/services/del_email"
 	"github.com/Jinnrry/pmail/services/detail"
@@ -271,7 +272,7 @@ func (a action) Retr(session *gopop.Session, id int64) (string, int64, error) {
 		return "", 0, errors.New("server error")
 	}
 
-	ret := email.ToTransObj().BuildBytes(session.Ctx.(*context.Context), false)
+	ret := parsemail.NewEmailFromModel(email.Email).BuildBytes(session.Ctx.(*context.Context), false)
 	log.WithContext(session.Ctx).Debugf("Retr \n %+v", string(ret))
 	return string(ret), cast.ToInt64(len(ret)), nil
 
@@ -300,7 +301,7 @@ func (a action) Top(session *gopop.Session, id int64, n int) (string, error) {
 		return "", errors.New("server error")
 	}
 
-	ret := email.ToTransObj().BuildBytes(session.Ctx.(*context.Context), false)
+	ret := parsemail.NewEmailFromModel(email.Email).BuildBytes(session.Ctx.(*context.Context), false)
 	res := strings.Split(string(ret), "\n")
 	headerEndLine := len(res) - 1
 	for i, re := range res {

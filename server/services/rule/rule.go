@@ -60,7 +60,7 @@ func MatchRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) boo
 	return true
 }
 
-func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
+func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email, user *models.User) {
 	log.WithContext(ctx).Debugf("执行规则:%s", rule.Name)
 
 	switch rule.Action {
@@ -81,7 +81,7 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) {
 			log.WithContext(ctx).Errorf("Forward Error! loop forwarding!")
 			return
 		}
-		err := send.Forward(ctx, email, rule.Params)
+		err := send.Forward(ctx, email, rule.Params, user)
 		if err != nil {
 			log.WithContext(ctx).Errorf("Forward Error:%v", err)
 		}
