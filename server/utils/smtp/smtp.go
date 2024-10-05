@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/smtp"
@@ -407,6 +408,9 @@ func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, fromD
 // library.
 // 修复TSL验证问题
 func SendMail(domain string, addr string, a smtp.Auth, from string, fromDomain string, to []string, msg []byte) error {
+
+	log.Debugf("SendMail,%s ,%s ,%s ,%s ,%v ", domain, addr, from, fromDomain, to)
+
 	if err := validateLine(from); err != nil {
 		return err
 	}

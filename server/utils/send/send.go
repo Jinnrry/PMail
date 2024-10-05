@@ -4,7 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
+	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/parsemail"
+	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/async"
 	"github.com/Jinnrry/pmail/utils/consts"
@@ -22,11 +25,14 @@ type mxDomain struct {
 }
 
 // Forward 转发邮件
-func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) error {
-	_, fromDomain := e.From.GetDomainAccount()
+func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string, user *models.User) error {
 
 	log.WithContext(ctx).Debugf("开始转发邮件")
-	b := e.ForwardBuildBytes(ctx, forwardAddress)
+	sender := fmt.Sprintf("%s@%s", user.Account, config.Instance.Domains[0])
+
+	b := e.ForwardBuildBytes(ctx, user)
+
+	log.WithContext(ctx).Debugf("%s", b)
 
 	var to []*parsemail.User
 	to = []*parsemail.User{
@@ -76,16 +82,16 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 		domain := domain
 		tos := tos
 		as.WaitProcess(func(p any) {
-			err := smtp.SendMail("", domain.mxHost+":25", nil, e.From.EmailAddress, fromDomain, buildAddress(tos), b)
+			err := smtp.SendMail("", domain.mxHost+":25", nil, sender, config.Instance.Domains[0], buildAddress(tos), b)
 
 			// 使用其他方式发送
 			if err != nil {
 				// EOF 表示未知错误，此时降级为非tls连接发送（目前仅139邮箱有这个问题）
 				if errors.Is(err, smtp.NoSupportSTARTTLSError) || err.Error() == "EOF" {
-					err = smtp.SendMailWithTls("", domain.mxHost+":465", nil, e.From.EmailAddress, fromDomain, buildAddress(tos), b)
+					err = smtp.SendMailWithTls("", domain.mxHost+":465", nil, sender, config.Instance.Domains[0], buildAddress(tos), b)
 					if err != nil {
 						log.WithContext(ctx).Warnf("Unsafe! %s Server Not Support SMTPS & STARTTLS", domain.domain)
-						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, e.From.EmailAddress, fromDomain, buildAddress(tos), b)
+						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, sender, config.Instance.Domains[0], buildAddress(tos), b)
 					}
 				}
 
@@ -93,12 +99,12 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string) er
 				if certificateErr, ok := err.(*tls.CertificateVerificationError); ok {
 					// 单测使用
 					if domain.domain == "localhost" {
-						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, e.From.EmailAddress, fromDomain, buildAddress(tos), b)
+						err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, sender, config.Instance.Domains[0], buildAddress(tos), b)
 					} else if hostnameErr, is := certificateErr.Err.(x509.HostnameError); is {
 						if hostnameErr.Certificate != nil {
 							certificateHostName := hostnameErr.Certificate.DNSNames
 							// 重新选取证书发送
-							err = smtp.SendMail(domainMatch(domain.domain, certificateHostName), domain.mxHost+":25", nil, e.From.EmailAddress, fromDomain, buildAddress(tos), b)
+							err = smtp.SendMail(domainMatch(domain.domain, certificateHostName), domain.mxHost+":25", nil, sender, config.Instance.Domains[0], buildAddress(tos), b)
 						}
 					}
 				}

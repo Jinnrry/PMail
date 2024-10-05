@@ -48,6 +48,10 @@
                    :reserve-keyword="false" :placeholder="lang.cc_desc"></el-select>
       </el-form-item>
 
+      <el-form-item :label="lang.bcc" prop="bcc">
+        <el-select v-model="ruleForm.bcc" style="width: 100%;" multiple filterable allow-create
+                   :reserve-keyword="false" :placeholder="lang.bcc_desc"></el-select>
+      </el-form-item>
 
       <el-form-item :label="lang.title" prop="subject">
         <el-input v-model="ruleForm.subject" :placeholder="lang.title"></el-input>
@@ -153,6 +157,7 @@ const ruleForm = reactive({
   sender: '',
   receivers: '',
   cc: '',
+  bcc: '',
   subject: '',
   domains: [],
   pickDomain: ""
@@ -216,6 +221,19 @@ const validateCc = function (rule, value, callback) {
   callback()
 }
 
+const validateBcc = function (rule, value, callback) {
+  for (let index = 0; index < ruleForm.bcc.length; index++) {
+    let element = ruleForm.bcc[index];
+
+    console.log(element)
+    if (!checkEmail(element)) {
+      callback(new Error(lang.err_email_format))
+      return
+    }
+  }
+  callback()
+}
+
 const rules = reactive({
   sender: [
     {validator: validateSender, trigger: 'change'}
@@ -225,6 +243,9 @@ const rules = reactive({
   ],
   cc: [
     {validator: validateCc, trigger: 'change'}
+  ],
+  bcc: [
+    {validator: validateBcc, trigger: 'change'}
   ],
   subject: [
     {required: true, message: lang.err_title_must, trigger: 'change'},
@@ -267,12 +288,22 @@ const send = function (formEl) {
         })
       }
 
+      let objectBccs = []
+      for (let index = 0; index < ruleForm.bcc.length; index++) {
+        let element = ruleForm.bcc[index];
+        objectBccs.push({
+          name: "",
+          email: element
+        })
+      }
+
       let text = editorRef.value.getText()
 
       http.post("/api/email/send", {
         from: {name: ruleForm.nickName, email: ruleForm.sender + "@" + ruleForm.pickDomain},
         to: objectTos,
         cc: objectCcs,
+        bcc: objectBccs,
         subject: ruleForm.subject,
         text: text,
         html: valueHtml.value,
