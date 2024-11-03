@@ -383,6 +383,7 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 		log.WithContext(ctx).Fatal(err)
 	}
 	var th mail.InlineHeader
+	th.Header.Set("Content-Transfer-Encoding", "base64")
 	th.SetContentType("text/plain", map[string]string{
 		"charset": "UTF-8",
 	})
@@ -397,6 +398,7 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	html.SetContentType("text/html", map[string]string{
 		"charset": "UTF-8",
 	})
+	html.Header.Set("Content-Transfer-Encoding", "base64")
 	w, err = tw.CreatePart(html)
 	if err != nil {
 		log.Fatal(err)
