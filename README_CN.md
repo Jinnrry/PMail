@@ -109,6 +109,9 @@ SMTP地址： smtp.[你的域名]
 
 SMTP端口： 25/465(SSL)
 
+IMAP地址： imap.[Your Domain]
+
+IMAP端口： 993(SSL)
 
 # 插件
 

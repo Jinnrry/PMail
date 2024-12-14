@@ -57,10 +57,10 @@ First go to [spamhaus](https://check.spamhaus.org/) and check your domain name a
 
 Or
 
-`docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -p 465:465 -p 995:995 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
+`docker run -p 25:25 -p 80:80 -p 443:443 -p 110:110 -p 465:465 -p 995:995 -p 993:993 -v $(pwd)/config:/work/config ghcr.io/jinnrry/pmail:latest`
 
 > [!IMPORTANT]
-> If your server has a firewall turned on, you need to open ports 25, 80, 110, 443, 465, 995
+> If your server has a firewall turned on, you need to open ports 25, 80, 110, 443, 465, 993, 995
 
 ## 3、Configuration
 
@@ -104,6 +104,9 @@ SMTP Server Address : smtp.[Your Domain]
 
 SMTP Port: 25/465(SSL)
 
+IMAP Server Address : imap.[Your Domain]
+
+IMAP Port: 993(SSL)
 # Plugin
 
 [WeChat Push](server/hooks/wechat_push/README.md)

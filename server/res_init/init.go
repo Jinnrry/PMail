@@ -16,6 +16,7 @@ import (
 	"github.com/Jinnrry/pmail/utils/file"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"time"
 )
 
 func Init(serverVersion string) {
@@ -73,6 +74,8 @@ func Init(serverVersion string) {
 			hooks.Stop()
 			return
 		}
+		log.Infof("Server Stop Success!")
+		time.Sleep(5 * time.Second)
 
 	}
 

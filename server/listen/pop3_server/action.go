@@ -2,6 +2,7 @@ package pop3_server
 
 import (
 	"database/sql"
+	errors2 "errors"
 	"github.com/Jinnrry/gopop"
 	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
@@ -122,7 +123,7 @@ func (a action) Pass(session *gopop.Session, pwd string) error {
 		return nil
 	}
 
-	return errors.New("password error")
+	return errors2.New("password error")
 }
 
 // Apop APOP登陆命令
@@ -159,7 +160,7 @@ func (a action) Apop(session *gopop.Session, username, digest string) error {
 		return nil
 	}
 
-	return errors.New("password error")
+	return errors2.New("password error")
 
 }
 
@@ -298,7 +299,7 @@ func (a action) Top(session *gopop.Session, id int64, n int) (string, error) {
 	email, err := detail.GetEmailDetail(session.Ctx.(*context.Context), cast.ToInt(id), false)
 	if err != nil {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
-		return "", errors.New("server error")
+		return "", errors2.New("password error")
 	}
 
 	ret := parsemail.NewEmailFromModel(email.Email).BuildBytes(session.Ctx.(*context.Context), false)

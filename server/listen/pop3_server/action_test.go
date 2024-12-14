@@ -14,6 +14,8 @@ import (
 
 func Test_action_Retr(t *testing.T) {
 	config.Init()
+	config.Instance.DbType = config.DBTypeSQLite
+	config.Instance.DbDSN = config.ROOT_PATH + "./config/pmail_temp.db"
 	db.Init("")
 
 	a := action{}

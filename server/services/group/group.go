@@ -8,7 +8,9 @@ import (
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/errors"
+	"github.com/Jinnrry/pmail/utils/utf7"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 type GroupItem struct {
@@ -112,4 +114,142 @@ func GetGroupList(ctx *context.Context) []*models.Group {
 	var ret []*models.Group
 	db.Instance.Table("group").Where("user_id=?", ctx.UserID).Find(&ret)
 	return ret
+}
+
+func hasChildren(ctx *context.Context, id int) bool {
+	var parent []*models.Group
+	db.Instance.Table("group").Where("parent_id=?", id).Find(&parent)
+	return len(parent) > 0
+}
+
+func getLayerName(ctx *context.Context, item *models.Group) string {
+	if item.ParentId == 0 {
+		return utf7.Encode(item.Name)
+	}
+	var parent models.Group
+	_, _ = db.Instance.Table("group").Where("id=?", item.ParentId).Get(&parent)
+	return getLayerName(ctx, &parent) + "/" + utf7.Encode(item.Name)
+}
+
+func MatchGroup(ctx *context.Context, basePath, template string) []string {
+	var groups []*models.Group
+	var ret []string
+	if basePath == "" {
+		db.Instance.Table("group").Where("user_id=?", ctx.UserID).Find(&groups)
+		ret = append(ret, `* LIST (\NoSelect \HasChildren) "/" "[PMail]"`)
+		ret = append(ret, `* LIST (\HasNoChildren) "/" "INBOX"`)
+		ret = append(ret, `* LIST (\HasNoChildren) "/" "Sent Messages"`)
+		ret = append(ret, `* LIST (\HasNoChildren) "/" "Drafts"`)
+		ret = append(ret, `* LIST (\HasNoChildren) "/" "Deleted Messages"`)
+		ret = append(ret, `* LIST (\HasNoChildren) "/" "Junk"`)
+	} else {
+		var parent *models.Group
+		db.Instance.Table("group").Where("user_id=? and name=?", ctx.UserID, basePath).Find(&groups)
+		if parent != nil && parent.ID > 0 {
+			db.Instance.Table("group").Where("user_id=? and parent_id=?", ctx.UserID, parent.ID).Find(&groups)
+		}
+	}
+	for _, group := range groups {
+		if hasChildren(ctx, group.ID) {
+			ret = append(ret, fmt.Sprintf(`* LIST (\HasChildren) "/" "[PMail]/%s"`, getLayerName(ctx, group)))
+		} else {
+			ret = append(ret, fmt.Sprintf(`* LIST (\HasNoChildren) "/" "[PMail]/%s"`, getLayerName(ctx, group)))
+		}
+	}
+	return ret
+}
+
+func GetGroupStatus(ctx *context.Context, groupName string, params []string) (string, map[string]int) {
+	retMap := map[string]int{}
+
+	if !array.InArray(groupName, []string{"INBOX", "Sent Messages", "Drafts", "Deleted Messages", "Junk"}) {
+		groupNames := strings.Split(groupName, "/")
+		groupName = groupNames[len(groupNames)-1]
+
+		var group models.Group
+		db.Instance.Table("group").Where("user_id=? and name=?", ctx.UserID, groupName).Get(&group)
+		if group.ID == 0 {
+			ret := ""
+			for _, param := range params {
+				if ret != "" {
+					ret += " "
+				}
+				retMap[param] = 0
+				ret += fmt.Sprintf("%s %d", param, 0)
+			}
+			return fmt.Sprintf("(%s)", ret), retMap
+		}
+		ret := ""
+		for _, param := range params {
+			if ret != "" {
+				ret += " "
+			}
+			var value int
+
+			switch param {
+			case "MESSAGES":
+				db.Instance.Table("user_email").Select("count(1)").Where("group_id=?", group.ID).Get(&value)
+			case "UIDNEXT":
+				db.Instance.Table("email").Select("count(1)").Get(&value)
+			case "UIDVALIDITY":
+				value = group.ID
+			case "UNSEEN":
+				db.Instance.Table("user_email").Select("count(1)").Where("group_id=? and is_read=0", group.ID).Get(&value)
+			}
+			retMap[param] = value
+			ret += fmt.Sprintf("%s %d", param, value)
+		}
+		return fmt.Sprintf("(%s)", ret), retMap
+	}
+
+	ret := ""
+	for _, param := range params {
+		if ret != "" {
+			ret += " "
+		}
+		var value int
+
+		switch param {
+		case "MESSAGES":
+			value = getGroupNum(ctx, groupName, false)
+		case "UIDNEXT":
+			db.Instance.Table("email").Select("count(1)").Get(&value)
+		case "UIDVALIDITY":
+			value = models.GroupNameToCode[groupName]
+		case "UNSEEN":
+			value = getGroupNum(ctx, groupName, true)
+		}
+		retMap[param] = value
+		ret += fmt.Sprintf("%s %d", param, value)
+	}
+	return fmt.Sprintf("(%s)", ret), retMap
+
+}
+
+func getGroupNum(ctx *context.Context, groupName string, mustUnread bool) int {
+	var count int
+	switch groupName {
+	case "INBOX":
+		if mustUnread {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=0 and is_read=0", ctx.UserID).Get(&count)
+		} else {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=0", ctx.UserID).Get(&count)
+		}
+	case "Sent Messages":
+		if mustUnread {
+			count = 0
+		} else {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=1", ctx.UserID).Get(&count)
+		}
+
+	case "Drafts":
+	case "Deleted Messages":
+		if mustUnread {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=3 and is_read=0", ctx.UserID).Get(&count)
+		} else {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=3", ctx.UserID).Get(&count)
+		}
+	case "Junk":
+	}
+	return count
 }

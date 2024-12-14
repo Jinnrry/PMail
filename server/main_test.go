@@ -287,8 +287,10 @@ func testCreateUser(t *testing.T) {
 func testPort(t *testing.T) {
 	if !portCheck(TestPort) {
 		t.Error("port check failed")
+	} else {
+		t.Log("port check passed")
 	}
-	t.Log("port check passed")
+
 }
 
 func testDataBaseSet(t *testing.T) {

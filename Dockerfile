@@ -10,7 +10,7 @@ FROM golang:alpine as serverbuild
 ARG VERSION
 WORKDIR /work
 COPY . .
-COPY --from=febuild /work/dist /work/server/http_server/dist
+COPY --from=febuild /work/dist /work/server/listen/http_server/dist
 RUN apk update && apk add git
 RUN cd /work/server && go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
 RUN cd /work/server/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
@@ -34,6 +34,6 @@ COPY --from=serverbuild /work/server/hooks/telegram_push/output/* ./plugins/
 COPY --from=serverbuild /work/server/hooks/wechat_push/output/* ./plugins/
 COPY --from=serverbuild /work/server/hooks/spam_block/output/* ./plugins/
 
-EXPOSE 25 80 110 443 465 995
+EXPOSE 25 80 110 443 465 995 993
 
 CMD /work/pmail

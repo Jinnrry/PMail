@@ -28,6 +28,6 @@ COPY --from=serverbuild /work/hooks/telegram_push/output/* ./plugins/
 COPY --from=serverbuild /work/hooks/wechat_push/output/* ./plugins/
 COPY --from=serverbuild /work/hooks/spam_block/output/* ./plugins/
 
-EXPOSE 25 80 110 443 465 995
+EXPOSE 25 80 110 443 465 995 993
 
 CMD /work/pmail

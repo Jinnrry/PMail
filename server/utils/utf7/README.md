@@ -1,0 +1,1 @@
+COPY from https://github.com/emersion/go-imap/tree/v2/internal/utf7

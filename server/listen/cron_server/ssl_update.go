@@ -33,14 +33,14 @@ func Start() {
 // 每天检查一遍SSL证书是否更新，更新就重启
 func sslCheck() {
 	var err error
-	_, expiredTime, err = ssl.CheckSSLCrtInfo()
+	_, expiredTime, _, err = ssl.CheckSSLCrtInfo()
 	if err != nil {
 		panic(err)
 	}
 
 	for {
 		time.Sleep(24 * time.Hour)
-		_, newExpTime, err := ssl.CheckSSLCrtInfo()
+		_, newExpTime, _, err := ssl.CheckSSLCrtInfo()
 		if err != nil {
 			log.Errorf("SSL Check Error! %+v", err)
 		}

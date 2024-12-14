@@ -6,7 +6,7 @@ type UserEmail struct {
 	EmailID int  `xorm:"email_id not null index('idx_eid') index comment('信件id')"`
 	IsRead  int8 `xorm:"is_read tinyint(1) comment('是否已读')" json:"is_read"`
 	GroupId int  `xorm:"group_id int notnull default(0) comment('分组id')'" json:"group_id"`
-	Status  int8 `xorm:"status tinyint(4) notnull default(0) comment('0未发送，1已发送，2发送失败，3删除')" json:"status"` // 0未发送，1已发送，2发送失败 3删除
+	Status  int8 `xorm:"status tinyint(4) notnull default(0) comment('0未发送或收件，1已发送，2发送失败，3删除')" json:"status"` // 0未发送或收件，1已发送，2发送失败 3删除
 }
 
 func (p UserEmail) TableName() string {

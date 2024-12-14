@@ -6,7 +6,7 @@ type Action interface {
 	Rename(session *Session, oldPath, newPath string) error             // 重命名邮箱
 	List(session *Session, basePath, template string) ([]string, error) // 浏览邮箱
 	Append(session *Session, item string) error                         // 上传邮件
-	Select(session *Session, path string) error                         // 选择邮箱
+	Select(session *Session, path string) ([]string, error)             // 选择邮箱
 	/*
 		读取邮件的文本信息，且仅用于显示的目的。
 			ALL：只返回按照一定格式的邮件摘要，包括邮件标志、RFC822.SIZE、自身的时间和信封信息。IMAP客户机能够将标准邮件解析成这些信息并显示出来。
@@ -45,13 +45,15 @@ type Action interface {
 			UIDVALIDITY	邮箱的UID有效性标志
 			UNSEEN	邮箱中没有被标志为\UNSEEN的邮件数
 	*/
-	Status(session *Session, mailbox, category string) (string, error) // 查询邮箱的当前状态
-	Check(session *Session) error                                      // sync数据
-	Search(session *Session, keyword, criteria string) (string, error) // 命令可以根据搜索条件在处于活动状态的邮箱中搜索邮件，然后显示匹配的邮件编号
-	Copy(session *Session, mailId, mailBoxName string) error           // 把邮件从一个邮箱复制到另一个邮箱
-	CapaBility(session *Session) ([]string, error)                     // 返回IMAP服务器支持的功能列表
-	Noop(session *Session) error                                       // 什么都不做，连接保活
-	Login(session *Session, username, password string) error           // 登录
-	Logout(session *Session) error                                     // 注销登录
-	Custom(session *Session, cmd string, args []string) ([]string, error)
+	Status(session *Session, mailbox string, category []string) (string, error) // 查询邮箱的当前状态
+	Check(session *Session) error                                               // sync数据
+	Search(session *Session, keyword, criteria string) (string, error)          // 命令可以根据搜索条件在处于活动状态的邮箱中搜索邮件，然后显示匹配的邮件编号
+	Copy(session *Session, mailId, mailBoxName string) error                    // 把邮件从一个邮箱复制到另一个邮箱
+	CapaBility(session *Session) ([]string, error)                              // 返回IMAP服务器支持的功能列表
+	Noop(session *Session) error                                                // 什么都不做，连接保活
+	Login(session *Session, username, password string) error                    // 登录
+	Logout(session *Session) error                                              // 注销登录
+	IDLE(session *Session) error                                                // 进入IDLE状态
+	Unselect(session *Session) error                                            // 取消邮箱选择
+	Custom(session *Session, cmd string, args string) ([]string, error)
 }

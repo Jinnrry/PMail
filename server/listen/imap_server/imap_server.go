@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"github.com/Jinnrry/pmail/config"
-	"github.com/Jinnrry/pmail/listen/imap_server/goimap"
+	"github.com/Jinnrry/pmail/utils/goimap"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
@@ -22,7 +22,7 @@ func StarTLS() {
 	tlsConfig.Time = time.Now
 	tlsConfig.Rand = rand.Reader
 	instanceTLS = goimap.NewImapServer(993, "imap."+config.Instance.Domain, true, tlsConfig, action{})
-	instanceTLS.ConnectAliveTime = 5 * time.Minute
+	instanceTLS.ConnectAliveTime = 30 * time.Minute
 
 	log.Infof("IMAP With TLS Server Start On Port :993")
 
@@ -35,5 +35,6 @@ func StarTLS() {
 func Stop() {
 	if instanceTLS != nil {
 		instanceTLS.Stop()
+		instanceTLS = nil
 	}
 }
