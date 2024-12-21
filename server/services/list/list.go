@@ -5,9 +5,12 @@ import (
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto"
 	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
+import . "xorm.io/builder"
 
 func GetEmailList(ctx *context.Context, tagInfo dto.SearchTag, keyword string, pop3List bool, offset, limit int) (emailList []*response.EmailResponseData, total int64) {
 	return getList(ctx, tagInfo, keyword, pop3List, offset, limit)
@@ -93,4 +96,49 @@ func Stat(ctx *context.Context) (int64, int64) {
 		log.WithContext(ctx).Errorf("SQL ERROR: %s ,Error:%s", sql, err)
 	}
 	return ret.Total, ret.Size
+}
+
+func GetEmailListByGroup(ctx *context.Context, groupName string, offset, limit int) []*response.EmailResponseData {
+	if limit == 0 {
+		limit = 1
+	}
+
+	var ret []*response.EmailResponseData
+	var ue []*models.UserEmail
+	switch groupName {
+	case "INBOX":
+		db.Instance.Table("user_email").Select("email_id,is_read").Where("user_id=? and status=0", ctx.UserID).Limit(limit, offset).Find(&ue)
+	case "Sent Messages":
+		db.Instance.Table("user_email").Select("email_id,is_read").Where("user_id=? and status=1", ctx.UserID).Limit(limit, offset).Find(&ue)
+	case "Drafts":
+		db.Instance.Table("user_email").Select("email_id,is_read").Where("user_id=? and status=4", ctx.UserID).Limit(limit, offset).Find(&ue)
+	case "Deleted Messages":
+		db.Instance.Table("user_email").Select("email_id,is_read").Where("user_id=? and status=3", ctx.UserID).Limit(limit, offset).Find(&ue)
+	case "Junk":
+		db.Instance.Table("user_email").Select("email_id,is_read").Where("user_id=? and status=5", ctx.UserID).Limit(limit, offset).Find(&ue)
+	default:
+		groupNames := strings.Split(groupName, "/")
+		groupName = groupNames[len(groupNames)-1]
+
+		var group models.Group
+		db.Instance.Table("group").Where("user_id=? and name=?", ctx.UserID, groupName).Get(&group)
+		if group.ID == 0 {
+			return ret
+		}
+		db.Instance.Table("user_email").Select("email_id,is_read").Where("user_id=? and group_id = ?", ctx.UserID, group.ID).Limit(limit, offset).Find(&ue)
+	}
+
+	ueMap := map[int]*models.UserEmail{}
+	var emailIds []int
+	for _, email := range ue {
+		ueMap[email.EmailID] = email
+		emailIds = append(emailIds, email.EmailID)
+	}
+
+	_ = db.Instance.Table("email").Select("*").Where(Eq{"id": emailIds}).Find(&ret)
+	for i, data := range ret {
+		ret[i].IsRead = ueMap[data.Id].IsRead
+	}
+
+	return ret
 }

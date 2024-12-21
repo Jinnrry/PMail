@@ -1,12 +1,12 @@
 package goimap
 
 type Action interface {
-	Create(session *Session, path string) error                         // 创建邮箱
-	Delete(session *Session, path string) error                         // 删除邮箱
-	Rename(session *Session, oldPath, newPath string) error             // 重命名邮箱
-	List(session *Session, basePath, template string) ([]string, error) // 浏览邮箱
-	Append(session *Session, item string) error                         // 上传邮件
-	Select(session *Session, path string) ([]string, error)             // 选择邮箱
+	Create(session *Session, path string) CommandResponse             // 创建邮箱
+	Delete(session *Session, path string) CommandResponse             // 删除邮箱
+	Rename(session *Session, oldPath, newPath string) CommandResponse // 重命名邮箱
+	List(session *Session, basePath, template string) CommandResponse // 浏览邮箱
+	Append(session *Session, item string) CommandResponse             // 上传邮件
+	Select(session *Session, path string) CommandResponse             // 选择邮箱
 	/*
 		读取邮件的文本信息，且仅用于显示的目的。
 			ALL：只返回按照一定格式的邮件摘要，包括邮件标志、RFC822.SIZE、自身的时间和信封信息。IMAP客户机能够将标准邮件解析成这些信息并显示出来。
@@ -29,14 +29,14 @@ type Action interface {
 			BODY[MIME]：返回邮件的[MIME-IMB]的头信息，在正常情况下跟BODY[HEADER]没有区别。
 			BODY[TEXT]：返回整个邮件体，这里的邮件体并不包括邮件头。
 			**/
-	Fetch(session *Session, mailIds, dataNames string) (string, error)
-	Store(session *Session, mailId, flags string) error            // STORE 命令用于修改指定邮件的属性，包括给邮件打上已读标记、删除标记
-	Close(session *Session) error                                  // 关闭文件夹
-	Expunge(session *Session) error                                // 删除已经标记为删除的邮件，释放服务器上的存储空间
-	Examine(session *Session, path string) error                   // 只读方式打开邮箱
-	Subscribe(session *Session, path string) error                 // 活动邮箱列表中增加一个邮箱
-	UnSubscribe(session *Session, path string) error               // 活动邮箱列表中去掉一个邮箱
-	LSub(session *Session, path, mailbox string) ([]string, error) // 显示那些使用SUBSCRIBE命令设置为活动邮箱的文件
+	Fetch(session *Session, mailIds, dataNames string, uid bool) CommandResponse
+	Store(session *Session, mailId, flags string) CommandResponse // STORE 命令用于修改指定邮件的属性，包括给邮件打上已读标记、删除标记
+	Close(session *Session) CommandResponse                       // 关闭文件夹
+	Expunge(session *Session) CommandResponse                     // 删除已经标记为删除的邮件，释放服务器上的存储空间
+	Examine(session *Session, path string) CommandResponse        // 只读方式打开邮箱
+	Subscribe(session *Session, path string) CommandResponse      // 活动邮箱列表中增加一个邮箱
+	UnSubscribe(session *Session, path string) CommandResponse    // 活动邮箱列表中去掉一个邮箱
+	LSub(session *Session, path, mailbox string) CommandResponse  // 显示那些使用SUBSCRIBE命令设置为活动邮箱的文件
 	/*
 		@category:
 			MESSAGES	邮箱中的邮件总数
@@ -45,15 +45,15 @@ type Action interface {
 			UIDVALIDITY	邮箱的UID有效性标志
 			UNSEEN	邮箱中没有被标志为\UNSEEN的邮件数
 	*/
-	Status(session *Session, mailbox string, category []string) (string, error) // 查询邮箱的当前状态
-	Check(session *Session) error                                               // sync数据
-	Search(session *Session, keyword, criteria string) (string, error)          // 命令可以根据搜索条件在处于活动状态的邮箱中搜索邮件，然后显示匹配的邮件编号
-	Copy(session *Session, mailId, mailBoxName string) error                    // 把邮件从一个邮箱复制到另一个邮箱
-	CapaBility(session *Session) ([]string, error)                              // 返回IMAP服务器支持的功能列表
-	Noop(session *Session) error                                                // 什么都不做，连接保活
-	Login(session *Session, username, password string) error                    // 登录
-	Logout(session *Session) error                                              // 注销登录
-	IDLE(session *Session) error                                                // 进入IDLE状态
-	Unselect(session *Session) error                                            // 取消邮箱选择
-	Custom(session *Session, cmd string, args string) ([]string, error)
+	Status(session *Session, mailbox string, category []string) CommandResponse // 查询邮箱的当前状态
+	Check(session *Session) CommandResponse                                     // sync数据
+	Search(session *Session, keyword, criteria string) CommandResponse          // 命令可以根据搜索条件在处于活动状态的邮箱中搜索邮件，然后显示匹配的邮件编号
+	Copy(session *Session, mailId, mailBoxName string) CommandResponse          // 把邮件从一个邮箱复制到另一个邮箱
+	CapaBility(session *Session) CommandResponse                                // 返回IMAP服务器支持的功能列表
+	Noop(session *Session) CommandResponse                                      // 什么都不做，连接保活
+	Login(session *Session, username, password string) CommandResponse          // 登录
+	Logout(session *Session) CommandResponse                                    // 注销登录
+	IDLE(session *Session) CommandResponse                                      // 进入IDLE状态
+	Unselect(session *Session) CommandResponse                                  // 取消邮箱选择
+	Custom(session *Session, cmd string, args string) CommandResponse
 }

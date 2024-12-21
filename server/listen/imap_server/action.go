@@ -2,11 +2,11 @@ package imap_server
 
 import (
 	"database/sql"
-	errors2 "errors"
 	"fmt"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/services/group"
+	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/goimap"
@@ -50,43 +50,51 @@ func PushMsgByIDLE(ctx *context.Context, account string, unionId string) error {
 
 type action struct{}
 
-func (a action) Create(session *goimap.Session, path string) error {
+func (a action) Create(session *goimap.Session, path string) goimap.CommandResponse {
 	log.Infof("%s,%s", "Create", path)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Delete(session *goimap.Session, path string) error {
+func (a action) Delete(session *goimap.Session, path string) goimap.CommandResponse {
 	log.Infof("%s,%s", "Delete", path)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Rename(session *goimap.Session, oldPath, newPath string) error {
+func (a action) Rename(session *goimap.Session, oldPath, newPath string) goimap.CommandResponse {
 	log.Infof("%s,%s,%s", "Rename", oldPath, newPath)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) List(session *goimap.Session, basePath, template string) ([]string, error) {
+func (a action) List(session *goimap.Session, basePath, template string) goimap.CommandResponse {
 	log.Infof("%s,%s,%s", "List", basePath, template)
 	var ret []string
 	if basePath == "" && template == "" {
-		ret = append(ret, `* LIST (\NoSelect \HasChildren) "/" "[PMail]`)
-		return ret, nil
+		ret = append(ret, `* LIST (\NoSelect \HasChildren) "/" "[PMail]"`)
+		return goimap.CommandResponse{
+			Type:    goimap.SUCCESS,
+			Data:    ret,
+			Message: "Success",
+		}
 	}
 
 	ret = group.MatchGroup(session.Ctx.(*context.Context), basePath, template)
 
-	return ret, nil
+	return goimap.CommandResponse{
+		Type:    goimap.SUCCESS,
+		Data:    ret,
+		Message: "Success",
+	}
 }
 
-func (a action) Append(session *goimap.Session, item string) error {
+func (a action) Append(session *goimap.Session, item string) goimap.CommandResponse {
 	log.Infof("%s,%s", "Append", item)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Select(session *goimap.Session, path string) ([]string, error) {
+func (a action) Select(session *goimap.Session, path string) goimap.CommandResponse {
 	log.Infof("%s,%s", "Select", path)
 	paths := strings.Split(path, "/")
-	session.CurrentPath = paths[len(paths)-1]
+	session.CurrentPath = strings.Trim(paths[len(paths)-1], `"`)
 	_, data := group.GetGroupStatus(session.Ctx.(*context.Context), session.CurrentPath, []string{"MESSAGES", "UNSEEN", "UIDNEXT", "UIDVALIDITY"})
 	ret := []string{}
 	allNum := data["MESSAGES"]
@@ -100,85 +108,98 @@ func (a action) Select(session *goimap.Session, path string) ([]string, error) {
 	ret = append(ret, fmt.Sprintf("* OK [UIDNEXT %d] Predicted next UID", nextID))
 	ret = append(ret, `* FLAGS (\Answered \Flagged \Deleted \Draft \Seen)`)
 	ret = append(ret, `* OK [PERMANENTFLAGS (\* \Answered \Flagged \Deleted \Draft \Seen)] Permanent flags`)
-	ret = append(ret, `$$NUM OK [READ-WRITE] SELECT complete`)
 
-	return ret, nil
+	return goimap.CommandResponse{
+		Type:    goimap.SUCCESS,
+		Data:    ret,
+		Message: "OK [READ-WRITE] SELECT complete",
+	}
 }
 
-func (a action) Fetch(session *goimap.Session, mailIds, dataNames string) (string, error) {
-	log.Infof("%s,%s,%s", "Fetch", mailIds, dataNames)
-	return "", nil
-}
-
-func (a action) Store(session *goimap.Session, mailId, flags string) error {
+func (a action) Store(session *goimap.Session, mailId, flags string) goimap.CommandResponse {
 	log.Infof("%s,%s,%s", "Store", mailId, flags)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Close(session *goimap.Session) error {
+func (a action) Close(session *goimap.Session) goimap.CommandResponse {
 	log.Infof("%s", "Close")
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Expunge(session *goimap.Session) error {
+func (a action) Expunge(session *goimap.Session) goimap.CommandResponse {
 	log.Infof("%s", "Expunge")
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Examine(session *goimap.Session, path string) error {
+func (a action) Examine(session *goimap.Session, path string) goimap.CommandResponse {
 	log.Infof("%s,%s", "Examine", path)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Subscribe(session *goimap.Session, path string) error {
+func (a action) Subscribe(session *goimap.Session, path string) goimap.CommandResponse {
 	log.Infof("%s,%s", "Subscribe", path)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) UnSubscribe(session *goimap.Session, path string) error {
+func (a action) UnSubscribe(session *goimap.Session, path string) goimap.CommandResponse {
 	log.Infof("%s,%s", "UnSubscribe", path)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) LSub(session *goimap.Session, path, mailbox string) ([]string, error) {
+func (a action) LSub(session *goimap.Session, path, mailbox string) goimap.CommandResponse {
 	log.Infof("%s,%s,%s", "LSub", path, mailbox)
-	return nil, nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Status(session *goimap.Session, mailbox string, category []string) (string, error) {
+func (a action) Status(session *goimap.Session, mailbox string, category []string) goimap.CommandResponse {
 	log.Infof("%s,%s,%+v", "Status", mailbox, category)
+
+	category = array.Intersect([]string{"MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN"}, category)
+	if len(category) == 0 {
+		category = []string{"MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN"}
+	}
+
 	ret, _ := group.GetGroupStatus(session.Ctx.(*context.Context), mailbox, category)
-	return fmt.Sprintf(`* STATUS "%s" %s`, mailbox, ret), nil
+	return goimap.CommandResponse{
+		Type:    goimap.SUCCESS,
+		Data:    []string{fmt.Sprintf(`* STATUS "%s" %s`, mailbox, ret)},
+		Message: "STATUS completed",
+	}
+
 }
 
-func (a action) Check(session *goimap.Session) error {
+func (a action) Check(session *goimap.Session) goimap.CommandResponse {
 	log.Infof("%s", "Check")
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Search(session *goimap.Session, keyword, criteria string) (string, error) {
+func (a action) Search(session *goimap.Session, keyword, criteria string) goimap.CommandResponse {
 	log.Infof("%s,%s,%s", "Search", keyword, criteria)
-	return "", nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Copy(session *goimap.Session, mailId, mailBoxName string) error {
+func (a action) Copy(session *goimap.Session, mailId, mailBoxName string) goimap.CommandResponse {
 	log.Infof("%s,%s,%s", "Copy", mailId, mailBoxName)
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) CapaBility(session *goimap.Session) ([]string, error) {
+func (a action) CapaBility(session *goimap.Session) goimap.CommandResponse {
 	log.Infof("%s", "CapaBility")
-	return []string{
-		"CAPABILITY",
-		"IMAP4rev1",
-		"UNSELECT",
-		"IDLE",
-		"AUTH=PLAIN",
-		"AUTH=LOGIN",
-	}, nil
+
+	return goimap.CommandResponse{
+		Type: goimap.SUCCESS,
+		Data: []string{
+			"CAPABILITY",
+			"IMAP4rev1",
+			"UNSELECT",
+			"IDLE",
+			"AUTH=LOGIN",
+		},
+	}
+
 }
 
-func (a action) IDLE(session *goimap.Session) error {
+func (a action) IDLE(session *goimap.Session) goimap.CommandResponse {
 	pools, ok := idlePool.Load(session.Account)
 	if !ok {
 		idlePool.Store(session.Account, []*goimap.Session{
@@ -193,21 +214,21 @@ func (a action) IDLE(session *goimap.Session) error {
 			idlePool.Store(session.Account, sPools)
 		}
 	}
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Unselect(session *goimap.Session) error {
+func (a action) Unselect(session *goimap.Session) goimap.CommandResponse {
 	log.Infof("%s", "Unselect")
 	session.CurrentPath = ""
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Noop(session *goimap.Session) error {
+func (a action) Noop(session *goimap.Session) goimap.CommandResponse {
 	log.Infof("%s", "Noop")
-	return nil
+	return goimap.CommandResponse{}
 }
 
-func (a action) Login(session *goimap.Session, username, pwd string) error {
+func (a action) Login(session *goimap.Session, username, pwd string) goimap.CommandResponse {
 	log.WithContext(session.Ctx).Infof("%s,%s,%s", "Login", username, pwd)
 
 	if strings.Contains(username, "@") {
@@ -237,21 +258,24 @@ func (a action) Login(session *goimap.Session, username, pwd string) error {
 		session.Ctx.(*context.Context).UserName = user.Name
 		session.Ctx.(*context.Context).UserAccount = user.Account
 
-		return nil
+		return goimap.CommandResponse{}
 	}
 
-	return errors2.New("password error")
+	return goimap.CommandResponse{
+		Type:    goimap.NO,
+		Message: "[AUTHENTICATIONFAILED] Invalid credentials (Failure)",
+	}
 }
 
-func (a action) Logout(session *goimap.Session) error {
+func (a action) Logout(session *goimap.Session) goimap.CommandResponse {
 	session.Status = goimap.UNAUTHORIZED
-	if session.Conn != nil {
-		_ = session.Conn.Close()
+
+	return goimap.CommandResponse{
+		Type: goimap.SUCCESS,
 	}
-	return nil
 }
 
-func (a action) Custom(session *goimap.Session, cmd string, args string) ([]string, error) {
+func (a action) Custom(session *goimap.Session, cmd string, args string) goimap.CommandResponse {
 	log.Infof("Custom  %s,%+v", cmd, args)
-	return nil, nil
+	return goimap.CommandResponse{}
 }

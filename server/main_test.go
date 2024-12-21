@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/models"
-	"github.com/Jinnrry/pmail/services/setup"
 	"github.com/Jinnrry/pmail/signal"
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/spf13/cast"
@@ -54,22 +54,25 @@ func TestMaster(t *testing.T) {
 	t.Run("testPwdSet", testPwdSet)
 	t.Run("testDomainSet", testDomainSet)
 	t.Run("testDNSSet", testDNSSet)
-	cfg, err := setup.ReadConfig()
+	cfg, err := config.ReadConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
 	cfg.HttpsEnabled = 2
 	cfg.HttpPort = TestPort
-	err = setup.WriteConfig(cfg)
+	cfg.LogLevel = "debug"
+	err = config.WriteConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Run("testSSLSet", testSSLSet)
+	t.Logf("Stop 8 Second for wating restart")
 	time.Sleep(8 * time.Second)
 	t.Run("testLogin", testLogin)           // 登录管理员账号
 	t.Run("testCreateUser", testCreateUser) // 创建3个测试用户
 	t.Run("testEditUser", testEditUser)     // 编辑user2，封禁user3
 	t.Run("testSendEmail", testSendEmail)
+	t.Logf("Stop 8 Second for wating sending")
 	time.Sleep(8 * time.Second)
 	t.Run("testEmailList", testEmailList)
 	t.Run("testGetDetail", testGetEmailDetail)

@@ -56,3 +56,12 @@ func GetEmailDetail(ctx *context.Context, id int, markRead bool) (*response.Emai
 
 	return &email, nil
 }
+
+func MakeRead(ctx *context.Context, emailId int) {
+	ue := models.UserEmail{
+		UserID:  ctx.UserID,
+		IsRead:  1,
+		EmailID: emailId,
+	}
+	db.Instance.Where("email_id = ? and user_id=?", emailId, ctx.UserID).Cols("is_read").Update(&ue)
+}

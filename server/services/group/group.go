@@ -218,10 +218,16 @@ func GetGroupStatus(ctx *context.Context, groupName string, params []string) (st
 			value = models.GroupNameToCode[groupName]
 		case "UNSEEN":
 			value = getGroupNum(ctx, groupName, true)
+		default:
+			continue
 		}
 		retMap[param] = value
 		ret += fmt.Sprintf("%s %d", param, value)
 	}
+	if ret == "" {
+		return "", retMap
+	}
+
 	return fmt.Sprintf("(%s)", ret), retMap
 
 }
@@ -241,8 +247,12 @@ func getGroupNum(ctx *context.Context, groupName string, mustUnread bool) int {
 		} else {
 			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=1", ctx.UserID).Get(&count)
 		}
-
 	case "Drafts":
+		if mustUnread {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=4 and is_read=0", ctx.UserID).Get(&count)
+		} else {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=4", ctx.UserID).Get(&count)
+		}
 	case "Deleted Messages":
 		if mustUnread {
 			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=3 and is_read=0", ctx.UserID).Get(&count)
@@ -250,6 +260,11 @@ func getGroupNum(ctx *context.Context, groupName string, mustUnread bool) int {
 			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=3", ctx.UserID).Get(&count)
 		}
 	case "Junk":
+		if mustUnread {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=5 and is_read=0", ctx.UserID).Get(&count)
+		} else {
+			db.Instance.Table("user_email").Select("count(1)").Where("user_id=? and status=5", ctx.UserID).Get(&count)
+		}
 	}
 	return count
 }
