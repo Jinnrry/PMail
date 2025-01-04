@@ -1,6 +1,7 @@
 package goimap
 
 import (
+	"fmt"
 	"net"
 	"net/netip"
 	"reflect"
@@ -86,6 +87,13 @@ func Test_getCommand(t *testing.T) {
 			"UID FETCH",
 			`5 BODY.PEEK[HEADER]`,
 		},
+		{
+			"UID Search命令测试",
+			args{`C117 UID SEARCH UID 46:*`},
+			"C117",
+			"UID SEARCH",
+			`UID 46:*`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -106,6 +114,7 @@ func Test_getCommand(t *testing.T) {
 type mockConn struct{}
 
 func (m mockConn) Read(b []byte) (n int, err error) {
+	fmt.Println("Read")
 	return 0, err
 }
 

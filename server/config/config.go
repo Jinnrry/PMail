@@ -222,6 +222,7 @@ func createNewPrivateKey() *ecdsa.PrivateKey {
 
 func WriteConfig(cfg *Config) error {
 	bytes, _ := json.Marshal(cfg)
+	_ = os.MkdirAll(ROOT_PATH+"/config/", 0755)
 	err := os.WriteFile(ROOT_PATH+"./config/config.json", bytes, 0666)
 	if err != nil {
 		return errors.Wrap(err)
@@ -237,19 +238,23 @@ func ReadConfig() (*Config, error) {
 	}
 	if !file.PathExist(ROOT_PATH + "./config/config.json") {
 		bytes, _ := json.Marshal(configData)
+		_ = os.MkdirAll(ROOT_PATH+"/config/", 0755)
 		err := os.WriteFile(ROOT_PATH+"./config/config.json", bytes, 0666)
 		if err != nil {
+			log.Errorf("Write Config Error:%s", err.Error())
 			return nil, errors.Wrap(err)
 		}
 	} else {
 		cfgData, err := os.ReadFile(ROOT_PATH + "./config/config.json")
 		if err != nil {
+			log.Errorf("Read Config Error:%s", err.Error())
 			return nil, errors.Wrap(err)
 		}
 
 		err = json.Unmarshal(cfgData, &configData)
 		configData.fixPath()
 		if err != nil {
+			log.Errorf("Read Config Unmarshal Error:%s", err.Error())
 			return nil, errors.Wrap(err)
 		}
 	}

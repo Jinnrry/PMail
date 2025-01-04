@@ -6,9 +6,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/Jinnrry/pmail/utils/context"
+	"github.com/Jinnrry/pmail/utils/id"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"log/slog"
 	"net"
 	"strings"
 	"sync"
@@ -125,7 +125,7 @@ func (s *Server) Stop() {
 
 func (s *Server) authenticate(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if args == "LOGIN" {
-		write(conn, "+ VXNlciBOYW1lAA=="+eol, "")
+		write(session, "+ VXNlciBOYW1lAA=="+eol, "")
 		line, err2 := reader.ReadString('\n')
 		if err2 != nil {
 			if conn != nil {
@@ -137,10 +137,10 @@ func (s *Server) authenticate(session *Session, args string, nub string, conn ne
 		}
 		account, err := base64.StdEncoding.DecodeString(line)
 		if err != nil {
-			showBad(conn, "Data Error.", nub)
+			showBad(session, "Data Error.", nub)
 			return
 		}
-		write(conn, "+ UGFzc3dvcmQA"+eol, "")
+		write(session, "+ UGFzc3dvcmQA"+eol, "")
 		line, err = reader.ReadString('\n')
 		if err2 != nil {
 			if conn != nil {
@@ -153,165 +153,170 @@ func (s *Server) authenticate(session *Session, args string, nub string, conn ne
 		password, err := base64.StdEncoding.DecodeString(line)
 		res := s.Action.Login(session, string(account), string(password))
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	} else {
-		showBad(conn, "Unsupported AUTHENTICATE mechanism.", nub)
+		showBad(session, "Unsupported AUTHENTICATE mechanism.", nub)
 	}
 }
 
 func (s *Server) capability(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	res := s.Action.CapaBility(session)
 	if res.Type == BAD {
-		write(conn, fmt.Sprintf("* BAD %s%s", res.Message, eol), nub)
+		write(session, fmt.Sprintf("* BAD %s%s", res.Message, eol), nub)
 	} else {
 		ret := "*"
 		for _, command := range res.Data {
 			ret += " " + command
 		}
 		ret += eol
-		write(conn, ret, nub)
-		showSucc(conn, res.Message, nub)
+		write(session, ret, nub)
+		showSucc(session, res.Message, nub)
 	}
 }
 
 func (s *Server) create(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "CREATE", nub)
+		paramsErr(session, "CREATE", nub)
 		return
 	}
 	res := s.Action.Create(session, args)
-	showSucc(conn, res.Message, nub)
+	showSucc(session, res.Message, nub)
 }
 
 func (s *Server) delete(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "DELETE", nub)
+		paramsErr(session, "DELETE", nub)
 		return
 	}
 	res := s.Action.Delete(session, args)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) rename(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "RENAME", nub)
+		paramsErr(session, "RENAME", nub)
 	} else {
 		dt := strings.Split(args, " ")
 		res := s.Action.Rename(session, dt[0], dt[1])
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) list(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "LIST", nub)
+		paramsErr(session, "LIST", nub)
 	} else {
 		dt := strings.Split(args, " ")
 		dt[0] = strings.Trim(dt[0], `"`)
 		dt[1] = strings.Trim(dt[1], `"`)
 		res := s.Action.List(session, dt[0], dt[1])
 		if res.Type == SUCCESS {
-			showSuccWithData(conn, res.Data, res.Message, nub)
+			showSuccWithData(session, res.Data, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) append(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
-	log.Debugf("Append: %+v", args)
+	log.WithContext(session.Ctx).Debugf("Append: %+v", args)
 }
 
 func (s *Server) cselect(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	res := s.Action.Select(session, args)
 	if res.Type == SUCCESS {
-		showSuccWithData(conn, res.Data, res.Message, nub)
+		showSuccWithData(session, res.Data, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) fetch(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader, uid bool) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "FETCH", nub)
+		paramsErr(session, "FETCH", nub)
 	} else {
 		dt := strings.SplitN(args, " ", 2)
+		if len(dt) != 2 {
+			showBad(session, "Error Params", nub)
+			return
+		}
+
 		res := s.Action.Fetch(session, dt[0], dt[1], uid)
 		if res.Type == SUCCESS {
-			showSuccWithData(conn, res.Data, res.Message, nub)
+			showSuccWithData(session, res.Data, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
-func (s *Server) store(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
+func (s *Server) store(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader, uid bool) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "RENAME", nub)
+		paramsErr(session, "RENAME", nub)
 	} else {
-		dt := strings.Split(args, " ")
-		res := s.Action.Store(session, dt[0], dt[1])
+		dt := strings.SplitN(args, " ", 2)
+		res := s.Action.Store(session, dt[0], dt[1], uid)
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
@@ -319,93 +324,94 @@ func (s *Server) store(session *Session, args string, nub string, conn net.Conn,
 func (s *Server) cclose(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	res := s.Action.Close(session)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) expunge(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	res := s.Action.Expunge(session)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) examine(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "EXAMINE", nub)
+		paramsErr(session, "EXAMINE", nub)
 	}
 	res := s.Action.Examine(session, args)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) unsubscribe(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "UNSUBSCRIBE", nub)
+		paramsErr(session, "UNSUBSCRIBE", nub)
 	} else {
 		res := s.Action.UnSubscribe(session, args)
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) lsub(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "LSUB", nub)
+		paramsErr(session, "LSUB", nub)
 	} else {
 		dt := strings.Split(args, " ")
+		dt[0] = strings.Trim(dt[0], `"`)
 		res := s.Action.LSub(session, dt[0], dt[1])
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSuccWithData(session, res.Data, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) status(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "STATUS", nub)
+		paramsErr(session, "STATUS", nub)
 	} else {
 		var mailBox string
 		var params []string
@@ -426,66 +432,77 @@ func (s *Server) status(session *Session, args string, nub string, conn net.Conn
 
 		res := s.Action.Status(session, mailBox, params)
 		if res.Type == SUCCESS {
-			showSuccWithData(conn, res.Data, res.Message, nub)
+			showSuccWithData(session, res.Data, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) check(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	res := s.Action.Check(session)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
-func (s *Server) search(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
+func (s *Server) search(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader, uid bool) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "SEARCH", nub)
+		paramsErr(session, "SEARCH", nub)
 	} else {
-		dt := strings.SplitN(args, " ", 2)
-		res := s.Action.Search(session, dt[0], dt[1])
-		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
-		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+		var res CommandResponse
+		if args == "ALL" {
+			res = s.Action.Search(session, "", "UID 1:*", uid)
 		} else {
-			showNo(conn, res.Message, nub)
+			res = s.Action.Search(session, "", args, uid)
+		}
+
+		if res.Type == SUCCESS {
+			content := "* SEARCH"
+			for _, datum := range res.Data {
+				content += " " + datum
+			}
+			content += eol
+			content += fmt.Sprintf("%s OK SEARCH completed (Success)%s", nub, eol)
+			write(session, content, nub)
+		} else if res.Type == BAD {
+			showBad(session, res.Message, nub)
+		} else {
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) copy(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "COPY", nub)
+		paramsErr(session, "COPY", nub)
 	} else {
 		dt := strings.SplitN(args, " ", 2)
 		res := s.Action.Copy(session, dt[0], dt[1])
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
@@ -493,39 +510,39 @@ func (s *Server) copy(session *Session, args string, nub string, conn net.Conn, 
 func (s *Server) noop(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	res := s.Action.Noop(session)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) login(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if args == "" {
-		paramsErr(conn, "LOGIN", nub)
+		paramsErr(session, "LOGIN", nub)
 	} else {
 		dt := strings.SplitN(args, " ", 2)
 		res := s.Action.Login(session, strings.Trim(dt[0], `"`), strings.Trim(dt[1], `"`))
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) logout(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	res := s.Action.Logout(session)
-	write(conn, "* BYE PMail Server logging out"+eol, nub)
+	write(session, "* BYE PMail Server logging out"+eol, nub)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 	if conn != nil {
 		_ = conn.Close()
@@ -534,77 +551,77 @@ func (s *Server) logout(session *Session, args string, nub string, conn net.Conn
 
 func (s *Server) unselect(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	res := s.Action.Unselect(session)
 	if res.Type == SUCCESS {
-		showSucc(conn, res.Message, nub)
+		showSucc(session, res.Message, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) subscribe(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	if args == "" {
-		paramsErr(conn, "SUBSCRIBE", nub)
+		paramsErr(session, "SUBSCRIBE", nub)
 	} else {
 		res := s.Action.Subscribe(session, args)
 		if res.Type == SUCCESS {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else if res.Type == BAD {
-			showBad(conn, res.Message, nub)
+			showBad(session, res.Message, nub)
 		} else {
-			showNo(conn, res.Message, nub)
+			showNo(session, res.Message, nub)
 		}
 	}
 }
 
 func (s *Server) idle(session *Session, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	if session.Status != AUTHORIZED {
-		showBad(conn, "Need Login", nub)
+		showBad(session, "Need Login", nub)
 		return
 	}
 	session.IN_IDLE = true
 	res := s.Action.IDLE(session)
 	if res.Type == SUCCESS {
-		write(conn, "+ idling"+eol, nub)
+		write(session, "+ idling"+eol, nub)
 	} else if res.Type == BAD {
-		showBad(conn, res.Message, nub)
+		showBad(session, res.Message, nub)
 	} else {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	}
 }
 
 func (s *Server) custom(session *Session, cmd string, args string, nub string, conn net.Conn, reader *bufio.Reader) {
 	res := s.Action.Custom(session, cmd, args)
 	if res.Type == BAD {
-		write(conn, fmt.Sprintf("* BAD %s %s", res.Message, eol), nub)
+		write(session, fmt.Sprintf("* BAD %s %s", res.Message, eol), nub)
 	} else if res.Type == NO {
-		showNo(conn, res.Message, nub)
+		showNo(session, res.Message, nub)
 	} else {
 		if len(res.Data) == 0 {
-			showSucc(conn, res.Message, nub)
+			showSucc(session, res.Message, nub)
 		} else {
 			ret := ""
 			for _, re := range res.Data {
 				ret += fmt.Sprintf("%s%s", re, eol)
 			}
 			ret += "." + eol
-			write(conn, fmt.Sprintf(ret), nub)
+			write(session, fmt.Sprintf(ret), nub)
 		}
 	}
 }
 
 func (s *Server) doCommand(session *Session, rawLine string, conn net.Conn, reader *bufio.Reader) {
 	nub, cmd, args := getCommand(rawLine)
-	log.Debugf("Imap Input:\t %s", rawLine)
+	log.WithContext(session.Ctx).Debugf("Imap Input:\t %s", rawLine)
 	if cmd != "IDLE" {
 		session.IN_IDLE = false
 	}
@@ -638,7 +655,9 @@ func (s *Server) doCommand(session *Session, rawLine string, conn net.Conn, read
 	case "UID FETCH":
 		s.fetch(session, args, nub, conn, reader, true)
 	case "STORE":
-		s.store(session, args, nub, conn, reader)
+		s.store(session, args, nub, conn, reader, false)
+	case "UID STORE":
+		s.store(session, args, nub, conn, reader, true)
 	case "CLOSE":
 		s.cclose(session, args, nub, conn, reader)
 	case "EXPUNGE":
@@ -656,7 +675,9 @@ func (s *Server) doCommand(session *Session, rawLine string, conn net.Conn, read
 	case "CHECK":
 		s.check(session, args, nub, conn, reader)
 	case "SEARCH":
-		s.search(session, args, nub, conn, reader)
+		s.search(session, args, nub, conn, reader, false)
+	case "UID SEARCH":
+		s.search(session, args, nub, conn, reader, true)
 	case "COPY":
 		s.copy(session, args, nub, conn, reader)
 	case "NOOP":
@@ -675,7 +696,6 @@ func (s *Server) doCommand(session *Session, rawLine string, conn net.Conn, read
 }
 
 func (s *Server) handleClient(conn net.Conn) {
-	slog.Debug("Imap conn")
 
 	defer func() {
 		if conn != nil {
@@ -688,6 +708,11 @@ func (s *Server) handleClient(conn net.Conn) {
 		Status:    UNAUTHORIZED,
 		AliveTime: time.Now(),
 	}
+
+	tc := &context.Context{}
+	tc.SetValue(context.LogID, id.GenLogID())
+	session.Ctx = tc
+
 	if s.TlsEnabled && s.TlsConfig != nil {
 		session.InTls = true
 	}
@@ -698,7 +723,7 @@ func (s *Server) handleClient(conn net.Conn) {
 			for {
 				if time.Now().Sub(session.AliveTime) >= s.ConnectAliveTime {
 					if session.Conn != nil {
-						write(session.Conn, "* BYE AutoLogout; idle for too long", "")
+						write(session, "* BYE AutoLogout; idle for too long", "")
 						_ = session.Conn.Close()
 					}
 					session.Conn = nil
@@ -711,7 +736,7 @@ func (s *Server) handleClient(conn net.Conn) {
 	}
 
 	reader := bufio.NewReader(conn)
-	write(conn, fmt.Sprintf(`* OK [CAPABILITY IMAP4 IMAP4rev1 AUTH=LOGIN] PMail Server ready%s`, eol), "")
+	write(session, fmt.Sprintf(`* OK [CAPABILITY IMAP4 IMAP4rev1 AUTH=LOGIN] PMail Server ready%s`, eol), "")
 
 	for {
 		rawLine, err := reader.ReadString('\n')
@@ -759,47 +784,47 @@ func getSafeArg(args []string, nr int) string {
 	return ""
 }
 
-func showSucc(w io.Writer, msg, nub string) {
+func showSucc(s *Session, msg, nub string) {
 	if msg == "" {
-		write(w, fmt.Sprintf("%s OK success %s", nub, eol), nub)
+		write(s, fmt.Sprintf("%s OK success %s", nub, eol), nub)
 	} else {
-		write(w, fmt.Sprintf("%s %s %s", nub, msg, eol), nub)
+		write(s, fmt.Sprintf("%s %s %s", nub, msg, eol), nub)
 	}
 }
 
-func showSuccWithData(w io.Writer, data []string, msg string, nub string) {
+func showSuccWithData(s *Session, data []string, msg string, nub string) {
 	content := ""
 	for _, datum := range data {
 		content += fmt.Sprintf("%s%s", datum, eol)
 	}
 	content += fmt.Sprintf("%s OK %s%s", nub, msg, eol)
-	write(w, content, nub)
+	write(s, content, nub)
 }
 
-func showBad(w io.Writer, err string, nub string) {
+func showBad(s *Session, err string, nub string) {
 	if nub == "" {
 		nub = "*"
 	}
 
 	if err == "" {
-		write(w, fmt.Sprintf("%s BAD %s", nub, eol), nub)
+		write(s, fmt.Sprintf("%s BAD %s", nub, eol), nub)
 		return
 	}
-	write(w, fmt.Sprintf("%s BAD %s%s", nub, err, eol), nub)
+	write(s, fmt.Sprintf("%s BAD %s%s", nub, err, eol), nub)
 }
 
-func showNo(w io.Writer, msg string, nub string) {
-	write(w, fmt.Sprintf("%s NO %s%s", nub, msg, eol), nub)
+func showNo(s *Session, msg string, nub string) {
+	write(s, fmt.Sprintf("%s NO %s%s", nub, msg, eol), nub)
 }
 
-func paramsErr(w io.Writer, commend string, nub string) {
-	write(w, fmt.Sprintf("* BAD %s parameters! %s", commend, eol), nub)
+func paramsErr(session *Session, commend string, nub string) {
+	write(session, fmt.Sprintf("* BAD %s parameters! %s", commend, eol), nub)
 }
 
-func write(w io.Writer, content string, nub string) {
+func write(session *Session, content string, nub string) {
 	if !strings.HasSuffix(content, eol) {
-		log.Errorf("Error:返回结尾错误  %s", content)
+		log.WithContext(session.Ctx).Errorf("Error:返回结尾错误  %s", content)
 	}
-	log.Debugf("Imap Out:\t |%s", content)
-	fmt.Fprintf(w, content)
+	log.WithContext(session.Ctx).Debugf("Imap Out:\t |%s", content)
+	fmt.Fprintf(session.Conn, content)
 }

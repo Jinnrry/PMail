@@ -328,8 +328,15 @@ func (a action) Noop(session *gopop.Session) error {
 
 func (a action) Quit(session *gopop.Session) error {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: QUIT ")
+
+	var DelIds []int
+
 	if len(session.DeleteIds) > 0 {
-		del_email.DelEmail(session.Ctx.(*context.Context), session.DeleteIds, false)
+		for _, delId := range session.DeleteIds {
+			DelIds = append(DelIds, cast.ToInt(delId))
+		}
+
+		del_email.DelEmail(session.Ctx.(*context.Context), DelIds, false)
 	}
 
 	return nil

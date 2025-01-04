@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
 	"github.com/emersion/go-message/charset"
@@ -68,14 +70,52 @@ func TestLogin(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
+	err := clientLogin.Create("一级菜单", nil).Wait()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = clientLogin.Create("一级菜单/二级菜单", nil).Wait()
+	if err != nil {
+		t.Error(err)
+	}
+
+	res, err := clientLogin.List("", "*", nil).Collect()
+	if err != nil {
+		t.Error(err)
+	}
+	var mailbox []string
+	for _, v := range res {
+		mailbox = append(mailbox, v.Mailbox)
+	}
+
+	if !array.InArray("一级菜单", mailbox) || !array.InArray("一级菜单/二级菜单", mailbox) {
+		t.Error(mailbox)
+	}
 
 }
-func TestDelete(t *testing.T) {
 
-}
 func TestRename(t *testing.T) {
 
+	err := clientLogin.Rename("一级菜单", "主菜单").Wait()
+	if err != nil {
+		t.Error(err)
+	}
+
+	res, err := clientLogin.List("", "*", nil).Collect()
+	if err != nil {
+		t.Error(err)
+	}
+	var mailbox []string
+	for _, v := range res {
+		mailbox = append(mailbox, v.Mailbox)
+	}
+
+	if !array.InArray("主菜单", mailbox) {
+		t.Error(mailbox)
+	}
 }
+
 func TestList(t *testing.T) {
 	res, err := clientUnLogin.List("", "", &imap.ListOptions{}).Collect()
 
@@ -100,7 +140,54 @@ func TestList(t *testing.T) {
 		t.Error("List Error")
 	}
 
+	res, err = clientLogin.List("", "一级菜单/%", &imap.ListOptions{}).Collect()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(res) == 0 {
+		t.Error("List Error")
+	}
+
+	if len(res) != 1 {
+		t.Error("List Error")
+	}
+
+	res, err = clientLogin.List("", "一级菜单/*", &imap.ListOptions{}).Collect()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(res) != 1 {
+		t.Error("List Error")
+	}
+	if len(res) == 0 {
+		t.Error("List Error")
+	}
+
 }
+
+func TestDelete(t *testing.T) {
+
+	clientLogin.Create("一级菜单/二级菜单", nil).Wait()
+
+	err := clientLogin.Delete("二级菜单").Wait()
+	if err != nil {
+		t.Error(err)
+	}
+	res, err := clientLogin.List("", "*", nil).Collect()
+	if err != nil {
+		t.Error(err)
+	}
+	var mailbox []string
+	for _, v := range res {
+		mailbox = append(mailbox, v.Mailbox)
+	}
+
+	if array.InArray("二级菜单", mailbox) {
+		t.Error(mailbox)
+	}
+
+}
+
 func TestAppend(t *testing.T) {
 
 }
@@ -216,12 +303,37 @@ func TestFetch(t *testing.T) {
 	}
 }
 func TestStore(t *testing.T) {
+	res, err := clientLogin.Store(
+		imap.UIDSetNum(1),
+		&imap.StoreFlags{
+			Op:    imap.StoreFlagsAdd,
+			Flags: []imap.Flag{"\\Seen"},
+		},
+		&imap.StoreOptions{}).Collect()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	t.Logf("%+v", res)
 
 }
 func TestClose(t *testing.T) {
 
 }
 func TestExpunge(t *testing.T) {
+
+	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
+
+	res, err := clientLogin.UIDExpunge(imap.UIDSetNum(1, 2)).Collect()
+
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	t.Logf("%+v", res)
+	var ues []models.UserEmail
+	db.Instance.Table("user_email").Where("id=1 or id=2").Find(&ues)
+	if len(ues) > 0 {
+		t.Errorf("TestExpunge Error")
+	}
 
 }
 func TestExamine(t *testing.T) {
@@ -241,10 +353,71 @@ func TestCheck(t *testing.T) {
 
 }
 func TestSearch(t *testing.T) {
+	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
+
+	res, err := clientLogin.Search(&imap.SearchCriteria{
+		UID: []imap.UIDSet{
+			[]imap.UIDRange{
+				{Start: 1},
+			},
+			[]imap.UIDRange{
+				{Start: 2},
+			},
+			[]imap.UIDRange{
+				{Start: 2, Stop: 5},
+			},
+		},
+	}, &imap.SearchOptions{}).Wait()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	t.Logf("%+v", res)
+}
+func TestMove(t *testing.T) {
+	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
+
+	_, err := clientLogin.Move(imap.UIDSetNum(21), "Junk").Wait()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	_, err = clientLogin.Move(imap.UIDSetNum(23), "一级菜单").Wait()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	var ue []models.UserEmail
+	db.Instance.Table("user_email").Where("id=21 or id=23").Find(&ue)
+	for _, v := range ue {
+		if v.ID == 21 && (v.GroupId != 0 || v.Status != 5) {
+			t.Errorf("TestMove Error")
+		}
+		if v.ID == 23 && v.GroupId != 4 {
+			t.Errorf("TestMove Error")
+		}
+	}
 
 }
-func TestCopy(t *testing.T) {
 
+func TestCopy(t *testing.T) {
+	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
+
+	res, err := clientLogin.Copy(imap.UIDSetNum(25), "Junk").Wait()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	t.Logf("%+v", res)
+
+	if !res.DestUIDs.Contains(33) {
+		t.Errorf("TestCopy Error")
+	}
+
+	res, err = clientLogin.Copy(imap.UIDSetNum(27), "一级菜单").Wait()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	t.Logf("%+v", res)
+	if !res.DestUIDs.Contains(34) {
+		t.Errorf("TestCopy Error")
+	}
 }
 
 func TestNoop(t *testing.T) {

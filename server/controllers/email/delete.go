@@ -11,8 +11,8 @@ import (
 )
 
 type emailDeleteRequest struct {
-	IDs       []int64 `json:"ids"`
-	ForcedDel bool    `json:"forcedDel"`
+	IDs       []int `json:"ids"`
+	ForcedDel bool  `json:"forcedDel"`
 }
 
 func EmailDelete(ctx *context.Context, w http.ResponseWriter, req *http.Request) {

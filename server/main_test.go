@@ -102,6 +102,10 @@ func TestMaster(t *testing.T) {
 	t.Run("testMoverEmailSend", testSendEmail2User2ForSpam)
 	time.Sleep(3 * time.Second)
 
+	// 生成10封测试邮件
+	t.Run("genTestEmailData", genTestEmailData)
+	time.Sleep(3 * time.Second)
+
 	// 检查规则执行
 	t.Run("testCheckRule", testCheckRule)
 	time.Sleep(3 * time.Second)
@@ -308,7 +312,9 @@ func testDataBaseSet(t *testing.T) {
 		t.Error(err)
 	}
 	if data.ErrorNo != 0 {
+		t.Errorf("Response %+v", data)
 		t.Error("Get Database Config Api Error!")
+		return
 	}
 
 	argList := flag.Args()
@@ -323,7 +329,7 @@ func testDataBaseSet(t *testing.T) {
 `
 	} else if array.InArray("postgres", argList) {
 		configData = `
-{"action":"set","step":"database","db_type":"postgres","db_dsn":"postgres://postgres:githubTest@127.0.0.1:5432/pmail?sslmode=disable"}
+{"action":"set","step":"database","db_type":"postgres","db_dsn":"postgres://postgres:githubTest@postgres:5432/pmail?sslmode=disable"}
 `
 	}
 
@@ -660,6 +666,45 @@ func testSendEmail2User2ForMove(t *testing.T) {
 	}
 
 	t.Logf("testSendEmail2User2ForMove Success! Response: %+v", data)
+
+}
+
+func genTestEmailData(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		ret, err := httpClient.Post(TestHost+"/api/email/send", "application/json", strings.NewReader(fmt.Sprintf(
+			`
+		{
+    "from": {
+        "name": "user2",
+        "email": "user2@test.domain"
+    },
+    "to": [
+        {
+            "name": "admin",
+            "email": "admin@test.domain"
+        }
+    ],
+    "cc": [
+        
+    ],
+    "subject": "测试邮件%d",
+    "text": "测试邮件%d",
+    "html": "<div>测试邮件%d</div>"
+}
+
+`, i, i, i)))
+		if err != nil {
+			t.Error(err)
+		}
+		data, err := readResponse(ret.Body)
+		if err != nil {
+			t.Error(err)
+		}
+		if data.ErrorNo != 0 {
+			t.Error("Send Email Api Error!")
+		}
+		time.Sleep(3 * time.Second)
+	}
 
 }
 

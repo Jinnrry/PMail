@@ -39,6 +39,9 @@ jobs:
       COMMIT: ${{ github.workflow_sha }}
       EVENT: ${{ github.event_name}}
     steps:
+      - name: Setup Node.js environment
+        run: apt update && apt install -y nodejs npm
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -50,9 +53,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           labels: 'Auto: Test Failed'
-
-      - name: Setup Node.js environment
-        run: apt update && apt install -y nodejs npm
         
       - name: Install Dependencies
         run: npm install --global yarn
@@ -60,15 +60,12 @@ jobs:
       - name: FE build
         run: make build_fe
 
+      - name: Run Test Mysql
+        run: make test_mysql
+
       - name: Run Test
         run: make test
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dbfile
-          path: server/config/pmail_temp.db
-
-
-      - name: Run Test Mysql
-        run: make test_mysql
+#      - name: Run postgres
+#        run: make test_postgres
 

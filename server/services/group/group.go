@@ -1,16 +1,19 @@
 package group
 
 import (
+	errors2 "errors"
 	"fmt"
+	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto"
 	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/services/del_email"
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/errors"
-	"github.com/Jinnrry/pmail/utils/utf7"
 	log "github.com/sirupsen/logrus"
 	"strings"
+	"xorm.io/builder"
 )
 
 type GroupItem struct {
@@ -18,6 +21,50 @@ type GroupItem struct {
 	Label    string       `json:"label"`
 	Tag      string       `json:"tag"`
 	Children []*GroupItem `json:"children"`
+}
+
+func CreateGroup(ctx *context.Context, name string, parentId int) (*models.Group, error) {
+	// 先查询是否存在
+	var group models.Group
+	db.Instance.Table("group").Where("name = ? and user_id = ?", name, ctx.UserID).Get(&group)
+	if group.ID > 0 {
+		return &group, nil
+	}
+	group.Name = name
+	group.ParentId = parentId
+	group.UserId = ctx.UserID
+	group.FullPath = getLayerName(ctx, &group, true)
+
+	_, err := db.Instance.Insert(&group)
+	return &group, err
+}
+
+func Rename(ctx *context.Context, oldName, newName string) error {
+	oldGroupInfo, err := GetGroupByName(ctx, oldName)
+	if err != nil {
+		return err
+	}
+	if oldGroupInfo == nil || oldGroupInfo.ID == 0 {
+		return errors2.New("group not found")
+	}
+	oldGroupInfo.Name = newName
+	oldGroupInfo.FullPath = getLayerName(ctx, oldGroupInfo, true)
+	_, err = db.Instance.ID(oldGroupInfo.ID).Update(oldGroupInfo)
+	return err
+}
+
+func GetGroupByName(ctx *context.Context, name string) (*models.Group, error) {
+	var group models.Group
+	db.Instance.Table("group").Where("name = ? and user_id = ?", name, ctx.UserID).Get(&group)
+
+	return &group, nil
+}
+
+func GetGroupByFullPath(ctx *context.Context, fullPath string) (*models.Group, error) {
+	var group models.Group
+	_, err := db.Instance.Table("group").Where("full_path = ? and user_id = ?", fullPath, ctx.UserID).Get(&group)
+
+	return &group, err
 }
 
 func DelGroup(ctx *context.Context, groupId int) (bool, error) {
@@ -38,7 +85,7 @@ func DelGroup(ctx *context.Context, groupId int) (bool, error) {
 		return false, errors.Wrap(err)
 	}
 
-	_, err = trans.Exec(db.WithContext(ctx, fmt.Sprintf("update email set group_id=0 where group_id in (%s)", array.Join(allGroupIds, ","))))
+	_, err = trans.Exec(db.WithContext(ctx, fmt.Sprintf("update user_email set group_id=0 where group_id in (%s)", array.Join(allGroupIds, ","))))
 	if err != nil {
 		trans.Rollback()
 		return false, errors.Wrap(err)
@@ -74,7 +121,9 @@ func GetGroupInfoList(ctx *context.Context) []*GroupItem {
 
 // MoveMailToGroup 将某封邮件移动到某个分组中
 func MoveMailToGroup(ctx *context.Context, mailId []int, groupId int) bool {
-	res, err := db.Instance.Exec(db.WithContext(ctx, fmt.Sprintf("update email set group_id=? where id in (%s)", array.Join(mailId, ","))), groupId)
+	res, err := db.Instance.Exec(db.WithContext(ctx,
+		fmt.Sprintf("update user_email set group_id=? where email_id in (%s) and user_id =?", array.Join(mailId, ","))),
+		groupId, ctx.UserID)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL Error:%+v", err)
 		return false
@@ -122,47 +171,26 @@ func hasChildren(ctx *context.Context, id int) bool {
 	return len(parent) > 0
 }
 
-func getLayerName(ctx *context.Context, item *models.Group) string {
+func getLayerName(ctx *context.Context, item *models.Group, allPath bool) string {
 	if item.ParentId == 0 {
-		return utf7.Encode(item.Name)
+		return item.Name
 	}
 	var parent models.Group
 	_, _ = db.Instance.Table("group").Where("id=?", item.ParentId).Get(&parent)
-	return getLayerName(ctx, &parent) + "/" + utf7.Encode(item.Name)
+	if allPath {
+		return getLayerName(ctx, &parent, allPath) + "/" + item.Name
+	}
+	return getLayerName(ctx, &parent, allPath)
 }
 
-func MatchGroup(ctx *context.Context, basePath, template string) []string {
-	var groups []*models.Group
-	var ret []string
-	if basePath == "" {
-		db.Instance.Table("group").Where("user_id=?", ctx.UserID).Find(&groups)
-		ret = append(ret, `* LIST (\NoSelect \HasChildren) "/" "[PMail]"`)
-		ret = append(ret, `* LIST (\HasNoChildren) "/" "INBOX"`)
-		ret = append(ret, `* LIST (\HasNoChildren) "/" "Sent Messages"`)
-		ret = append(ret, `* LIST (\HasNoChildren) "/" "Drafts"`)
-		ret = append(ret, `* LIST (\HasNoChildren) "/" "Deleted Messages"`)
-		ret = append(ret, `* LIST (\HasNoChildren) "/" "Junk"`)
-	} else {
-		var parent *models.Group
-		db.Instance.Table("group").Where("user_id=? and name=?", ctx.UserID, basePath).Find(&groups)
-		if parent != nil && parent.ID > 0 {
-			db.Instance.Table("group").Where("user_id=? and parent_id=?", ctx.UserID, parent.ID).Find(&groups)
-		}
-	}
-	for _, group := range groups {
-		if hasChildren(ctx, group.ID) {
-			ret = append(ret, fmt.Sprintf(`* LIST (\HasChildren) "/" "[PMail]/%s"`, getLayerName(ctx, group)))
-		} else {
-			ret = append(ret, fmt.Sprintf(`* LIST (\HasNoChildren) "/" "[PMail]/%s"`, getLayerName(ctx, group)))
-		}
-	}
-	return ret
+func IsDefaultBox(box string) bool {
+	return array.InArray(box, []string{"INBOX", "Sent Messages", "Drafts", "Deleted Messages", "Junk"})
 }
 
 func GetGroupStatus(ctx *context.Context, groupName string, params []string) (string, map[string]int) {
 	retMap := map[string]int{}
 
-	if !array.InArray(groupName, []string{"INBOX", "Sent Messages", "Drafts", "Deleted Messages", "Junk"}) {
+	if !IsDefaultBox(groupName) {
 		groupNames := strings.Split(groupName, "/")
 		groupName = groupNames[len(groupNames)-1]
 
@@ -267,4 +295,51 @@ func getGroupNum(ctx *context.Context, groupName string, mustUnread bool) int {
 		}
 	}
 	return count
+}
+
+func Move2DefaultBox(ctx *context.Context, mailIds []int, groupName string) error {
+	switch groupName {
+	case "Deleted Messages":
+		err := del_email.DelEmail(ctx, mailIds, false)
+		if err != nil {
+			return err
+		}
+	case "INBOX":
+		_, err := db.Instance.Table(&models.UserEmail{}).Where(builder.Eq{
+			"user_id":  ctx.UserID,
+			"email_id": mailIds,
+		}).Update(map[string]interface{}{
+			"status":   consts.EmailTypeReceive,
+			"group_id": 0,
+		})
+		return err
+	case "Sent Messages":
+		_, err := db.Instance.Table(&models.UserEmail{}).Where(builder.Eq{
+			"user_id":  ctx.UserID,
+			"email_id": mailIds,
+		}).Update(map[string]interface{}{
+			"status":   consts.EmailStatusSent,
+			"group_id": 0,
+		})
+		return err
+	case "Drafts":
+		_, err := db.Instance.Table(&models.UserEmail{}).Where(builder.Eq{
+			"user_id":  ctx.UserID,
+			"email_id": mailIds,
+		}).Update(map[string]interface{}{
+			"status":   consts.EmailStatusDrafts,
+			"group_id": 0,
+		})
+		return err
+	case "Junk":
+		_, err := db.Instance.Table(&models.UserEmail{}).Where(builder.Eq{
+			"user_id":  ctx.UserID,
+			"email_id": mailIds,
+		}).Update(map[string]interface{}{
+			"status":   consts.EmailStatusJunk,
+			"group_id": 0,
+		})
+		return err
+	}
+	return nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/hooks"
 	"github.com/Jinnrry/pmail/hooks/framework"
+	"github.com/Jinnrry/pmail/listen/imap_server"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/services/rule"
 	"github.com/Jinnrry/pmail/utils/array"
@@ -85,7 +86,7 @@ func (s *Session) Data(r io.Reader) error {
 		}
 
 		// 转发
-		_, err := saveEmail(ctx, len(emailData), email, s.Ctx.UserID, 1, nil, true, true)
+		_, _, err := saveEmail(ctx, len(emailData), email, s.Ctx.UserID, 1, nil, true, true)
 		if err != nil {
 			log.WithContext(ctx).Errorf("Email Save Error %v", err)
 		}
@@ -159,7 +160,7 @@ func (s *Session) Data(r io.Reader) error {
 			return nil
 		}
 
-		users, _ := saveEmail(ctx, len(emailData), email, 0, 0, s.To, SPFStatus, dkimStatus)
+		users, dbEmail, _ := saveEmail(ctx, len(emailData), email, 0, 0, s.To, SPFStatus, dkimStatus)
 
 		if email.MessageId > 0 {
 			log.WithContext(ctx).Debugf("开始执行邮件规则！")
@@ -192,12 +193,17 @@ func (s *Session) Data(r io.Reader) error {
 		as3.Wait()
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveSaveAfter！End")
 
+		// IDLE命令通知
+		for _, user := range users {
+			imap_server.IdleNotice(ctx, user.ID, dbEmail)
+		}
+
 	}
 
 	return nil
 }
 
-func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserID int, emailType int, reallyTo []string, SPFStatus, dkimStatus bool) ([]*models.User, error) {
+func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserID int, emailType int, reallyTo []string, SPFStatus, dkimStatus bool) ([]*models.User, *models.Email, error) {
 	var dkimV, spfV int8
 	if dkimStatus {
 		dkimV = 1
@@ -209,7 +215,7 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 	log.WithContext(ctx).Debugf("开始入库！")
 
 	if email == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	modelEmail := models.Email{
@@ -305,7 +311,7 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 		}
 	}
 
-	return users, nil
+	return users, &modelEmail, nil
 }
 
 func json2string(d any) string {

@@ -36,6 +36,7 @@ func Init(version string) error {
 		return errors.New("Database Type Error!")
 	}
 	if err != nil {
+		log.Errorf("DB init Error! %s", err.Error())
 		return errors.Wrap(err)
 	}
 
@@ -53,7 +54,7 @@ func Init(version string) error {
 		panic(err)
 	}
 
-	if version != "" && v.Info != version {
+	if version != "" && v.Info != version && version != "test" {
 		v.Info = version
 		Instance.Update(&v)
 	}

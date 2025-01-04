@@ -1,40 +1,55 @@
 package imap_server
 
 import (
-	"crypto/rand"
 	"crypto/tls"
 	"github.com/Jinnrry/pmail/config"
-	"github.com/Jinnrry/pmail/utils/goimap"
+	"github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-imap/v2/imapserver"
 	log "github.com/sirupsen/logrus"
-	"time"
+	"os"
 )
 
-var instanceTLS *goimap.Server
+var instanceTLS *imapserver.Server
+
+func Stop() {
+	if instanceTLS != nil {
+		instanceTLS.Close()
+		instanceTLS = nil
+	}
+}
 
 // StarTLS 启动TLS端口监听，不加密的代码就懒得写了
 func StarTLS() {
+
 	crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
 		panic(err)
 	}
-	tlsConfig := &tls.Config{}
-	tlsConfig.Certificates = []tls.Certificate{crt}
-	tlsConfig.Time = time.Now
-	tlsConfig.Rand = rand.Reader
-	instanceTLS = goimap.NewImapServer(993, "imap."+config.Instance.Domain, true, tlsConfig, action{})
-	instanceTLS.ConnectAliveTime = 30 * time.Minute
-
-	log.Infof("IMAP With TLS Server Start On Port :993")
-
-	err = instanceTLS.Start()
-	if err != nil {
-		panic(err)
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{crt},
 	}
-}
 
-func Stop() {
-	if instanceTLS != nil {
-		instanceTLS.Stop()
-		instanceTLS = nil
+	memServer := NewServer()
+
+	option := &imapserver.Options{
+		NewSession: func(conn *imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
+			return memServer.NewSession(), nil, nil
+		},
+		Caps: imap.CapSet{
+			imap.CapIMAP4rev1: {},
+			imap.CapIMAP4rev2: {},
+		},
+		TLSConfig:    tlsConfig,
+		InsecureAuth: false,
+	}
+
+	if config.Instance.LogLevel == "debug" {
+		option.DebugWriter = os.Stdout
+	}
+
+	instanceTLS = imapserver.New(option)
+	log.Infof("IMAP With TLS Server Start On Port :993")
+	if err := instanceTLS.ListenAndServeTLS(":993"); err != nil {
+		panic(err)
 	}
 }
