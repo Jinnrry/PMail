@@ -17,4 +17,10 @@ const (
 
 	//EmailStatusDel 3删除
 	EmailStatusDel int8 = 3
+
+	// EmailStatusDrafts 草稿箱
+	EmailStatusDrafts int8 = 4
+
+	// EmailStatusJunk 骚扰邮件
+	EmailStatusJunk int8 = 5
 )

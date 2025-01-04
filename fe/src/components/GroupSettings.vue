@@ -53,7 +53,7 @@ http.get("/api/group").then((res) => {
 
 const del = function (node, data) {
   if (data.id !== -1) {
-    this.$axios.post("/api/group/del", { id: data.id }).then((res) => {
+    http.post("/api/group/del", { id: data.id }).then((res) => {
       if (res.errorNo !== 0) {
         ElMessage({
           message: res.errorMsg,
@@ -87,7 +87,7 @@ const add = function (item) {
   item.children.push({
     children: [],
     label: "",
-    id: "-1",
+    id: -1,
     parent_id: item.id,
   });
 };
@@ -96,15 +96,14 @@ const addRoot = function () {
   data.push({
     children: [],
     label: "",
-    id: "-1",
+    id: -1,
     parent_id: 0,
   });
 };
 
 const onInputBlur = function (item) {
   if (item.label !== "") {
-    http
-      .post("/api/group/add", { name: item.label, parent_id: item.parent_id })
+    http.post("/api/group/add", { name: item.label, parent_id: item.parent_id })
       .then((res) => {
         if (res.errorNo !== 0) {
           ElMessage({
@@ -112,7 +111,7 @@ const onInputBlur = function (item) {
             type: "error",
           });
         } else {
-          this.$axios.get("/api/group").then((res) => {
+          http.get("/api/group").then((res) => {
             data.splice(0, data.length);
             data.push(...res.data);
           });

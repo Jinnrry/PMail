@@ -6,15 +6,17 @@ import (
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/hooks"
-	"github.com/Jinnrry/pmail/http_server"
-	"github.com/Jinnrry/pmail/pop3_server"
+	"github.com/Jinnrry/pmail/listen/http_server"
+	"github.com/Jinnrry/pmail/listen/imap_server"
+	"github.com/Jinnrry/pmail/listen/pop3_server"
+	"github.com/Jinnrry/pmail/listen/smtp_server"
 	"github.com/Jinnrry/pmail/services/setup/ssl"
 	"github.com/Jinnrry/pmail/session"
 	"github.com/Jinnrry/pmail/signal"
-	"github.com/Jinnrry/pmail/smtp_server"
 	"github.com/Jinnrry/pmail/utils/file"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"time"
 )
 
 func Init(serverVersion string) {
@@ -47,6 +49,8 @@ func Init(serverVersion string) {
 		// pop3 server start
 		go pop3_server.Start()
 		go pop3_server.StartWithTls()
+		// imap server start
+		go imap_server.StarTLS()
 
 		configStr, _ := json.Marshal(config.Instance)
 		log.Warnf("Config File Info:  %s", configStr)
@@ -58,6 +62,7 @@ func Init(serverVersion string) {
 			http_server.HttpsStop()
 			http_server.HttpStop()
 			pop3_server.Stop()
+			imap_server.Stop()
 			hooks.Stop()
 		case <-signal.StopChan:
 			log.Infof("Server Stop!")
@@ -65,9 +70,12 @@ func Init(serverVersion string) {
 			http_server.HttpsStop()
 			http_server.HttpStop()
 			pop3_server.Stop()
+			imap_server.Stop()
 			hooks.Stop()
 			return
 		}
+		log.Infof("Server Stop Success!")
+		time.Sleep(5 * time.Second)
 
 	}
 

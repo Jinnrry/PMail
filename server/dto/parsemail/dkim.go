@@ -25,7 +25,9 @@ var instance *Dkim
 func Init() {
 	privateKey, err := loadPrivateKey(config.Instance.DkimPrivateKeyPath)
 	if err != nil {
-		panic("DKIM load fail! Please set dkim!  dkim私钥加载失败！请先设置dkim秘钥")
+		panic(config.Instance.DkimPrivateKeyPath +
+			" DKIM load fail! Please set dkim!  dkim私钥加载失败！请先设置dkim秘钥" +
+			err.Error())
 	}
 
 	instance = &Dkim{

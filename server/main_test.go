@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/models"
-	"github.com/Jinnrry/pmail/services/setup"
 	"github.com/Jinnrry/pmail/signal"
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/spf13/cast"
@@ -54,22 +54,25 @@ func TestMaster(t *testing.T) {
 	t.Run("testPwdSet", testPwdSet)
 	t.Run("testDomainSet", testDomainSet)
 	t.Run("testDNSSet", testDNSSet)
-	cfg, err := setup.ReadConfig()
+	cfg, err := config.ReadConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
 	cfg.HttpsEnabled = 2
 	cfg.HttpPort = TestPort
-	err = setup.WriteConfig(cfg)
+	cfg.LogLevel = "debug"
+	err = config.WriteConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Run("testSSLSet", testSSLSet)
+	t.Logf("Stop 8 Second for wating restart")
 	time.Sleep(8 * time.Second)
 	t.Run("testLogin", testLogin)           // 登录管理员账号
 	t.Run("testCreateUser", testCreateUser) // 创建3个测试用户
 	t.Run("testEditUser", testEditUser)     // 编辑user2，封禁user3
 	t.Run("testSendEmail", testSendEmail)
+	t.Logf("Stop 8 Second for wating sending")
 	time.Sleep(8 * time.Second)
 	t.Run("testEmailList", testEmailList)
 	t.Run("testGetDetail", testGetEmailDetail)
@@ -97,6 +100,10 @@ func TestMaster(t *testing.T) {
 	time.Sleep(4 * time.Second)
 
 	t.Run("testMoverEmailSend", testSendEmail2User2ForSpam)
+	time.Sleep(3 * time.Second)
+
+	// 生成10封测试邮件
+	t.Run("genTestEmailData", genTestEmailData)
 	time.Sleep(3 * time.Second)
 
 	// 检查规则执行
@@ -287,8 +294,10 @@ func testCreateUser(t *testing.T) {
 func testPort(t *testing.T) {
 	if !portCheck(TestPort) {
 		t.Error("port check failed")
+	} else {
+		t.Log("port check passed")
 	}
-	t.Log("port check passed")
+
 }
 
 func testDataBaseSet(t *testing.T) {
@@ -303,7 +312,9 @@ func testDataBaseSet(t *testing.T) {
 		t.Error(err)
 	}
 	if data.ErrorNo != 0 {
+		t.Errorf("Response %+v", data)
 		t.Error("Get Database Config Api Error!")
+		return
 	}
 
 	argList := flag.Args()
@@ -318,7 +329,7 @@ func testDataBaseSet(t *testing.T) {
 `
 	} else if array.InArray("postgres", argList) {
 		configData = `
-{"action":"set","step":"database","db_type":"postgres","db_dsn":"postgres://postgres:githubTest@127.0.0.1:5432/pmail?sslmode=disable"}
+{"action":"set","step":"database","db_type":"postgres","db_dsn":"postgres://postgres:githubTest@postgres:5432/pmail?sslmode=disable"}
 `
 	}
 
@@ -655,6 +666,45 @@ func testSendEmail2User2ForMove(t *testing.T) {
 	}
 
 	t.Logf("testSendEmail2User2ForMove Success! Response: %+v", data)
+
+}
+
+func genTestEmailData(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		ret, err := httpClient.Post(TestHost+"/api/email/send", "application/json", strings.NewReader(fmt.Sprintf(
+			`
+		{
+    "from": {
+        "name": "user2",
+        "email": "user2@test.domain"
+    },
+    "to": [
+        {
+            "name": "admin",
+            "email": "admin@test.domain"
+        }
+    ],
+    "cc": [
+        
+    ],
+    "subject": "测试邮件%d",
+    "text": "测试邮件%d",
+    "html": "<div>测试邮件%d</div>"
+}
+
+`, i, i, i)))
+		if err != nil {
+			t.Error(err)
+		}
+		data, err := readResponse(ret.Body)
+		if err != nil {
+			t.Error(err)
+		}
+		if data.ErrorNo != 0 {
+			t.Error("Send Email Api Error!")
+		}
+		time.Sleep(3 * time.Second)
+	}
 
 }
 

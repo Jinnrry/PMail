@@ -68,7 +68,7 @@ func TestEmail_builder(t *testing.T) {
 	e := Email{
 		From:    buildUser("i@test.com"),
 		To:      buildUsers([]string{"to@test.com"}),
-		Subject: "Title",
+		Subject: "Title中文",
 		HTML:    []byte("Html"),
 		Text:    []byte("Text"),
 		Attachments: []*Attachment{

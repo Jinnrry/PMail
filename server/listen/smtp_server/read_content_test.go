@@ -38,9 +38,9 @@ func testInit() {
 	time.Local = cst
 
 	config.Init()
-	config.Instance.DkimPrivateKeyPath = "../config/dkim/dkim.priv"
+	config.Instance.DkimPrivateKeyPath = config.ROOT_PATH + "./config/dkim/dkim.priv"
 	config.Instance.DbType = config.DBTypeSQLite
-	config.Instance.DbDSN = "../config/pmail_temp.db"
+	config.Instance.DbDSN = config.ROOT_PATH + "./config/pmail_temp.db"
 
 	parsemail2.Init()
 	db.Init("")

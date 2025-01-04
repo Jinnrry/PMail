@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
+	"mime"
 	"net/textproto"
 	"regexp"
 	"strings"
@@ -22,6 +23,13 @@ import (
 type User struct {
 	EmailAddress string `json:"EmailAddress"`
 	Name         string `json:"Name"`
+}
+
+func (u User) Build() string {
+	if u.Name != "" {
+		return fmt.Sprintf("\"%s\" <%s>", mime.QEncoding.Encode("utf-8", u.Name), u.EmailAddress)
+	}
+	return fmt.Sprintf("<%s>", u.EmailAddress)
 }
 
 func (u User) GetDomainAccount() (string, string) {
@@ -58,6 +66,25 @@ type Email struct {
 	Status      int // 0未发送，1已发送，2发送失败，3删除
 	MessageId   int64
 	Size        int
+}
+
+func users2String(users []*User) string {
+	ret := ""
+	for _, user := range users {
+		if ret != "" {
+			ret += ", "
+		}
+		ret += user.Build()
+	}
+	return ret
+}
+
+func (e *Email) BuildTo2String() string {
+	return users2String(e.To)
+}
+
+func (e *Email) BuildCc2String() string {
+	return users2String(e.Cc)
 }
 
 func NewEmailFromModel(d models.Email) *Email {

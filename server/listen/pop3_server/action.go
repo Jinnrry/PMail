@@ -2,6 +2,7 @@ package pop3_server
 
 import (
 	"database/sql"
+	errors2 "errors"
 	"github.com/Jinnrry/gopop"
 	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
@@ -122,7 +123,7 @@ func (a action) Pass(session *gopop.Session, pwd string) error {
 		return nil
 	}
 
-	return errors.New("password error")
+	return errors2.New("password error")
 }
 
 // Apop APOP登陆命令
@@ -159,7 +160,7 @@ func (a action) Apop(session *gopop.Session, username, digest string) error {
 		return nil
 	}
 
-	return errors.New("password error")
+	return errors2.New("password error")
 
 }
 
@@ -298,7 +299,7 @@ func (a action) Top(session *gopop.Session, id int64, n int) (string, error) {
 	email, err := detail.GetEmailDetail(session.Ctx.(*context.Context), cast.ToInt(id), false)
 	if err != nil {
 		log.WithContext(session.Ctx.(*context.Context)).Errorf("%+v", err)
-		return "", errors.New("server error")
+		return "", errors2.New("password error")
 	}
 
 	ret := parsemail.NewEmailFromModel(email.Email).BuildBytes(session.Ctx.(*context.Context), false)
@@ -327,8 +328,15 @@ func (a action) Noop(session *gopop.Session) error {
 
 func (a action) Quit(session *gopop.Session) error {
 	log.WithContext(session.Ctx).Debugf("POP3 CMD: QUIT ")
+
+	var DelIds []int
+
 	if len(session.DeleteIds) > 0 {
-		del_email.DelEmail(session.Ctx.(*context.Context), session.DeleteIds, false)
+		for _, delId := range session.DeleteIds {
+			DelIds = append(DelIds, cast.ToInt(delId))
+		}
+
+		del_email.DelEmail(session.Ctx.(*context.Context), DelIds, false)
 	}
 
 	return nil

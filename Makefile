@@ -6,8 +6,8 @@ clean:
 
 build_fe:
 	cd fe && yarn && yarn build
-	rm -rf server/http_server/dist
-	cd server && cp -rf ../fe/dist http_server
+	rm -rf server/listen/http_server/dist
+	cd server && cp -rf ../fe/dist listen/http_server
 
 build_server:
 	cd server && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail_linux_amd64  main.go
@@ -52,10 +52,10 @@ package: clean
 	cp README.md output/
 
 test:
-	export setup_port=17888 && cd server && go test -v ./...
+	export setup_port=17888 && cd server && export PMail_ROOT=$(CURDIR)/server/ && go test -v -p 1 ./...
 
 test_mysql:
-	export setup_port=17888 && cd server && go test -args "mysql" -v ./...
+	export setup_port=17888 && cd server && export PMail_ROOT=$(CURDIR)/server/ && go test -args "mysql" -v -p 1 ./...
 
 test_postgres:
-	export setup_port=17888 && cd server && go test -args "postgres" -v ./...
+	export setup_port=17888 && cd server && export PMail_ROOT=$(CURDIR)/server/ && go test -args "postgres" -v -p 1 ./...

@@ -1,5 +1,5 @@
 {
-  "logLevel": "",
+  "logLevel": "debug",
   "domain": "test.domain",
   "domains": null,
   "webDomain": "mail.test.domain",
