@@ -76,7 +76,15 @@ func write(ctx *context.Context, w *imapserver.FetchWriter, emailList []*respons
 			if section.Specifier == imap.PartSpecifierHeader {
 				var b bytes.Buffer
 				parseEmail := parsemail.NewEmailFromModel(email.Email)
-				for _, field := range section.HeaderFields {
+				fields := section.HeaderFields
+
+				if fields == nil || len(fields) == 0 {
+					fields = []string{
+						"date", "subject", "from", "to", "cc", "message-id", "content-type",
+					}
+				}
+
+				for _, field := range fields {
 					switch field {
 					case "date":
 						fmt.Fprintf(&b, "Date: %s\r\n", email.CreateTime.Format(time.RFC1123Z))

@@ -56,7 +56,11 @@ func Init(version string) error {
 
 	if version != "" && v.Info != version && version != "test" {
 		v.Info = version
-		Instance.Update(&v)
+		if v.Id == 0 {
+			Instance.Insert(&v)
+		} else {
+			Instance.Update(&v)
+		}
 	}
 
 	if config.Instance.LogLevel == "debug" {

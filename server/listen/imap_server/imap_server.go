@@ -37,7 +37,6 @@ func StarTLS() {
 		},
 		Caps: imap.CapSet{
 			imap.CapIMAP4rev1: {},
-			imap.CapIMAP4rev2: {},
 		},
 		TLSConfig:    tlsConfig,
 		InsecureAuth: false,

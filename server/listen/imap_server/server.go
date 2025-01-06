@@ -38,6 +38,7 @@ type serverSession struct {
 	status         Status
 	currentMailbox string
 	connectTime    time.Time
+	deleteUidList  []int
 }
 
 // NewSession creates a new IMAP session.

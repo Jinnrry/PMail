@@ -290,7 +290,7 @@ func CheckSSLCrtInfo() (int, time.Time, bool, error) {
 
 	nameMatchFail := true
 	for _, name := range cert.DNSNames {
-		if strings.Contains("imap", name) {
+		if strings.Contains(name, "imap") {
 			nameMatchFail = false
 			break
 		}

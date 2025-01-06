@@ -157,7 +157,7 @@ func (s *SpamBlock) ReceiveParseAfter(ctx *context.Context, email *parsemail.Ema
 	}
 
 	if maxClass != 0 && maxScore > s.cfg.Threshold/100 {
-		email.Status = 3
+		email.Status = 5
 	}
 }
 
