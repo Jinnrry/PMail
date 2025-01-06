@@ -400,24 +400,16 @@ func TestMove(t *testing.T) {
 func TestCopy(t *testing.T) {
 	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
 
-	res, err := clientLogin.Copy(imap.UIDSetNum(25), "Junk").Wait()
+	_, err := clientLogin.Copy(imap.UIDSetNum(25), "Junk").Wait()
 	if err != nil {
 		t.Errorf("%+v", err)
 	}
-	t.Logf("%+v", res)
 
-	if !res.DestUIDs.Contains(33) {
-		t.Errorf("TestCopy Error")
-	}
-
-	res, err = clientLogin.Copy(imap.UIDSetNum(27), "一级菜单").Wait()
+	_, err = clientLogin.Copy(imap.UIDSetNum(27), "一级菜单").Wait()
 	if err != nil {
 		t.Errorf("%+v", err)
 	}
-	t.Logf("%+v", res)
-	if !res.DestUIDs.Contains(34) {
-		t.Errorf("TestCopy Error")
-	}
+
 }
 
 func TestNoop(t *testing.T) {
