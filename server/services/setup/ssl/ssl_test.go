@@ -9,7 +9,7 @@ import (
 func TestCheckSSLCrtInfo(t *testing.T) {
 	config.Init()
 
-	got, got1, _, err := CheckSSLCrtInfo()
+	got, got1, match, err := CheckSSLCrtInfo()
 
-	fmt.Println(got, got1, err)
+	fmt.Println(got, got1, match, err)
 }

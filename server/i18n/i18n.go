@@ -15,6 +15,7 @@ var (
 		"ip_taps":               "这是你服务器IP，确保这个IP正确",
 		"invalid_email_address": "无效的邮箱地址！",
 		"deleted":               "垃圾箱",
+		"junk":                  "广告箱",
 	}
 	en = map[string]string{
 		"all_email":             "All Email",
@@ -30,6 +31,7 @@ var (
 		"ip_taps":               "This is your server's IP, make sure it is correct.",
 		"invalid_email_address": "Invalid e-mail address!",
 		"deleted":               "Deleted",
+		"junk":                  "Junk",
 	}
 )
 

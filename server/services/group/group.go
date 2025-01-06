@@ -218,7 +218,8 @@ func GetGroupStatus(ctx *context.Context, groupName string, params []string) (st
 			case "MESSAGES":
 				db.Instance.Table("user_email").Select("count(1)").Where("group_id=?", group.ID).Get(&value)
 			case "UIDNEXT":
-				db.Instance.Table("email").Select("count(1)").Get(&value)
+				db.Instance.Table("user_email").Select("id").OrderBy("id desc").Get(&value)
+				value += 1
 			case "UIDVALIDITY":
 				value = group.ID
 			case "UNSEEN":
@@ -241,7 +242,8 @@ func GetGroupStatus(ctx *context.Context, groupName string, params []string) (st
 		case "MESSAGES":
 			value = getGroupNum(ctx, groupName, false)
 		case "UIDNEXT":
-			db.Instance.Table("email").Select("count(1)").Get(&value)
+			db.Instance.Table("user_email").Select("id").OrderBy("id desc").Get(&value)
+			value += 1
 		case "UIDVALIDITY":
 			value = models.GroupNameToCode[groupName]
 		case "UNSEEN":
