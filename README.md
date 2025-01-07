@@ -151,4 +151,4 @@ The code is in `server` folder.
 
 # Thanks
 
-A special thanks to [Jetbrains](http://jetbrains.com/) for donating licenses to the project.
+Thanks to [Jetbrains](http://jetbrains.com/) for donating licenses to the project.
