@@ -80,7 +80,7 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
 
 # 配置文件说明
 
-```json
+```jsonc
 {
   "logLevel": "info", //日志输出级别
   "domain": "domain.com", // 你的域名

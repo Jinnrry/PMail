@@ -9,7 +9,7 @@ add config.json to `/plugins/config.com` like this:
 
 新建配置文件`/plugins/config.com`，内容如下
 
-```json
+```jsonc
 {
   "weChatPushAppId": "", // wechat appid
   "weChatPushSecret": "", // weChat  Secret

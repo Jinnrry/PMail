@@ -35,7 +35,7 @@ curl -X POST http://localhost:8501/v1/models/emotion_model:predict -d '{
 
 将得到类似输出：
 
-```json
+```jsonc
 {
   "predictions": [
     [
