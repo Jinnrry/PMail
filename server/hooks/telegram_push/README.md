@@ -6,7 +6,7 @@ Copy plugin binary file to `/plugins`
 
 add config.json to `/plugins/config.com` like this:
 
-```json
+```jsonc
 {
   "tgChatId": "", // telegram  chatid
   "tgBotToken": "", // telegram   token

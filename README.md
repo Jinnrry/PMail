@@ -75,7 +75,7 @@ use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
 
 # Configuration file format description
 
-```json
+```jsonc
 {
   "logLevel": "info", //log output level
   "domain": "domain.com", // Your domain
