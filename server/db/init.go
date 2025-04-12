@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite"
+	"time"
 	"xorm.io/xorm"
 )
 
@@ -40,6 +41,7 @@ func Init(version string) error {
 		return errors.Wrap(err)
 	}
 
+	Instance.SetConnMaxLifetime(30 * time.Minute)
 	Instance.ShowSQL(false)
 	// 同步表结构
 	syncTables()
