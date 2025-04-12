@@ -70,7 +70,7 @@ jobs:
           zip -r ${{ env.ZIPNAME }}.zip ${{ env.FILENAME }} plugins
           ls
       - name: Upload files to Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ZIPNAME }}
           path: server/${{ env.ZIPNAME }}.zip
