@@ -1,7 +1,6 @@
 package match
 
 import (
-	"encoding/json"
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/utils/context"
 )
@@ -16,32 +15,37 @@ type Match interface {
 	Match(ctx *context.Context, email *parsemail.Email) bool
 }
 
+func buildUsers(users []*parsemail.User) string {
+	ret := ""
+	for i, u := range users {
+		if i != 0 {
+			ret += ","
+		}
+		ret += u.EmailAddress
+	}
+	return ret
+}
+
 func getFieldContent(field string, email *parsemail.Email) string {
 	switch field {
 	case "ReplyTo":
-		b, _ := json.Marshal(email.ReplyTo)
-		return string(b)
+		return buildUsers(email.ReplyTo)
 	case "From":
-		b, _ := json.Marshal(email.From)
-		return string(b)
+		return email.From.EmailAddress
 	case "Subject":
 		return email.Subject
 	case "To":
-		b, _ := json.Marshal(email.To)
-		return string(b)
+		return buildUsers(email.To)
 	case "Bcc":
-		b, _ := json.Marshal(email.Bcc)
-		return string(b)
+		return buildUsers(email.Bcc)
 	case "Cc":
-		b, _ := json.Marshal(email.Cc)
-		return string(b)
+		return buildUsers(email.Cc)
 	case "Text":
 		return string(email.Text)
 	case "Html":
 		return string(email.HTML)
 	case "Sender":
-		b, _ := json.Marshal(email.Sender)
-		return string(b)
+		return email.Sender.EmailAddress
 	case "Content":
 		b := string(email.HTML)
 		b2 := string(email.Text)

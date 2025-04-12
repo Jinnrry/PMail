@@ -188,7 +188,7 @@ func NewSpamBlockHook() *SpamBlock {
 	}
 
 	if pluginConfig.Threshold == 0 {
-		pluginConfig.Threshold = 80
+		pluginConfig.Threshold = 20
 	}
 
 	hc := &http.Client{
