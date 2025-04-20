@@ -45,7 +45,11 @@ func main() {
 		}
 		for _, email := range emails {
 			start = email.Id
-			_, err = file.WriteString(fmt.Sprintf("0 \t%s %s\n", email.Subject, tools.Trim(tools.TrimHtml(email.Html.String))))
+			content := tools.Trim(tools.TrimHtml(email.Html.String))
+			if content == "" {
+				content = tools.Trim(email.Text.String)
+			}
+			_, err = file.WriteString(fmt.Sprintf("0 \t%s %s\n", email.Subject, content))
 			if err != nil {
 				fmt.Println(err)
 			}

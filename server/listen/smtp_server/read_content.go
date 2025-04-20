@@ -136,7 +136,7 @@ func (s *Session) Data(r io.Reader) error {
 		var dkimStatus, SPFStatus bool
 
 		// DKIM校验
-		dkimStatus = parsemail.Check(bytes.NewReader(emailData))
+		dkimStatus = parsemail.Check(ctx, bytes.NewReader(emailData))
 
 		SPFStatus = spfCheck(s.RemoteAddress.String(), email.Sender, email.Sender.EmailAddress)
 
@@ -158,6 +158,13 @@ func (s *Session) Data(r io.Reader) error {
 		if config.Instance.SpamFilterLevel == 2 && !SPFStatus {
 			log.WithContext(ctx).Infoln("垃圾邮件，拒信")
 			return nil
+		}
+
+		_, formDomain := email.From.GetDomainAccount()
+		// 伪造邮件
+		if array.InArray(formDomain, config.Instance.Domains) && SPFStatus == false {
+			dkimStatus = false
+			email.Status = 3
 		}
 
 		users, dbEmail, _ := saveEmail(ctx, len(emailData), email, 0, 0, s.To, SPFStatus, dkimStatus)

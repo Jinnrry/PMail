@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/utils/consts"
+	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/emersion/go-msgauth/dkim"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ed25519"
@@ -82,11 +83,15 @@ func (p *Dkim) Sign(msgData string) []byte {
 	return b.Bytes()
 }
 
-func Check(mail io.Reader) bool {
+func Check(ctx *context.Context, mail io.Reader) bool {
 
 	verifications, err := dkim.Verify(mail)
 	if err != nil {
-		log.Println(err)
+		log.WithContext(ctx).Warnf("DKIM Error:%v", err)
+	}
+
+	if len(verifications) == 0 {
+		return false
 	}
 
 	for _, v := range verifications {

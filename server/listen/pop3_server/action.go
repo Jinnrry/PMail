@@ -33,8 +33,8 @@ func (a action) Custom(session *gopop.Session, cmd string, args []string) ([]str
 		session.Ctx = tc
 	}
 
-	log.WithContext(session.Ctx).Warnf("not supported cmd request! cmd:%s args:%v", cmd, args)
-	return nil, nil
+	log.WithContext(session.Ctx).Debugf("not supported cmd request! cmd:%s args:%v", cmd, args)
+	return nil, errors2.New("not supported cmd request")
 }
 
 // Capa 说明服务端支持的命令列表

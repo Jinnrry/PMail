@@ -102,11 +102,16 @@ func (s *SpamBlock) ReceiveParseAfter(ctx *context.Context, email *parsemail.Ema
 		return
 	}
 
+	content := tools.Trim(tools.TrimHtml(string(email.HTML)))
+	if content == "" {
+		content = tools.Trim(string(email.Text))
+	}
+
 	reqData := ApiRequest{
 		Instances: []InstanceItem{
 			{
 				Token: []string{
-					fmt.Sprintf("%s %s", email.Subject, tools.Trim(tools.TrimHtml(string(email.HTML)))),
+					fmt.Sprintf("%s %s", email.Subject, content),
 				},
 			},
 		},
