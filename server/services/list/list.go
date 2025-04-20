@@ -50,8 +50,8 @@ func genSQL(ctx *context.Context, count bool, tagInfo dto.SearchTag, keyword str
 	if tagInfo.Status != -1 {
 		sql += " and ue.status =? "
 		sqlParams = append(sqlParams, tagInfo.Status)
-	} else {
-		sql += " and ue.status != 3"
+	} else if tagInfo.Status == -1 {
+		sql += " and ue.status = 0"
 	}
 
 	if tagInfo.Type != -1 {
@@ -62,6 +62,8 @@ func genSQL(ctx *context.Context, count bool, tagInfo dto.SearchTag, keyword str
 	if tagInfo.GroupId != -1 {
 		sql += " and ue.group_id=? "
 		sqlParams = append(sqlParams, tagInfo.GroupId)
+	} else {
+		sql += " and ue.group_id=0 "
 	}
 
 	if keyword != "" {

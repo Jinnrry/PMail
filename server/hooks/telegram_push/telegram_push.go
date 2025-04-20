@@ -28,7 +28,7 @@ func (w *TelegramPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsema
 
 	for _, u := range ue {
 		// 管理员（Uid=1）收到邮件且非已读、非已删除 触发通知
-		if u.UserID == 1 && u.IsRead == 0 && u.Status != 3 && email.MessageId > 0 {
+		if u.UserID == 1 && u.IsRead == 0 && u.Status == 0 && email.MessageId > 0 {
 			w.sendUserMsg(nil, email)
 		}
 	}

@@ -59,7 +59,7 @@ func (s *Session) Auth(mech string) (sasl.Server, error) {
 	}
 
 	if mech == sasl.Login {
-		return sasl.NewLoginServer(func(username, password string) error {
+		return NewLoginServer(func(username, password string) error {
 			return s.AuthPlain(username, password)
 		}), nil
 	}

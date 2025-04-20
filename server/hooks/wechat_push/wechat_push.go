@@ -40,7 +40,7 @@ func (w *WeChatPushHook) GetName(ctx *context.Context) string {
 func (w *WeChatPushHook) SettingsHtml(ctx *context.Context, url string, requestData string) string {
 	return fmt.Sprintf(`
 <div>
-	 TG push No Settings Page
+	 Wechat push No Settings Page
 </div>
 `)
 }
@@ -52,7 +52,7 @@ func (w *WeChatPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail
 
 	for _, u := range ue {
 		// 管理员（Uid=1）收到邮件且非已读、非已删除 触发通知
-		if u.UserID == 1 && u.IsRead == 0 && u.Status != 3 && email.MessageId > 0 {
+		if u.UserID == 1 && u.IsRead == 0 && u.Status == 0 && email.MessageId > 0 {
 			content := "<<" + email.Subject + ">>  " + string(email.Text)
 
 			w.sendUserMsg(nil, w.pushUser, content)

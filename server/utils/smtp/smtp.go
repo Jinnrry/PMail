@@ -23,7 +23,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"github.com/Jinnrry/pmail/config"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -248,7 +247,7 @@ func (c *Client) Auth(a smtp.Auth) error {
 	}
 	resp64 := make([]byte, encoding.EncodedLen(len(resp)))
 	encoding.Encode(resp64, resp)
-	code, msg64, err := c.cmd(0, strings.TrimSpace(fmt.Sprintf("AUTH %s %s", mech, resp64)))
+	code, msg64, err := c.cmd(0, "AUTH %s %s", mech, resp64)
 	for err == nil {
 		var msg []byte
 		switch code {
@@ -274,7 +273,7 @@ func (c *Client) Auth(a smtp.Auth) error {
 		}
 		resp64 = make([]byte, encoding.EncodedLen(len(resp)))
 		encoding.Encode(resp64, resp)
-		code, msg64, err = c.cmd(0, string(resp64))
+		code, msg64, err = c.cmd(0, "%s", string(resp64))
 	}
 	return err
 }

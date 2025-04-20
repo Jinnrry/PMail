@@ -37,7 +37,7 @@ func (h *HookSender) ReceiveSaveAfter(ctx *context.Context, email *parsemail.Ema
 	}
 	body, _ := json.Marshal(dto)
 
-	_, err := h.httpc.Post("http://plugin/ReceiveSaveAfter", "application/json", strings.NewReader(string(body)))
+	_, err := h.httpc.Post("http://unix/ReceiveSaveAfter", "application/json", strings.NewReader(string(body)))
 	if err != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, err)
 		return
@@ -55,7 +55,7 @@ func (h *HookSender) SendBefore(ctx *context.Context, email *parsemail.Email) {
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, err := h.httpc.Post("http://plugin/SendBefore", "application/json", strings.NewReader(string(body)))
+	ret, err := h.httpc.Post("http://unix/SendBefore", "application/json", strings.NewReader(string(body)))
 	if err != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, err)
 		return
@@ -79,7 +79,7 @@ func (h *HookSender) SendAfter(ctx *context.Context, email *parsemail.Email, err
 	}
 	body, _ := json.Marshal(dto)
 
-	_, errL := h.httpc.Post("http://plugin/SendAfter", "application/json", strings.NewReader(string(body)))
+	_, errL := h.httpc.Post("http://unix/SendAfter", "application/json", strings.NewReader(string(body)))
 	if errL != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
 		return
@@ -98,7 +98,7 @@ func (h *HookSender) ReceiveParseBefore(ctx *context.Context, email *[]byte) {
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, errL := h.httpc.Post("http://plugin/ReceiveParseBefore", "application/json", strings.NewReader(string(body)))
+	ret, errL := h.httpc.Post("http://unix/ReceiveParseBefore", "application/json", strings.NewReader(string(body)))
 	if errL != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
 		return
@@ -122,7 +122,7 @@ func (h *HookSender) ReceiveParseAfter(ctx *context.Context, email *parsemail.Em
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, errL := h.httpc.Post("http://plugin/ReceiveParseAfter", "application/json", strings.NewReader(string(body)))
+	ret, errL := h.httpc.Post("http://unix/ReceiveParseAfter", "application/json", strings.NewReader(string(body)))
 	if errL != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
 		return
@@ -145,7 +145,7 @@ func (h *HookSender) GetName(ctx *context.Context) string {
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, errL := h.httpc.Post("http://plugin/GetName", "application/json", strings.NewReader(string(body)))
+	ret, errL := h.httpc.Post("http://unix/GetName", "application/json", strings.NewReader(string(body)))
 	if errL != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
 		return ""
@@ -166,7 +166,7 @@ func (h *HookSender) SettingsHtml(ctx *context.Context, url string, requestData 
 	}
 	body, _ := json.Marshal(dto)
 
-	ret, errL := h.httpc.Post("http://plugin/SettingsHtml", "application/json", strings.NewReader(string(body)))
+	ret, errL := h.httpc.Post("http://unix/SettingsHtml", "application/json", strings.NewReader(string(body)))
 	if errL != nil {
 		log.WithContext(ctx).Errorf("[%s] Error! %v", h.name, errL)
 		return ""
@@ -251,7 +251,7 @@ func Init(serverVersion string) {
 					break
 				}
 				if i == 4 {
-					log.Errorf(fmt.Sprintf("[%s] Start Fail!", info.Name()))
+					log.Errorf("[%s] Start Fail!", info.Name())
 				}
 			}
 			if loadSucc {
