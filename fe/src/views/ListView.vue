@@ -13,14 +13,14 @@
         <el-button size="small">
           {{ lang.move_btn }}
           <el-icon class="el-icon--right">
-            <EpArrowDownBold />
+            <EpArrowDownBold/>
           </el-icon>
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item @click="move(group.id)" v-for="group in groupList" :key="group.id">{{
-              group.name
-            }}
+            <el-dropdown-item @click="move(group.id,group.name)" v-for="group in groupList" :key="group.id">{{
+                group.name
+              }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -28,8 +28,8 @@
     </div>
     <div id="table">
       <el-table ref="taskTableDataRef" :data="data" :show-header="true" :border="false" @row-click="rowClick"
-        :row-style="rowStyle">
-        <el-table-column type="selection" width="30" />
+                :row-style="rowStyle">
+        <el-table-column type="selection" width="30"/>
         <el-table-column prop="is_read" label="" width="50">
           <template #default="scope">
             <div>
@@ -64,7 +64,7 @@
         <el-table-column prop="title" :label="lang.to" width="150">
           <template #default="scope">
             <el-tooltip v-for="toInfo in scope.row.to" :key="toInfo" class="box-item" effect="dark"
-              :content="toInfo.EmailAddress" placement="top">
+                        :content="toInfo.EmailAddress" placement="top">
               <el-tag size="small" type="info">{{ toInfo.Name !== '' ? toInfo.Name : toInfo.EmailAddress }}</el-tag>
             </el-tooltip>
           </template>
@@ -88,7 +88,7 @@
       </el-table>
     </div>
     <div id="pagination">
-      <el-pagination background layout="prev, pager, next" :page-count="totalPage" @current-change="pageChange" />
+      <el-pagination background layout="prev, pager, next" :page-count="totalPage" @current-change="pageChange"/>
     </div>
   </div>
 </template>
@@ -96,13 +96,13 @@
 
 <script setup>
 
-import { EpArrowDownBold } from "vue-icons-plus/ep";
-import { RouterLink, useRouter } from 'vue-router'
-import { ref, watch } from 'vue'
+import {EpArrowDownBold} from "vue-icons-plus/ep";
+import {RouterLink, useRouter} from 'vue-router'
+import {ref, watch} from 'vue'
 import useGroupStore from '../stores/group'
 import lang from '../i18n/i18n';
-import { http } from "@/utils/axios";
-import { ElMessage, ElMessageBox } from "element-plus";
+import {http} from "@/utils/axios";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 
 const router = useRouter();
@@ -122,7 +122,7 @@ watch(groupStore, async (newV) => {
     tag = '{"type":0,"status":-1}'
   }
   data.value = []
-  http.post("/api/email/list", { tag: tag, page_size: 10 }).then(res => {
+  http.post("/api/email/list", {tag: tag, page_size: 10}).then(res => {
     data.value = res.data.list
     totalPage.value = res.data.total_page
   })
@@ -133,7 +133,7 @@ const data = ref([])
 const totalPage = ref(0)
 
 const updateList = function () {
-  http.post("/api/email/list", { tag: tag, page_size: 10 }).then(res => {
+  http.post("/api/email/list", {tag: tag, page_size: 10}).then(res => {
     data.value = res.data.list
     totalPage.value = res.data.total_page
   })
@@ -163,7 +163,7 @@ const markRead = function () {
       confirmButtonText: 'OK',
     })
   } else {
-    http.post("/api/email/read", { "ids": ids }).then(res => {
+    http.post("/api/email/read", {"ids": ids}).then(res => {
       if (res.errorNo === 0) {
         updateList()
       } else {
@@ -177,7 +177,7 @@ const markRead = function () {
 }
 
 
-const move = function (group_id) {
+const move = function (group_id, group_name) {
   let rows = taskTableDataRef.value?.getSelectionRows()
   let ids = []
   rows.forEach(element => {
@@ -191,32 +191,32 @@ const move = function (group_id) {
     })
   } else {
     ElMessageBox.confirm(
-      lang.move_email_confirm,
-      'Warning',
-      {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning',
-      }
+        lang.move_email_confirm,
+        'Warning',
+        {
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+        }
     )
-      .then(() => {
-        http.post("/api/email/move", { "group_id": group_id, "ids": ids }).then(res => {
-          if (res.errorNo === 0) {
-            updateList()
-            ElMessage({
-              type: 'success',
-              message: 'Move completed',
-            })
-          } else {
-            ElMessage({
-              type: 'error',
-              message: res.errorMsg,
-            })
-          }
+        .then(() => {
+          http.post("/api/email/move", {"group_id": group_id, "group_name": group_name, "ids": ids}).then(res => {
+            if (res.errorNo === 0) {
+              updateList()
+              ElMessage({
+                type: 'success',
+                message: 'Move completed',
+              })
+            } else {
+              ElMessage({
+                type: 'error',
+                message: res.errorMsg,
+              })
+            }
+          })
+
+
         })
-
-
-      })
   }
 }
 
@@ -236,42 +236,42 @@ const del = function () {
   } else {
 
     ElMessageBox.confirm(
-      lang.del_email_confirm,
-      'Warning',
-      {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning',
-      }
+        lang.del_email_confirm,
+        'Warning',
+        {
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+        }
     )
-      .then(() => {
-        http.post("/api/email/del", { "ids": ids, "forcedDel": groupTag.status === 3 }).then(res => {
-          if (res.errorNo === 0) {
-            updateList()
-            ElMessage({
-              type: 'success',
-              message: 'Delete completed',
-            })
-          } else {
-            ElMessage({
-              type: 'error',
-              message: res.errorMsg,
-            })
-          }
+        .then(() => {
+          http.post("/api/email/del", {"ids": ids, "forcedDel": groupTag.status === 3}).then(res => {
+            if (res.errorNo === 0) {
+              updateList()
+              ElMessage({
+                type: 'success',
+                message: 'Delete completed',
+              })
+            } else {
+              ElMessage({
+                type: 'error',
+                message: res.errorMsg,
+              })
+            }
+          })
+
+
         })
-
-
-      })
   }
 }
 
 
 const rowStyle = function () {
-  return { 'cursor': 'pointer' }
+  return {'cursor': 'pointer'}
 }
 
 const pageChange = function (p) {
-  http.post("/api/email/list", { tag: tag, page_size: 10, current_page: p }).then(res => {
+  http.post("/api/email/list", {tag: tag, page_size: 10, current_page: p}).then(res => {
     data.value = res.data.list
   })
 }

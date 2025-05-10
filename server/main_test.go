@@ -200,8 +200,8 @@ func testCreateGroup(t *testing.T) {
 		t.Error("CreateGroup Api Error!", data)
 	}
 	dt := data.Data.([]any)
-	if len(dt) != 1 {
-		t.Error("Group List Is Empty!")
+	if len(dt) != 4 {
+		t.Errorf("Group List Check Error!,response: %+v", data)
 	}
 }
 

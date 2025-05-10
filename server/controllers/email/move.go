@@ -3,6 +3,7 @@ package email
 import (
 	"encoding/json"
 	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/services/group"
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
@@ -11,8 +12,9 @@ import (
 )
 
 type moveRequest struct {
-	GroupId int   `json:"group_id"`
-	IDs     []int `json:"ids"`
+	GroupId   int    `json:"group_id"`
+	GroupName string `json:"group_name"`
+	IDs       []int  `json:"ids"`
 }
 
 func Move(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
@@ -31,7 +33,13 @@ func Move(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !group.MoveMailToGroup(ctx, reqData.IDs, reqData.GroupId) {
+	if name, ok := models.GroupCodeToName[reqData.GroupId]; ok {
+		err := group.Move2DefaultBox(ctx, reqData.IDs, name)
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, "Error", err.Error()).FPrint(w)
+			return
+		}
+	} else if !group.MoveMailToGroup(ctx, reqData.IDs, reqData.GroupId) {
 		response.NewErrorResponse(response.ServerError, "Error", "").FPrint(w)
 		return
 	}

@@ -51,7 +51,9 @@ func genSQL(ctx *context.Context, count bool, tagInfo dto.SearchTag, keyword str
 		sql += " and ue.status =? "
 		sqlParams = append(sqlParams, tagInfo.Status)
 	} else if tagInfo.Status == -1 {
-		sql += " and ue.status = 0"
+		if tagInfo.Type != 1 {
+			sql += " and ue.status = 0"
+		}
 	}
 
 	if tagInfo.Type != -1 {
