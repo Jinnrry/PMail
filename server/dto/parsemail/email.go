@@ -63,7 +63,7 @@ type Email struct {
 	Attachments []*Attachment
 	ReadReceipt []string
 	Date        string
-	Status      int // 0未发送，1已发送，2发送失败，3删除
+	Status      int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
 	MessageId   int64
 	Size        int
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/Jinnrry/pmail/dto"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/services/group"
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -14,8 +15,15 @@ import (
 )
 
 func GetUserGroupList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
+	defaultGroup := []*models.Group{
+		{models.INBOX, i18n.GetText(ctx.Lang, "inbox"), 0, 0, "/"},
+		{models.Junk, i18n.GetText(ctx.Lang, "junk"), 0, 0, "/"},
+		{models.Deleted, i18n.GetText(ctx.Lang, "deleted"), 0, 0, "/"},
+	}
+
 	infos := group.GetGroupList(ctx)
-	response.NewSuccessResponse(infos).FPrint(w)
+
+	response.NewSuccessResponse(append(defaultGroup, infos...)).FPrint(w)
 }
 
 func GetUserGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {

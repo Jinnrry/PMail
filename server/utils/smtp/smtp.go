@@ -69,6 +69,10 @@ func Dial(addr, fromDomain string) (*Client, error) {
 
 // with tls
 func DialTls(addr, domain, fromDomain string) (*Client, error) {
+	if domain == "" {
+		domain = fromDomain
+	}
+
 	// TLS config
 	tlsconfig := &tls.Config{
 		InsecureSkipVerify: true,
