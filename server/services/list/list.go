@@ -53,6 +53,9 @@ func genSQL(ctx *context.Context, count bool, tagInfo dto.SearchTag, keyword str
 	} else if tagInfo.Status == -1 {
 		if tagInfo.Type != 1 {
 			sql += " and ue.status = 0"
+		} else {
+			// 发件箱不展示已删除的邮件
+			sql += " and ue.status != 3"
 		}
 	}
 
