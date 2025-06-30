@@ -318,33 +318,50 @@ func BuilderUser(str string) *User {
 
 var emailAddressRe = regexp.MustCompile(`<(.*@.*)>`)
 
+var emailAddressRe = regexp.MustCompile(`<(.*@.*)>`)
+
 func buildUser(str string) *User {
-	if strings.TrimSpace(str) == "" {
-		return nil
+	str = strings.TrimSpace(str)
+	if str == "" {
+		return &User{}
 	}
+
+	user := &User{}
 
 	addr, err := mail.ParseAddress(str)
-	if err != nil {
-		return nil 
-	}
+	if err == nil {
+		user.EmailAddress = strings.TrimSpace(addr.Address)
 
-	email := strings.TrimSpace(addr.Address)
-	name := strings.TrimSpace(addr.Name)
-
-	if name != "" {
-		decoder := mime.WordDecoder{}
-		if decoded, err := decoder.Decode(name); err == nil {
-			name = decoded
+		name := strings.TrimSpace(addr.Name)
+		if name != "" {
+			decoder := mime.WordDecoder{}
+			if decoded, err := decoder.Decode(name); err == nil {
+				name = decoded
+			}
+			user.Name = strictPolicy.Sanitize(name)
 		}
+		return user
 	}
 
-	safeName := strictPolicy.Sanitize(name)
+	matched := emailAddressRe.FindStringSubmatch(str)
+	if len(matched) == 2 {
+		user.EmailAddress = strings.TrimSpace(matched[1])
+		namePart := strings.ReplaceAll(str, matched[0], "")
+		namePart = strings.Trim(strings.TrimSpace(namePart), "\"")
 
-	return &User{
-		EmailAddress: email,     
-		Name:         safeName, 
+		decoder := mime.WordDecoder{}
+		if decoded, err := decoder.Decode(strings.ReplaceAll(namePart, "\"", "")); err == nil {
+			user.Name = strictPolicy.Sanitize(strings.TrimSpace(decoded))
+		} else {
+			user.Name = strictPolicy.Sanitize(strings.TrimSpace(namePart))
+		}
+	} else {
+		user.EmailAddress = strictPolicy.Sanitize(str)
 	}
+
+	return user
 }
+
 
 func buildUsers(strs []string) []*User {
 	var ret []*User
