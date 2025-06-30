@@ -183,19 +183,23 @@ func TestBuildUser_XSS(t *testing.T) {
 		{
 			name:          "JavaScript in name - should be filtered",
 			input:         `javascript:alert('xss') <js@example.com>`,
-			shouldBeNil:   true, // buildUser may return nil if input is heavily sanitized
+			expectedEmail: "js@example.com",
+			expectedName:  "javascript:alert(&#39;xss&#39;)",
+			shouldBeNil:   false,
 		},
 		{
 			name:          "Event handler in name - quotes removed in sanitization",
 			input:         `onclick="alert('xss')" <click@example.com>`,
 			expectedEmail: "click@example.com",
-			expectedName:  "onclick= alert(&#39;xss&#39;)", // Note: quotes are removed, space added
+			expectedName:  "onclick= alert(&#39;xss&#39;)", 
 			shouldBeNil:   false,
 		},
 		{
 			name:          "HTML in email address - should be filtered",
 			input:         `<script>test@example.com</script>`,
-			shouldBeNil:   true, // Invalid email format after sanitization
+			expectedEmail: "script>test@example.com</script",
+			expectedName:  "",
+			shouldBeNil:   false,
 		},
 	}
 

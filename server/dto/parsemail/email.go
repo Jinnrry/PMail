@@ -318,8 +318,6 @@ func BuilderUser(str string) *User {
 
 var emailAddressRe = regexp.MustCompile(`<(.*@.*)>`)
 
-var emailAddressRe = regexp.MustCompile(`<(.*@.*)>`)
-
 func buildUser(str string) *User {
 	str = strings.TrimSpace(str)
 	if str == "" {
