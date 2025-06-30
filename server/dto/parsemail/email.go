@@ -12,6 +12,7 @@ import (
 	"github.com/emersion/go-message/mail"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
+	"github.com/microcosm-cc/bluemonday"
 	"io"
 	"mime"
 	"net/textproto"
@@ -66,6 +67,28 @@ type Email struct {
 	Status      int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
 	MessageId   int64
 	Size        int
+}
+
+// Xss filter policy
+var (
+	strictPolicy *bluemonday.Policy
+	relaxedPolicy *bluemonday.Policy
+)
+
+func init() {
+	// Init xss filter policy
+	strictPolicy = bluemonday.StrictPolicy()
+	relaxedPolicy = bluemonday.UGCPolicy()
+}
+
+// Sanitize HTML
+func sanitizeHTML(htmlContent string) string {
+    return relaxedPolicy.Sanitize(htmlContent)
+}
+
+// Sanitize Text
+func sanitizeText(text string) string {
+    return strictPolicy.Sanitize(text)
 }
 
 func users2String(users []*User) string {
@@ -162,8 +185,9 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	if ret.Sender == nil {
 		ret.Sender = ret.From
 	}
-
-	ret.Subject, _ = m.Header.Text("Subject")
+	
+	subject, _ := m.Header.Text("Subject")
+	ret.Subject = sanitizeText(subject)
 
 	sendTime, err := time.Parse(time.RFC1123Z, m.Header.Get("Date"))
 	if err != nil {
@@ -188,9 +212,11 @@ func formatContent(entity *message.Entity, ret *Email) error {
 	case "multipart/alternative":
 	case "multipart/mixed":
 	case "text/plain":
-		ret.Text, _ = io.ReadAll(entity.Body)
+		testContent, _ := io.ReadAll(entity.Body)
+		ret.Text = []byte(strictPolicy.Sanitize(string(testContent)))
 	case "text/html":
-		ret.HTML, _ = io.ReadAll(entity.Body)
+		htmlContent, _ := io.ReadAll(entity.Body)
+		ret.HTML = []byte(relaxedPolicy.Sanitize(string(htmlContent)))
 	case "multipart/related":
 		entity.Walk(func(path []int, entity *message.Entity, err error) error {
 			if t, _, _ := entity.Header.ContentType(); t == "multipart/related" {
@@ -213,8 +239,8 @@ func formatContent(entity *message.Entity, ret *Email) error {
 		}
 
 		ret.Attachments = append(ret.Attachments, &Attachment{
-			Filename:    fileName,
-			ContentType: contentType,
+			Filename:    sanitizeText(fileName),
+			ContentType: sanitizeText(strings.TrimSpace(contentType)),
 			Content:     c,
 			ContentID:   strings.TrimPrefix(strings.TrimSuffix(entity.Header.Get("Content-Id"), ">"), "<"),
 		})
@@ -251,9 +277,9 @@ func buildUser(str string) *User {
 
 	name, err := (&WordDecoder{}).Decode(strings.ReplaceAll(str, "\"", ""))
 	if err == nil {
-		ret.Name = strings.TrimSpace(name)
+		ret.Name = sanitizeText(strings.TrimSpace(name))
 	} else {
-		ret.Name = strings.TrimSpace(str)
+		ret.Name = sanitizeText(strings.TrimSpace(str))
 	}
 	return ret
 }
