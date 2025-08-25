@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-func GetDomainSettings() (string, string, []string, error) {
+func GetDomainSettings() (string, string, []string, int, int, int, error) {
 	configData, err := config.ReadConfig()
 	if err != nil {
-		return "", "", []string{}, errors.Wrap(err)
+		return "", "", []string{}, 0, 0, 0, errors.Wrap(err)
 	}
 
-	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), nil
+	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), configData.SMTPPort, configData.IMAPPort, configData.POP3Port, nil
 }
 
-func SetDomainSettings(smtpDomain, webDomain, multiDomains string) error {
+func SetDomainSettings(smtpDomain, webDomain, multiDomains string, smtpPort, imapPort, pop3Port int) error {
 	configData, err := config.ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)
@@ -43,6 +43,9 @@ func SetDomainSettings(smtpDomain, webDomain, multiDomains string) error {
 
 	configData.Domain = smtpDomain
 	configData.WebDomain = webDomain
+	configData.SMTPPort = smtpPort
+	configData.IMAPPort = imapPort
+	configData.POP3Port = pop3Port
 
 	// 检查域名是否指向本机 todo
 

@@ -2,6 +2,7 @@ package smtp_server
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/emersion/go-smtp"
 	log "github.com/sirupsen/logrus"
@@ -73,7 +74,11 @@ func Start() {
 
 	instance = smtp.NewServer(be)
 
-	instance.Addr = ":25"
+	if config.Instance.SMTPPort == 0 {
+		instance.Addr = ":25"
+	} else {
+		instance.Addr = fmt.Sprintf(":%d", config.Instance.SMTPPort)
+	}
 	instance.Domain = config.Instance.Domain
 	instance.ReadTimeout = 10 * time.Second
 	instance.WriteTimeout = 10 * time.Second
