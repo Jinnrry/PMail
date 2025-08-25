@@ -1,87 +1,82 @@
-name: Release
+name: Build and Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+  release:
+    types: [ released,prereleased ]
+
 
 jobs:
-  release:
-    name: Release
+  build:
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        goos: [ windows,  linux, darwin ]
+        goarch: [ amd64, arm64 ]
     runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
     steps:
+      - name: Get version
+        id: get_version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "${GITHUB_REF}"
       - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/checkout@v4.0.0
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.8.1
+      - name: Install Dependencies
+        run: npm install --global yarn
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.1.0
         with:
-          go-version: '1.20'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Build Frontend
+          check-latest: true
+      - name: Gen output name
         run: |
-          cd fe
-          npm install
-          npm run build
-      
-      - name: Build Backend and Package
+          echo "FILENAME=pmail_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+          echo "TGFILENAME=telegram_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+          echo "WCFILENAME=wechat_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+          echo "SPAMBLOCKFILENAME=spam_block_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+          echo "ZIPNAME=${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
+      - name: Rename Windows File
+        if: matrix.goos == 'windows'
         run: |
-          # For windows-amd64
-          cd server
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o ../pmail-windows-amd64.exe .
-          cd ..
-          mkdir -p release/pmail-windows-amd64
-          mv pmail-windows-amd64.exe release/pmail-windows-amd64/pmail.exe
-          cp -r fe/dist release/pmail-windows-amd64/
-          cd release
-          zip -r pmail-windows-amd64.zip pmail-windows-amd64
-          cd ..
-
-          # For linux-amd64
-          cd server
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ../pmail-linux-amd64 .
-          cd ..
-          mkdir -p release/pmail-linux-amd64
-          mv pmail-linux-amd64 release/pmail-linux-amd64/pmail
-          cp -r fe/dist release/pmail-linux-amd64/
-          cd release
-          tar -czvf pmail-linux-amd64.tar.gz pmail-linux-amd64
-          cd ..
-
-          # For darwin-amd64
-          cd server
-          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o ../pmail-darwin-amd64 .
-          cd ..
-          mkdir -p release/pmail-darwin-amd64
-          mv pmail-darwin-amd64 release/pmail-darwin-amd64/pmail
-          cp -r fe/dist release/pmail-darwin-amd64/
-          cd release
-          tar -czvf pmail-darwin-amd64.tar.gz pmail-darwin-amd64
-          cd ..
-
-          # For darwin-arm64
-          cd server
-          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o ../pmail-darwin-arm64 .
-          cd ..
-          mkdir -p release/pmail-darwin-arm64
-          mv pmail-darwin-arm64 release/pmail-darwin-arm64/pmail
-          cp -r fe/dist release/pmail-darwin-arm64/
-          cd release
-          tar -czvf pmail-darwin-arm64.tar.gz pmail-darwin-arm64
-          cd ..
-
-      - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v1
+          echo "FILENAME=pmail_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
+          echo "TGFILENAME=telegram_push_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
+          echo "WCFILENAME=wechat_push_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
+          echo "SPAMBLOCKFILENAME=spam_block_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
+      - name: FE Build
+        run: cd fe && yarn && yarn build
+      - name: BE Build
+        run: |
+          cd server && cp -rf ../fe/dist listen/http_server
+          go build -ldflags "-s -w -X 'main.version=${{ env.VERSION }}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o ${{ env.FILENAME }}  main.go
+          go build -ldflags "-s -w" -o ${{ env.TGFILENAME }} hooks/telegram_push/telegram_push.go 
+          go build -ldflags "-s -w" -o ${{ env.WCFILENAME }} hooks/wechat_push/wechat_push.go
+          go build -ldflags "-s -w" -o ${{ env.SPAMBLOCKFILENAME }} hooks/spam_block/spam_block.go
+          ls -alh
+      - name: Zip
+        run: |
+          cd ./server
+          mkdir plugins
+          mv ${{ env.TGFILENAME }} plugins/
+          mv ${{ env.WCFILENAME }} plugins/
+          mv ${{ env.SPAMBLOCKFILENAME }} plugins/
+          zip -r ${{ env.ZIPNAME }}.zip ${{ env.FILENAME }} plugins
+          ls
+      - name: Upload files to Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            release/pmail-windows-amd64.zip
-            release/pmail-linux-amd64.tar.gz
-            release/pmail-darwin-amd64.tar.gz
-            release/pmail-darwin-arm64.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ env.ZIPNAME }}
+          path: server/${{ env.ZIPNAME }}.zip
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: server/${{ env.ZIPNAME }}.zip
+          tag: ${{ github.ref }}
+          file_glob: true
