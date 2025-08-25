@@ -32,7 +32,9 @@ jobs:
       - name: Build Backend and Package
         run: |
           # For windows-amd64
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o pmail-windows-amd64.exe ./server
+          cd server
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o ../pmail-windows-amd64.exe .
+          cd ..
           mkdir -p release/pmail-windows-amd64
           mv pmail-windows-amd64.exe release/pmail-windows-amd64/pmail.exe
           cp -r fe/dist release/pmail-windows-amd64/
@@ -41,7 +43,9 @@ jobs:
           cd ..
 
           # For linux-amd64
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o pmail-linux-amd64 ./server
+          cd server
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ../pmail-linux-amd64 .
+          cd ..
           mkdir -p release/pmail-linux-amd64
           mv pmail-linux-amd64 release/pmail-linux-amd64/pmail
           cp -r fe/dist release/pmail-linux-amd64/
@@ -50,7 +54,9 @@ jobs:
           cd ..
 
           # For darwin-amd64
-          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o pmail-darwin-amd64 ./server
+          cd server
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o ../pmail-darwin-amd64 .
+          cd ..
           mkdir -p release/pmail-darwin-amd64
           mv pmail-darwin-amd64 release/pmail-darwin-amd64/pmail
           cp -r fe/dist release/pmail-darwin-amd64/
@@ -59,7 +65,9 @@ jobs:
           cd ..
 
           # For darwin-arm64
-          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o pmail-darwin-arm64 ./server
+          cd server
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o ../pmail-darwin-arm64 .
+          cd ..
           mkdir -p release/pmail-darwin-arm64
           mv pmail-darwin-arm64 release/pmail-darwin-arm64/pmail
           cp -r fe/dist release/pmail-darwin-arm64/
