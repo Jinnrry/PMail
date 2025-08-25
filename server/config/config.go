@@ -36,6 +36,9 @@ type Config struct {
 	SpamFilterLevel      int               `json:"spamFilterLevel"` //垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时过滤，2 spf校验不通过时过滤
 	HttpPort             int               `json:"httpPort"`        //http服务端口设置，默认80
 	HttpsPort            int               `json:"httpsPort"`       //https服务端口，默认443
+	SMTPPort             int               `json:"smtpPort"`
+	IMAPPort             int               `json:"imapPort"`
+	POP3Port             int               `json:"pop3Port"`
 	WeChatPushAppId      string            `json:"weChatPushAppId"`
 	WeChatPushSecret     string            `json:"weChatPushSecret"`
 	WeChatPushTemplateId string            `json:"weChatPushTemplateId"`

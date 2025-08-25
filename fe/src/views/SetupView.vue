@@ -107,6 +107,18 @@
                       v-model="domainSettings.multi_domain[i]" :key="item"></el-input>
           </el-form-item>
 
+          <el-form-item label="SMTP Port">
+            <el-input type="number" placeholder="25" v-model="domainSettings.smtp_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="IMAP Port">
+            <el-input type="number" placeholder="993" v-model="domainSettings.imap_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="POP3 Port">
+            <el-input type="number" placeholder="110" v-model="domainSettings.pop3_port"></el-input>
+          </el-form-item>
+
 
         </el-form>
       </div>
@@ -250,7 +262,10 @@ const dbSettings = reactive({
 const domainSettings = reactive({
   "web_domain": "",
   "smtp_domain": "",
-  "multi_domain": []
+  "multi_domain": [],
+  "smtp_port": 0,
+  "imap_port": 0,
+  "pop3_port": 0
 })
 
 const sslSettings = reactive({
@@ -337,6 +352,9 @@ const getDomainConfig = () => {
       domainSettings.web_domain = res.data.web_domain;
       domainSettings.smtp_domain = res.data.smtp_domain;
       domainSettings.multi_domain = res.data.domains;
+      domainSettings.smtp_port = res.data.smtp_port;
+      domainSettings.imap_port = res.data.imap_port;
+      domainSettings.pop3_port = res.data.pop3_port;
     }
   })
 }
@@ -451,7 +469,10 @@ const setDomainConfig = () => {
     "step": "domain",
     "web_domain": domainSettings.web_domain,
     "smtp_domain": domainSettings.smtp_domain,
-    "multi_domain": domainSettings.multi_domain.join(",")
+    "multi_domain": domainSettings.multi_domain.join(","),
+    "smtp_port": domainSettings.smtp_port,
+    "imap_port": domainSettings.imap_port,
+    "pop3_port": domainSettings.pop3_port
   }).then((res) => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)

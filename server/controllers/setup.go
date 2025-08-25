@@ -93,7 +93,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "domain" && reqData["action"] == "get" {
-		smtpDomain, webDomain, domains, err := setup.GetDomainSettings()
+		smtpDomain, webDomain, domains, smtpPort, imapPort, pop3Port, err := setup.GetDomainSettings()
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
@@ -102,12 +102,22 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			"smtp_domain": smtpDomain,
 			"web_domain":  webDomain,
 			"domains":     domains,
+			"smtp_port":   smtpPort,
+			"imap_port":   imapPort,
+			"pop3_port":   pop3Port,
 		}).FPrint(w)
 		return
 	}
 
 	if reqData["step"] == "domain" && reqData["action"] == "set" {
-		err := setup.SetDomainSettings(cast.ToString(reqData["smtp_domain"]), cast.ToString(reqData["web_domain"]), reqData["multi_domain"])
+		err := setup.SetDomainSettings(
+			cast.ToString(reqData["smtp_domain"]),
+			cast.ToString(reqData["web_domain"]),
+			reqData["multi_domain"],
+			cast.ToInt(reqData["smtp_port"]),
+			cast.ToInt(reqData["imap_port"]),
+			cast.ToInt(reqData["pop3_port"]),
+		)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
