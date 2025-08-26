@@ -119,6 +119,18 @@
             <el-input type="number" placeholder="110" v-model="domainSettings.pop3_port"></el-input>
           </el-form-item>
 
+          <el-form-item label="SMTPS Port">
+            <el-input type="number" placeholder="465" v-model="domainSettings.smtps_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="IMAPS Port">
+            <el-input type="number" placeholder="993" v-model="domainSettings.imaps_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="POP3S Port">
+            <el-input type="number" placeholder="995" v-model="domainSettings.pop3s_port"></el-input>
+          </el-form-item>
+
 
         </el-form>
       </div>
@@ -265,7 +277,10 @@ const domainSettings = reactive({
   "multi_domain": [],
   "smtp_port": 0,
   "imap_port": 0,
-  "pop3_port": 0
+  "pop3_port": 0,
+  "smtps_port": 0,
+  "imaps_port": 0,
+  "pop3s_port": 0
 })
 
 const sslSettings = reactive({
@@ -355,6 +370,9 @@ const getDomainConfig = () => {
       domainSettings.smtp_port = res.data.smtp_port;
       domainSettings.imap_port = res.data.imap_port;
       domainSettings.pop3_port = res.data.pop3_port;
+      domainSettings.smtps_port = res.data.smtps_port;
+      domainSettings.imaps_port = res.data.imaps_port;
+      domainSettings.pop3s_port = res.data.pop3s_port;
     }
   })
 }
@@ -472,7 +490,10 @@ const setDomainConfig = () => {
     "multi_domain": domainSettings.multi_domain.join(","),
     "smtp_port": domainSettings.smtp_port,
     "imap_port": domainSettings.imap_port,
-    "pop3_port": domainSettings.pop3_port
+    "pop3_port": domainSettings.pop3_port,
+    "smtps_port": domainSettings.smtps_port,
+    "imaps_port": domainSettings.imaps_port,
+    "pop3s_port": domainSettings.pop3s_port
   }).then((res) => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)

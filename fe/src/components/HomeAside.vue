@@ -1,11 +1,16 @@
 <template>
-  <div id="main">
-    <input id="search" :placeholder="lang.search" />
-    <el-tree
-      :data="data"
-      :defaultExpandAll="true"
-      @node-click="handleNodeClick"
-    />
+  <div class="aside-container">
+    <div class="search-bar">
+      <el-input :placeholder="lang.search" />
+    </div>
+    <el-scrollbar>
+      <el-tree
+          :data="data"
+          :default-expand-all="true"
+          @node-click="handleNodeClick"
+          class="custom-tree"
+      />
+    </el-scrollbar>
   </div>
 </template>
 
@@ -36,29 +41,45 @@ const handleNodeClick = function (data) {
 </script>
 
 <style scoped>
-#main {
-  width: 243px;
-  background-color: #f1f1f1;
+.aside-container {
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  background-color: #fafafa;
+  border-right: 1px solid #e0e0e0;
 }
 
-#search {
-  background-color: #d6e7f7;
-  width: 100%;
-  height: 40px;
-  padding-left: 10px;
-  border: none;
-  outline: none;
-  font-size: 16px;
+.search-bar {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.el-tree {
-  background-color: #f1f1f1;
+.el-scrollbar {
+  flex-grow: 1;
 }
 
-.add_group {
-  font-size: 14px;
-  text-align: left;
-  padding-left: 15px;
+.custom-tree {
+  background-color: transparent;
+  padding: 10px;
+}
+
+.custom-tree >>> .el-tree-node__content {
+  height: 36px;
+  line-height: 36px;
+  border-radius: 4px;
+}
+
+.custom-tree >>> .el-tree-node__content:hover {
+  background-color: #ecf5ff;
+}
+
+.custom-tree >>> .el-tree-node:focus > .el-tree-node__content {
+  background-color: #d9ecff;
+}
+
+.custom-tree >>> .el-tree-node.is-current > .el-tree-node__content {
+  background-color: #d9ecff;
+  color: #409eff;
+  font-weight: bold;
 }
 </style>
