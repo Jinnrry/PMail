@@ -3,11 +3,12 @@ package imap_server
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapserver"
 	log "github.com/sirupsen/logrus"
-	"os"
 )
 
 var instanceTLS *imapserver.Server
@@ -49,10 +50,10 @@ func StarTLS() {
 
 	instanceTLS = imapserver.New(option)
 	var addr string
-	if config.Instance.IMAPPort == 0 {
+	if config.Instance.IMAPSPort == 0 {
 		addr = ":993"
 	} else {
-		addr = fmt.Sprintf(":%d", config.Instance.IMAPPort)
+		addr = fmt.Sprintf(":%d", config.Instance.IMAPSPort)
 	}
 	log.Infof("IMAP With TLS Server Start On Port %s", addr)
 	if err := instanceTLS.ListenAndServeTLS(addr); err != nil {

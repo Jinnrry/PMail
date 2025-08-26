@@ -2,6 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/services/setup"
@@ -9,10 +14,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"net/http"
-	"os"
-	"strings"
 )
 
 func AcmeChallenge(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +94,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "domain" && reqData["action"] == "get" {
-		smtpDomain, webDomain, domains, smtpPort, imapPort, pop3Port, err := setup.GetDomainSettings()
+		smtpDomain, webDomain, domains, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, err := setup.GetDomainSettings()
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
@@ -105,6 +106,9 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			"smtp_port":   smtpPort,
 			"imap_port":   imapPort,
 			"pop3_port":   pop3Port,
+			"smtps_port":  smtpsPort,
+			"imaps_port":  imapsPort,
+			"pop3s_port":  pop3sPort,
 		}).FPrint(w)
 		return
 	}
@@ -117,6 +121,9 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			cast.ToInt(reqData["smtp_port"]),
 			cast.ToInt(reqData["imap_port"]),
 			cast.ToInt(reqData["pop3_port"]),
+			cast.ToInt(reqData["smtps_port"]),
+			cast.ToInt(reqData["imaps_port"]),
+			cast.ToInt(reqData["pop3s_port"]),
 		)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
