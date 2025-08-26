@@ -2,6 +2,9 @@ package res_init
 
 import (
 	"encoding/json"
+	"os"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/parsemail"
@@ -15,8 +18,6 @@ import (
 	"github.com/Jinnrry/pmail/signal"
 	"github.com/Jinnrry/pmail/utils/file"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"time"
 )
 
 func Init(serverVersion string) {
@@ -43,7 +44,6 @@ func Init(serverVersion string) {
 		// smtp server start
 		go smtp_server.Start()
 		go smtp_server.StartWithTLS()
-		go smtp_server.StartWithTLSNew()
 		// http server start
 		go http_server.HttpsStart()
 		go http_server.HttpStart()
