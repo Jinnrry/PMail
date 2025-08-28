@@ -3,19 +3,20 @@ package pop3_server
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"testing"
+
 	"github.com/Jinnrry/gopop"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/emersion/go-message/mail"
-	"io"
-	"testing"
 )
 
 func Test_action_Retr(t *testing.T) {
 	config.Init()
 	config.Instance.DbType = config.DBTypeSQLite
-	config.Instance.DbDSN = config.ROOT_PATH + "./config/pmail_temp.db"
+	config.Instance.DbDSN = "./config/pmail_temp.db"
 	db.Init("")
 
 	a := action{}
