@@ -41,14 +41,14 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var reqData map[string]string
+	var reqData map[string]interface{}
 	err = json.Unmarshal(reqBytes, &reqData)
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, "", err.Error()).FPrint(w)
 		return
 	}
 
-	if reqData["step"] == "database" && reqData["action"] == "get" {
+	if cast.ToString(reqData["step"]) == "database" && cast.ToString(reqData["action"]) == "get" {
 		dbType, dbDSN, err := setup.GetDatabaseSettings(ctx)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -62,7 +62,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "database" && reqData["action"] == "set" {
+	if cast.ToString(reqData["step"]) == "database" && cast.ToString(reqData["action"]) == "set" {
 		err := setup.SetDatabaseSettings(ctx, cast.ToString(reqData["db_type"]), cast.ToString(reqData["db_dsn"]))
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -73,7 +73,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "password" && reqData["action"] == "get" {
+	if cast.ToString(reqData["step"]) == "password" && cast.ToString(reqData["action"]) == "get" {
 		ok, err := setup.GetAdminPassword(ctx)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -83,7 +83,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "password" && reqData["action"] == "set" {
+	if cast.ToString(reqData["step"]) == "password" && cast.ToString(reqData["action"]) == "set" {
 		err := setup.SetAdminPassword(ctx, cast.ToString(reqData["account"]), cast.ToString(reqData["password"]))
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -93,7 +93,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "domain" && reqData["action"] == "get" {
+	if cast.ToString(reqData["step"]) == "domain" && cast.ToString(reqData["action"]) == "get" {
 		smtpDomain, webDomain, domains, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, err := setup.GetDomainSettings()
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -113,11 +113,11 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "domain" && reqData["action"] == "set" {
+	if cast.ToString(reqData["step"]) == "domain" && cast.ToString(reqData["action"]) == "set" {
 		err := setup.SetDomainSettings(
 			cast.ToString(reqData["smtp_domain"]),
 			cast.ToString(reqData["web_domain"]),
-			reqData["multi_domain"],
+			cast.ToString(reqData["multi_domain"]),
 			cast.ToInt(reqData["smtp_port"]),
 			cast.ToInt(reqData["imap_port"]),
 			cast.ToInt(reqData["pop3_port"]),
@@ -133,7 +133,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "dns" && reqData["action"] == "get" {
+	if cast.ToString(reqData["step"]) == "dns" && cast.ToString(reqData["action"]) == "get" {
 		dnsInfos, err := setup.GetDNSSettings(ctx)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -143,7 +143,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "ssl" && reqData["action"] == "get" {
+	if cast.ToString(reqData["step"]) == "ssl" && cast.ToString(reqData["action"]) == "get" {
 		sslType := ssl.GetSSL()
 		res := sslResponse{
 			Type: sslType,
@@ -153,16 +153,16 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if reqData["step"] == "ssl" && reqData["action"] == "getParams" {
+	if cast.ToString(reqData["step"]) == "ssl" && cast.ToString(reqData["action"]) == "getParams" {
 		dnsChallenge := ssl.GetDnsChallengeInstance()
 
 		response.NewSuccessResponse(dnsChallenge.GetDNSSettings(ctx)).FPrint(w)
 		return
 	}
 
-	if reqData["step"] == "ssl" && reqData["action"] == "set" {
+	if cast.ToString(reqData["step"]) == "ssl" && cast.ToString(reqData["action"]) == "set" {
 
-		if reqData["ssl_type"] == config.SSLTypeUser {
+		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeUser {
 			keyPath := reqData["key_path"]
 			crtPath := reqData["crt_path"]
 
@@ -185,7 +185,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if reqData["ssl_type"] == config.SSLTypeAutoHTTP || reqData["ssl_type"] == config.SSLTypeAutoDNS {
+		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeAutoHTTP || cast.ToString(reqData["ssl_type"]) == config.SSLTypeAutoDNS {
 			err = ssl.GenSSL(false)
 			if err != nil {
 				response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
@@ -195,7 +195,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 		response.NewSuccessResponse("Succ").FPrint(w)
 
-		if reqData["ssl_type"] == config.SSLTypeUser {
+		if cast.ToString(reqData["ssl_type"]) == config.SSLTypeUser {
 			setup.Finish()
 		}
 		return
