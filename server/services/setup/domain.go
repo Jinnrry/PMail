@@ -14,7 +14,32 @@ func GetDomainSettings() (string, string, []string, int, int, int, int, int, int
 		return "", "", []string{}, 0, 0, 0, 0, 0, 0, errors.Wrap(err)
 	}
 
-	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), configData.SMTPPort, configData.IMAPPort, configData.POP3Port, configData.SMTPSPort, configData.IMAPSPort, configData.POP3SPort, nil
+	smtpPort := configData.SMTPPort
+	if smtpPort == 0 {
+		smtpPort = 25
+	}
+	imapPort := configData.IMAPPort
+	if imapPort == 0 {
+		imapPort = 993
+	}
+	pop3Port := configData.POP3Port
+	if pop3Port == 0 {
+		pop3Port = 110
+	}
+	smtpsPort := configData.SMTPSPort
+	if smtpsPort == 0 {
+		smtpsPort = 465
+	}
+	imapsPort := configData.IMAPSPort
+	if imapsPort == 0 {
+		imapsPort = 993
+	}
+	pop3sPort := configData.POP3SPort
+	if pop3sPort == 0 {
+		pop3sPort = 995
+	}
+
+	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, nil
 }
 
 func SetDomainSettings(smtpDomain, webDomain, multiDomains string, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort int) error {
