@@ -2,8 +2,9 @@ name: Build and Release
 
 on:
   workflow_dispatch:
-  release:
-    types: [ released,prereleased ]
+  push:
+    tags:
+      - 'v*'
 
 
 jobs:
