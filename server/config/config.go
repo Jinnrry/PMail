@@ -35,6 +35,7 @@ type Config struct {
 	SpamFilterLevel      int               `json:"spamFilterLevel"` //垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时过滤，2 spf校验不通过时过滤
 	HttpPort             int               `json:"httpPort"`        //http服务端口设置，默认80
 	HttpsPort            int               `json:"httpsort"`        //https服务端口，默认443
+	FrontendPort         int               `json:"frontendPort"`    //前端服务端口
 	SMTPPort             int               `json:"smtpPort"`
 	IMAPPort             int               `json:"imapPort"`
 	POP3Port             int               `json:"pop3Port"`
@@ -202,6 +203,9 @@ func ReadConfig() (*Config, error) {
 		DkimPrivateKeyPath: "config/dkim/dkim.priv",
 		SSLPrivateKeyPath:  "config/ssl/private.key",
 		SSLPublicKeyPath:   "config/ssl/public.crt",
+		HttpPort:           80,
+		HttpsPort:          443,
+		FrontendPort:       5173,
 	}
 	if !file.PathExist("./config/config.json") {
 		bytes, _ := json.Marshal(configData)
