@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/emersion/go-message"
 	"io"
+
 	"testing"
 )
 
@@ -83,4 +84,14 @@ func TestEmail_builder(t *testing.T) {
 
 	rest := e.BuildBytes(nil, false)
 	fmt.Println(string(rest))
+}
+
+func TestEmail_BuildPart(t *testing.T) {
+	e := Email{
+		Text: []byte("text"),
+		HTML: []byte("html"),
+	}
+	res := e.BuildPart(nil, []int{1, 2})
+	fmt.Println(string(res))
+
 }

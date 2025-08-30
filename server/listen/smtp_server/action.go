@@ -2,10 +2,10 @@ package smtp_server
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
-	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/id"
 	"github.com/Jinnrry/pmail/utils/password"
 	"github.com/emersion/go-sasl"

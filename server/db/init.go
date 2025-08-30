@@ -65,9 +65,9 @@ func Init(version string) error {
 		}
 	}
 
-	if config.Instance.LogLevel == "debug" {
-		Instance.ShowSQL(true)
-	}
+	//if config.Instance.LogLevel == "debug" {
+	//	Instance.ShowSQL(true)
+	//}
 
 	return nil
 }

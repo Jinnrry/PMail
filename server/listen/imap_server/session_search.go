@@ -11,12 +11,18 @@ import (
 func (s *serverSession) Search(kind imapserver.NumKind, criteria *imap.SearchCriteria, options *imap.SearchOptions) (*imap.SearchData, error) {
 	retList := []*response.UserEmailUIDData{}
 
-	for _, uidSet := range criteria.UID {
-		for _, uid := range uidSet {
-			res := list.GetUEListByUID(s.ctx, s.currentMailbox, cast.ToInt(uint32(uid.Start)), cast.ToInt(uint32(uid.Stop)), nil)
-			retList = append(retList, res...)
+	if len(criteria.UID) > 0 {
+		for _, uidSet := range criteria.UID {
+			for _, uid := range uidSet {
+				res := list.GetUEListByUID(s.ctx, s.currentMailbox, cast.ToInt(uint32(uid.Start)), cast.ToInt(uint32(uid.Stop)), nil)
+				retList = append(retList, res...)
+			}
 		}
+	} else {
+		res := list.GetUEListByUID(s.ctx, s.currentMailbox, 0, 0, nil)
+		retList = append(retList, res...)
 	}
+
 	ret := &imap.SearchData{}
 
 	if kind == imapserver.NumKindSeq {
