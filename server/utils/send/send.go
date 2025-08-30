@@ -4,6 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"net"
+	"strings"
+	"sync"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/models"
@@ -13,9 +17,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/smtp"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"strings"
-	"sync"
 )
 
 type mxDomain struct {
@@ -73,17 +74,14 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 				//查询dns mx记录
 				mxInfo, err := net.LookupMX(args[1])
 				address := mxDomain{
-					domain: "smtp." + args[1],
-					mxHost: "smtp." + args[1],
+					domain: args[1],
+					mxHost: args[1],
 				}
 				if err != nil {
 					log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败，检查邮箱是否存在！")
 				}
 				if len(mxInfo) > 0 {
-					address = mxDomain{
-						domain: args[1],
-						mxHost: mxInfo[0].Host,
-					}
+					address.mxHost = mxInfo[0].Host
 				}
 				toByDomain[address] = append(toByDomain[address], s)
 			}
