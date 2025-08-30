@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	oerrors "errors"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/parsemail"
@@ -15,7 +16,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/async"
 	"github.com/Jinnrry/pmail/utils/context"
-	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/send"
 	"github.com/mileusna/spf"
 	log "github.com/sirupsen/logrus"
@@ -69,7 +69,7 @@ func (s *Session) Data(r io.Reader) error {
 	if s.Ctx.UserID > 0 {
 		account, _ := email.From.GetDomainAccount()
 		if account != ctx.UserAccount && !ctx.IsAdmin {
-			return errors.New("No Auth")
+			return oerrors.New("No Auth")
 		}
 
 		log.WithContext(ctx).Debugf("开始执行插件SendBefore！")

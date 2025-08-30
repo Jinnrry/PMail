@@ -2,6 +2,7 @@ package parsemail
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
@@ -10,9 +11,9 @@ import (
 	"github.com/emersion/go-message"
 	_ "github.com/emersion/go-message/charset"
 	"github.com/emersion/go-message/mail"
+	"github.com/microcosm-cc/bluemonday"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"github.com/microcosm-cc/bluemonday"
 	"io"
 	"mime"
 	"net/textproto"
@@ -71,48 +72,48 @@ type Email struct {
 
 // Xss filter policy
 var (
-	strictPolicy *bluemonday.Policy
+	strictPolicy  *bluemonday.Policy
 	relaxedPolicy *bluemonday.Policy
 )
 
 func init() {
 	strictPolicy = bluemonday.StrictPolicy()
-	
+
 	relaxedPolicy = bluemonday.NewPolicy()
-	
+
 	relaxedPolicy.AllowElements("p", "br", "strong", "em", "u", "b", "i", "h1", "h2", "h3", "h4", "h5", "h6")
 	relaxedPolicy.AllowElements("div", "span", "center")
 	relaxedPolicy.AllowElements("ul", "ol", "li")
 	relaxedPolicy.AllowElements("blockquote", "cite")
-	
+
 	relaxedPolicy.AllowElements("table", "tbody", "thead", "tr", "td", "th")
 	relaxedPolicy.AllowAttrs("width", "height", "border", "cellpadding", "cellspacing").OnElements("table")
 	relaxedPolicy.AllowAttrs("align", "valign", "colspan", "rowspan").OnElements("td", "th")
 	relaxedPolicy.AllowAttrs("align").OnElements("tr")
-	
+
 	relaxedPolicy.AllowAttrs("style").Globally()
 	relaxedPolicy.AllowAttrs("class", "id").Globally()
-	
+
 	relaxedPolicy.AllowAttrs("bgcolor", "color", "background").Globally()
 	relaxedPolicy.AllowAttrs("align").OnElements("p", "div", "h1", "h2", "h3", "h4", "h5", "h6")
-	
+
 	relaxedPolicy.AllowElements("img")
 	relaxedPolicy.AllowAttrs("src", "alt", "width", "height", "style", "align").OnElements("img")
-	
+
 	relaxedPolicy.AllowElements("a")
 	relaxedPolicy.AllowAttrs("href", "style").OnElements("a")
 	relaxedPolicy.RequireNoReferrerOnLinks(true)
 	relaxedPolicy.AddTargetBlankToFullyQualifiedLinks(true)
 	relaxedPolicy.RequireNoFollowOnLinks(true)
-	
+
 	relaxedPolicy.AllowElements("font")
 	relaxedPolicy.AllowAttrs("size", "color", "face").OnElements("font")
-	
+
 	relaxedPolicy.AllowElements("style")
 	relaxedPolicy.AllowAttrs("type").OnElements("style")
-	
+
 	relaxedPolicy.AllowURLSchemes("http", "https", "mailto")
-	
+
 	relaxedPolicy.SkipElementsContent("script", "object", "embed", "iframe", "frame", "frameset")
 }
 
@@ -120,31 +121,30 @@ func sanitizeHTML(htmlContent string) string {
 	if htmlContent == "" {
 		return ""
 	}
-	
+
 	sanitized := relaxedPolicy.Sanitize(htmlContent)
-	
+
 	dataUrlRegex := regexp.MustCompile(`href\s*=\s*["']data:[^"']*["']`)
 	sanitized = dataUrlRegex.ReplaceAllString(sanitized, `rel="nofollow"`)
-	
+
 	jsUrlRegex := regexp.MustCompile(`href\s*=\s*["']javascript:[^"']*["']`)
 	sanitized = jsUrlRegex.ReplaceAllString(sanitized, `rel="nofollow"`)
-	
+
 	expressionRegex := regexp.MustCompile(`(?i)expression\s*\(.*?\)`)
 	sanitized = expressionRegex.ReplaceAllString(sanitized, "")
-	
+
 	styleExpressionRegex := regexp.MustCompile(`(?i)style\s*=\s*["'][^"']*expression[^"']*["']`)
 	sanitized = styleExpressionRegex.ReplaceAllString(sanitized, "")
-	
+
 	cssJsRegex := regexp.MustCompile(`(?i)javascript\s*:`)
 	sanitized = cssJsRegex.ReplaceAllString(sanitized, "")
-	
+
 	return sanitized
 }
 
-
 // Sanitize Text
 func sanitizeText(text string) string {
-    return strictPolicy.Sanitize(text)
+	return strictPolicy.Sanitize(text)
 }
 
 func users2String(users []*User) string {
@@ -241,7 +241,7 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	if ret.Sender == nil {
 		ret.Sender = ret.From
 	}
-	
+
 	subject, _ := m.Header.Text("Subject")
 	ret.Subject = strictPolicy.Sanitize(subject)
 
@@ -253,12 +253,12 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	m.Walk(func(path []int, entity *message.Entity, err error) error {
 		return formatContent(entity, ret)
 	})
-	
+
 	if ret.From != nil {
 		ret.From.Name = strictPolicy.Sanitize(ret.From.Name)
 		ret.From.EmailAddress = strictPolicy.Sanitize(ret.From.EmailAddress)
 	}
-	
+
 	return ret
 }
 
@@ -360,7 +360,6 @@ func buildUser(str string) *User {
 	return user
 }
 
-
 func buildUsers(strs []string) []*User {
 	var ret []*User
 	for _, line := range strs {
@@ -461,6 +460,33 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []b
 	return instance.Sign(b.String())
 }
 
+func (e *Email) BuildPart(ctx *context.Context, loc []int) []byte {
+	if len(loc) < 2 {
+		return nil
+	}
+	if loc[0] == 1 && loc[1] == 2 {
+
+		encoded := base64.StdEncoding.EncodeToString(e.HTML)
+		encoded += "\r\n"
+
+		return []byte(encoded)
+	}
+	if loc[0] == 1 && loc[1] == 1 {
+		if len(e.Text) == 0 {
+			encoded := base64.StdEncoding.EncodeToString(e.HTML)
+			encoded += "\r\n"
+
+			return []byte(encoded)
+		}
+		encoded := base64.StdEncoding.EncodeToString(e.Text)
+		encoded += "\r\n"
+
+		return []byte(encoded)
+	}
+
+	return nil
+}
+
 func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	var b bytes.Buffer
 
@@ -513,24 +539,27 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	if err != nil {
 		log.WithContext(ctx).Fatal(err)
 	}
-	var th mail.InlineHeader
-	th.Header.Set("Content-Transfer-Encoding", "base64")
-	th.SetContentType("text/plain", map[string]string{
-		"charset": "UTF-8",
-	})
-	w, err := tw.CreatePart(th)
-	if err != nil {
-		log.Fatal(err)
+
+	if len(e.Text) > 0 {
+		var th mail.InlineHeader
+		th.Header.Set("Content-Transfer-Encoding", "base64")
+		th.SetContentType("text/plain", map[string]string{
+			"charset": "UTF-8",
+		})
+		w, err := tw.CreatePart(th)
+		if err != nil {
+			log.Fatal(err)
+		}
+		io.WriteString(w, string(e.Text))
+		w.Close()
 	}
-	io.WriteString(w, string(e.Text))
-	w.Close()
 
 	var html mail.InlineHeader
 	html.SetContentType("text/html", map[string]string{
 		"charset": "UTF-8",
 	})
 	html.Header.Set("Content-Transfer-Encoding", "base64")
-	w, err = tw.CreatePart(html)
+	w, err := tw.CreatePart(html)
 	if err != nil {
 		log.Fatal(err)
 	}
