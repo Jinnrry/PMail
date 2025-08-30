@@ -159,7 +159,7 @@
           <el-table-column prop="type" label="TYPE" width="110px"/>
           <el-table-column prop="value" label="VALUE">
             <template #default="scope">
-              <div style="display: flex; align-items: center">
+              <div style="display: flex; align-items: center; cursor: pointer" @click="copyToClipboard(scope.row.value)">
                 <el-tooltip :content="scope.row.tips" placement="top" v-if="scope.row.tips !== ''">
                   {{ scope.row.value }}
                 </el-tooltip>
@@ -224,7 +224,7 @@
         <el-table-column prop="type" label="TYPE" width="110px"/>
         <el-table-column prop="value" label="VALUE">
           <template #default="scope">
-            <div style="display: flex; align-items: center">
+            <div style="display: flex; align-items: center; cursor: pointer" @click="copyToClipboard(scope.row.value)">
               <el-tooltip :content="scope.row.tips" placement="top" v-if="scope.row.tips !== ''">
                 {{ scope.row.value }}
               </el-tooltip>
@@ -523,6 +523,15 @@ const getSSLDNSParams = () => {
 
 }
 
+const copyToClipboard = (text) => {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    ElMessage({
+      message: "Copied to clipboard",
+      type: "success",
+    });
+  });
+};
 
 const next = () => {
   switch (active.value) {
