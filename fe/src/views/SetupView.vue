@@ -107,6 +107,14 @@
                       v-model="domainSettings.multi_domain[i]" :key="item"></el-input>
           </el-form-item>
 
+          <el-form-item label="HTTP Port">
+            <el-input type="number" placeholder="80" v-model="domainSettings.http_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="HTTPS Port">
+            <el-input type="number" placeholder="443" v-model="domainSettings.https_port"></el-input>
+          </el-form-item>
+
           <el-form-item label="SMTP Port">
             <el-input type="number" placeholder="25" v-model="domainSettings.smtp_port"></el-input>
           </el-form-item>
@@ -129,10 +137,6 @@
 
           <el-form-item label="POP3S Port">
             <el-input type="number" placeholder="995" v-model="domainSettings.pop3s_port"></el-input>
-          </el-form-item>
-
-          <el-form-item label="Frontend Port">
-            <el-input type="number" placeholder="5173" v-model="domainSettings.frontend_port"></el-input>
           </el-form-item>
 
 
@@ -285,7 +289,8 @@ const domainSettings = reactive({
   "smtps_port": 0,
   "imaps_port": 0,
   "pop3s_port": 0,
-  "frontend_port": 0
+  "http_port": 0,
+  "https_port": 0
 })
 
 const sslSettings = reactive({
@@ -378,7 +383,8 @@ const getDomainConfig = () => {
       domainSettings.smtps_port = res.data.smtps_port;
       domainSettings.imaps_port = res.data.imaps_port;
       domainSettings.pop3s_port = res.data.pop3s_port;
-      domainSettings.frontend_port = res.data.frontend_port;
+      domainSettings.http_port = res.data.http_port;
+      domainSettings.https_port = res.data.https_port;
     }
   })
 }
@@ -500,7 +506,8 @@ const setDomainConfig = () => {
     "smtps_port": domainSettings.smtps_port,
     "imaps_port": domainSettings.imaps_port,
     "pop3s_port": domainSettings.pop3s_port,
-    "frontend_port": domainSettings.frontend_port
+    "http_port": domainSettings.http_port,
+    "https_port": domainSettings.https_port
   }).then((res) => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)
