@@ -8,10 +8,10 @@ import (
 	"github.com/Jinnrry/pmail/utils/errors"
 )
 
-func GetDomainSettings() (string, string, []string, int, int, int, int, int, int, int, error) {
+func GetDomainSettings() (string, string, []string, int, int, int, int, int, int, int, int, error) {
 	configData, err := config.ReadConfig()
 	if err != nil {
-		return "", "", []string{}, 0, 0, 0, 0, 0, 0, 0, errors.Wrap(err)
+		return "", "", []string{}, 0, 0, 0, 0, 0, 0, 0, 0, errors.Wrap(err)
 	}
 
 	smtpPort := configData.SMTPPort
@@ -38,15 +38,19 @@ func GetDomainSettings() (string, string, []string, int, int, int, int, int, int
 	if pop3sPort == 0 {
 		pop3sPort = 995
 	}
-	frontendPort := configData.FrontendPort
-	if frontendPort == 0 {
-		frontendPort = 5173
+	httpPort := configData.HttpPort
+	if httpPort == 0 {
+		httpPort = 80
+	}
+	httpsPort := configData.HttpsPort
+	if httpsPort == 0 {
+		httpsPort = 443
 	}
 
-	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, frontendPort, nil
+	return configData.Domain, configData.WebDomain, array.Difference(configData.Domains, []string{configData.Domain}), smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, httpPort, httpsPort, nil
 }
 
-func SetDomainSettings(smtpDomain, webDomain, multiDomains string, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, frontendPort int) error {
+func SetDomainSettings(smtpDomain, webDomain, multiDomains string, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, httpPort, httpsPort int) error {
 	configData, err := config.ReadConfig()
 	if err != nil {
 		return errors.Wrap(err)
@@ -79,7 +83,8 @@ func SetDomainSettings(smtpDomain, webDomain, multiDomains string, smtpPort, ima
 	configData.SMTPSPort = smtpsPort
 	configData.IMAPSPort = imapsPort
 	configData.POP3SPort = pop3sPort
-	configData.FrontendPort = frontendPort
+	configData.HttpPort = httpPort
+	configData.HttpsPort = httpsPort
 
 	// 检查域名是否指向本机 todo
 
