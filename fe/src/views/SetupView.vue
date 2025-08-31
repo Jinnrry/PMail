@@ -486,7 +486,7 @@ const setDomainConfig = () => {
     "action": "set",
     "step": "domain",
     "web_domain": domainSettings.web_domain,
-    "smtp_domain": "smtp." + domainSettings.smtp_domain,
+    "smtp_domain": domainSettings.smtp_domain,
     "multi_domain": domainSettings.multi_domain.join(","),
     "smtp_port": domainSettings.smtp_port,
     "imap_port": domainSettings.imap_port,
