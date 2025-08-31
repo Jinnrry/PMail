@@ -94,21 +94,22 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if cast.ToString(reqData["step"]) == "domain" && cast.ToString(reqData["action"]) == "get" {
-		smtpDomain, webDomain, domains, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, err := setup.GetDomainSettings()
+		smtpDomain, webDomain, domains, smtpPort, imapPort, pop3Port, smtpsPort, imapsPort, pop3sPort, frontendPort, err := setup.GetDomainSettings()
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return
 		}
 		response.NewSuccessResponse(map[string]any{
-			"smtp_domain": smtpDomain,
-			"web_domain":  webDomain,
-			"domains":     domains,
-			"smtp_port":   smtpPort,
-			"imap_port":   imapPort,
-			"pop3_port":   pop3Port,
-			"smtps_port":  smtpsPort,
-			"imaps_port":  imapsPort,
-			"pop3s_port":  pop3sPort,
+			"smtp_domain":   smtpDomain,
+			"web_domain":    webDomain,
+			"domains":       domains,
+			"smtp_port":     smtpPort,
+			"imap_port":     imapPort,
+			"pop3_port":     pop3Port,
+			"smtps_port":    smtpsPort,
+			"imaps_port":    imapsPort,
+			"pop3s_port":    pop3sPort,
+			"frontend_port": frontendPort,
 		}).FPrint(w)
 		return
 	}
@@ -124,6 +125,7 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			cast.ToInt(reqData["smtps_port"]),
 			cast.ToInt(reqData["imaps_port"]),
 			cast.ToInt(reqData["pop3s_port"]),
+			cast.ToInt(reqData["frontend_port"]),
 		)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)

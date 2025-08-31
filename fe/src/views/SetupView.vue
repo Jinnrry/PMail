@@ -131,6 +131,10 @@
             <el-input type="number" placeholder="995" v-model="domainSettings.pop3s_port"></el-input>
           </el-form-item>
 
+          <el-form-item label="Frontend Port">
+            <el-input type="number" placeholder="5173" v-model="domainSettings.frontend_port"></el-input>
+          </el-form-item>
+
 
         </el-form>
       </div>
@@ -280,7 +284,8 @@ const domainSettings = reactive({
   "pop3_port": 0,
   "smtps_port": 0,
   "imaps_port": 0,
-  "pop3s_port": 0
+  "pop3s_port": 0,
+  "frontend_port": 0
 })
 
 const sslSettings = reactive({
@@ -373,6 +378,7 @@ const getDomainConfig = () => {
       domainSettings.smtps_port = res.data.smtps_port;
       domainSettings.imaps_port = res.data.imaps_port;
       domainSettings.pop3s_port = res.data.pop3s_port;
+      domainSettings.frontend_port = res.data.frontend_port;
     }
   })
 }
@@ -493,7 +499,8 @@ const setDomainConfig = () => {
     "pop3_port": domainSettings.pop3_port,
     "smtps_port": domainSettings.smtps_port,
     "imaps_port": domainSettings.imaps_port,
-    "pop3s_port": domainSettings.pop3s_port
+    "pop3s_port": domainSettings.pop3s_port,
+    "frontend_port": domainSettings.frontend_port
   }).then((res) => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)
