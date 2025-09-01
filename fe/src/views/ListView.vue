@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100%">
-    <div id="title">{{ lang.inbox }}</div>
+    <div id="title">{{ groupStore.name || lang.inbox }}</div>
     <div id="action">
       <el-button @click="del" size="small">{{ lang.del_btn }}</el-button>
       <el-button @click="markRead" size="small">{{ lang.read_btn }}</el-button>
