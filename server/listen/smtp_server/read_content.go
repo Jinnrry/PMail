@@ -5,6 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	oerrors "errors"
+	"io"
+	"net"
+	"net/netip"
+	"strings"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/parsemail"
@@ -20,11 +26,6 @@ import (
 	"github.com/mileusna/spf"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"net"
-	"net/netip"
-	"strings"
-	"time"
 	. "xorm.io/builder"
 )
 
@@ -43,12 +44,9 @@ func (s *Session) Data(r io.Reader) error {
 	log.WithContext(ctx).Debugf("%s", string(emailData))
 
 	log.WithContext(ctx).Debugf("开始执行插件ReceiveParseBefore！")
-	for _, hook := range hooks.HookList {
-		if hook == nil {
-			continue
-		}
+	executeHooks(ctx, func(hook framework.EmailHook) {
 		hook.ReceiveParseBefore(ctx, &emailData)
-	}
+	})
 	log.WithContext(ctx).Debugf("开始执行插件ReceiveParseBefore End！")
 
 	email := parsemail.NewEmailFromReader(s.To, bytes.NewReader(emailData), len(emailData))
@@ -73,12 +71,9 @@ func (s *Session) Data(r io.Reader) error {
 		}
 
 		log.WithContext(ctx).Debugf("开始执行插件SendBefore！")
-		for _, hook := range hooks.HookList {
-			if hook == nil {
-				continue
-			}
+		executeHooks(ctx, func(hook framework.EmailHook) {
 			hook.SendBefore(ctx, email)
-		}
+		})
 		log.WithContext(ctx).Debugf("开始执行插件SendBefore！End")
 
 		if email == nil {
@@ -95,18 +90,10 @@ func (s *Session) Data(r io.Reader) error {
 		err, sendErr := send.Send(ctx, email)
 
 		log.WithContext(ctx).Debugf("插件执行--SendAfter")
-
-		as3 := async.New(ctx)
-		for _, hook := range hooks.HookList {
-			if hook == nil {
-				continue
-			}
-			as3.WaitProcess(func(hk any) {
-				hk.(framework.EmailHook).SendAfter(ctx, email, sendErr)
-			}, hook)
-		}
-		as3.Wait()
-		log.WithContext(ctx).Debugf("插件执行--SendAfter")
+		executeHooksAsync(ctx, func(hook framework.EmailHook) {
+			hook.SendAfter(ctx, email, sendErr)
+		})
+		log.WithContext(ctx).Debugf("插件执行--SendAfter End")
 
 		if err != nil {
 			errMsg = err.Error()
@@ -141,12 +128,9 @@ func (s *Session) Data(r io.Reader) error {
 		SPFStatus = spfCheck(s.RemoteAddress.String(), email.Sender, email.Sender.EmailAddress)
 
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！")
-		for _, hook := range hooks.HookList {
-			if hook == nil {
-				continue
-			}
+		executeHooks(ctx, func(hook framework.EmailHook) {
 			hook.ReceiveParseAfter(ctx, email)
-		}
+		})
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！End")
 
 		// 垃圾过滤
@@ -188,16 +172,9 @@ func (s *Session) Data(r io.Reader) error {
 		if err != nil {
 			log.WithContext(ctx).Errorf("sql Error :%+v", err)
 		}
-		as3 := async.New(ctx)
-		for _, hook := range hooks.HookList {
-			if hook == nil {
-				continue
-			}
-			as3.WaitProcess(func(hk any) {
-				hk.(framework.EmailHook).ReceiveSaveAfter(ctx, email, ue)
-			}, hook)
-		}
-		as3.Wait()
+		executeHooksAsync(ctx, func(hook framework.EmailHook) {
+			hook.ReceiveSaveAfter(ctx, email, ue)
+		})
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveSaveAfter！End")
 
 		// IDLE命令通知
@@ -319,6 +296,26 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 	}
 
 	return users, &modelEmail, nil
+}
+
+func executeHooks(ctx *context.Context, action func(hook framework.EmailHook)) {
+	for _, hook := range hooks.HookList {
+		if hook != nil {
+			action(hook)
+		}
+	}
+}
+
+func executeHooksAsync(ctx *context.Context, action func(hook framework.EmailHook)) {
+	as := async.New(ctx)
+	for _, hook := range hooks.HookList {
+		if hook != nil {
+			as.WaitProcess(func(hk any) {
+				action(hk.(framework.EmailHook))
+			}, hook)
+		}
+	}
+	as.Wait()
 }
 
 func json2string(d any) string {

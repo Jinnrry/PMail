@@ -3,6 +3,9 @@ package smtp_server
 import (
 	"database/sql"
 	"errors"
+	"net"
+	"strings"
+
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -11,8 +14,6 @@ import (
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"strings"
 )
 
 // The Backend implements SMTP server methods.
@@ -49,19 +50,18 @@ func (s *Session) AuthMechanisms() []string {
 // Auth is the handler for supported authenticators.
 func (s *Session) Auth(mech string) (sasl.Server, error) {
 	log.WithContext(s.Ctx).Debugf("Auth :%s", mech)
-	if mech == sasl.Plain {
+	switch mech {
+	case sasl.Plain:
 		return sasl.NewPlainServer(func(identity, username, password string) error {
 			return s.AuthPlain(username, password)
 		}), nil
-	}
-
-	if mech == sasl.Login {
+	case sasl.Login:
 		return NewLoginServer(func(username, password string) error {
 			return s.AuthPlain(username, password)
 		}), nil
+	default:
+		return nil, errors.New("Auth Not Supported")
 	}
-
-	return nil, errors.New("Auth Not Supported")
 }
 
 func (s *Session) AuthPlain(username, pwd string) error {

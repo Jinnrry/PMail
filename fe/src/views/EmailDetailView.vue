@@ -1,31 +1,27 @@
-<template>
+r<template>
   <div id="main">
-    <div id="title">{{ detailData.subject }}</div>
-    <el-divider/>
-
-    <div>
-      <div>{{ lang.to }}：
-        <el-tooltip v-for="to in tos" :key.prop="to" class="box-item" effect="dark" :content="to.EmailAddress" placement="top">
-          <el-tag size="small" type="info">{{ to.Name !== '' ? to.Name : to.EmailAddress }}</el-tag>
-        </el-tooltip>
-      </div>
-
-      <div v-if="showCC">{{ lang.cc }}：
-        <el-tooltip v-for="item in ccs" :key="item" class="box-item" effect="dark" :content="item.EmailAddress" placement="top">
-          <el-tag size="small" type="info">{{ item.Name !== '' ? item.Name : item.EmailAddress }}</el-tag>
-        </el-tooltip>
-      </div>
-
-      <div>{{ lang.sender }}：
-        <el-tooltip class="box-item" effect="dark" :content="detailData.from_address" placement="top">
+    <div class="header">
+      <div id="title">{{ detailData.subject }}</div>
+      <div class="info">
+        <div>{{ lang.sender }}：
           <el-tag size="small" type="info">
-            {{ detailData.from_name !== '' ? detailData.from_name : detailData.from_address }}
+            {{ detailData.from_name }} <{{ detailData.from_address }}>
           </el-tag>
-        </el-tooltip>
-      </div>
+        </div>
+        <div>{{ lang.to }}：
+          <el-tooltip v-for="to in tos" :key.prop="to" class="box-item" effect="dark" :content="to.EmailAddress"
+                      placement="top">
+            <el-tag size="small" type="info">{{ to.Name !== '' ? to.Name : to.EmailAddress }}</el-tag>
+          </el-tooltip>
+        </div>
 
-      <div>{{ lang.date }}：
-        {{ detailData.send_date }}
+        <div v-if="showCC">{{ lang.cc }}：
+          <el-tooltip v-for="item in ccs" :key="item" class="box-item" effect="dark" :content="item.EmailAddress"
+                      placement="top">
+            <el-tag size="small" type="info">{{ item.Name !== '' ? item.Name : item.EmailAddress }}</el-tag>
+          </el-tooltip>
+        </div>
+        <div>{{ lang.date }}：{{ detailData.send_date }}</div>
       </div>
     </div>
     <el-divider/>
@@ -90,9 +86,21 @@ http.post("/api/email/detail", {id: parseInt(route.params.id)}).then(res => {
 <style scoped>
 #main {
   display: flex;
+  flex-direction: column;
   padding-left: 20px;
   padding-right: 80px;
   text-align: left;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.info {
+  text-align: right;
+  min-width: 300px;
 }
 
 #title {
