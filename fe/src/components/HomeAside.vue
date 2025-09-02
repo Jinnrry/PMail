@@ -1,5 +1,8 @@
 <template>
   <div class="aside-container">
+    <div class="compose-button-wrapper">
+      <el-button type="primary" @click="goToEditer" style="width: 100%">{{ lang.compose }}</el-button>
+    </div>
     <div class="search-bar">
       <el-input :placeholder="lang.search" />
     </div>
@@ -38,6 +41,10 @@ const handleNodeClick = function (data) {
     });
   }
 };
+
+const goToEditer = () => {
+  router.push({ name: 'editer' });
+};
 </script>
 
 <style scoped>
@@ -47,6 +54,11 @@ const handleNodeClick = function (data) {
   height: 100%;
   background-color: #fafafa;
   border-right: 1px solid #e0e0e0;
+}
+
+.compose-button-wrapper {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .search-bar {

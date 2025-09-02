@@ -111,8 +111,8 @@ if (tag === "") {
 }
 
 
-watch(groupStore, async (newV) => {
-  tag = newV.tag;
+watch(() => groupStore.tag, async (newTag) => {
+  tag = newTag;
   if (tag === "") {
     tag = '{"type":0,"status":-1}'
   }
