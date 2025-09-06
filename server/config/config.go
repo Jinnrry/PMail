@@ -206,6 +206,12 @@ func ReadConfig() (*Config, error) {
 		HttpPort:           80,
 		HttpsPort:          443,
 		FrontendPort:       5173,
+		SMTPPort:           25,
+		IMAPPort:           143,
+		POP3Port:           110,
+		SMTPSPort:          465,
+		IMAPSPort:          993,
+		POP3SPort:          995,
 	}
 	if !file.PathExist("./config/config.json") {
 		bytes, _ := json.Marshal(configData)
