@@ -4,13 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/Jinnrry/pmail/config"
-	"github.com/Jinnrry/pmail/db"
-	"github.com/Jinnrry/pmail/dto/response"
-	"github.com/Jinnrry/pmail/models"
-	"github.com/Jinnrry/pmail/signal"
-	"github.com/Jinnrry/pmail/utils/array"
-	"github.com/spf13/cast"
 	"io"
 	"net"
 	"net/http"
@@ -20,6 +13,14 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/db"
+	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/models"
+	"github.com/Jinnrry/pmail/signal"
+	"github.com/Jinnrry/pmail/utils/array"
+	"github.com/spf13/cast"
 )
 
 var httpClient *http.Client
@@ -61,6 +62,12 @@ func TestMaster(t *testing.T) {
 	cfg.HttpsEnabled = 2
 	cfg.HttpPort = TestPort
 	cfg.LogLevel = "debug"
+	cfg.SMTPPort = 25
+	cfg.IMAPPort = 143
+	cfg.POP3Port = 110
+	cfg.SMTPSPort = 465
+	cfg.IMAPSPort = 993
+	cfg.POP3SPort = 995
 	err = config.WriteConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
