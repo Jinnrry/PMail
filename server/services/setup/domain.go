@@ -16,7 +16,7 @@ func GetDomainSettings() (string, string, []string, int, int, int, int, int, int
 
 	smtpPort := configData.SMTPPort
 	if smtpPort == 0 {
-		smtpPort = 25
+		smtpPort = 10025
 	}
 	imapPort := configData.IMAPPort
 	if imapPort == 0 {

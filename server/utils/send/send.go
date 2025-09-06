@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -101,16 +102,22 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 		tos := tos
 		as.WaitProcess(func(p any) {
 
+			smtpPort := config.Instance.SMTPPort
+			if smtpPort == 0 {
+				smtpPort = 25
+			}
+			smtpAddr := fmt.Sprintf("%s:%d", domain.mxHost, smtpPort)
+
 			if domain.domain == "localhost" {
-				err := smtp.SendMailUnsafe("", domain.mxHost+":25", nil, from, fromDomain, buildAddress(tos), data)
+				err := smtp.SendMailUnsafe("", smtpAddr, nil, from, fromDomain, buildAddress(tos), data)
 				if err != nil {
 					log.WithContext(ctx).Errorf("send error %s", err.Error())
 				}
 				return
 			}
 
-			// 优先尝试25端口，starttls方式投递
-			err := smtp.SendMail("", domain.mxHost+":25", nil, from, fromDomain, buildAddress(tos), data)
+			// 优先尝试配置端口，starttls方式投递
+			err := smtp.SendMail("", smtpAddr, nil, from, fromDomain, buildAddress(tos), data)
 			if err == nil {
 				return
 			}
@@ -123,14 +130,14 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 					if hostnameErr.Certificate != nil {
 						certificateHostName := hostnameErr.Certificate.DNSNames
 						// 重新选取证书发送
-						err = smtp.SendMail(domainMatch(domain.domain, certificateHostName), domain.mxHost+":25", nil, from, fromDomain, buildAddress(tos), data)
+						err = smtp.SendMail(domainMatch(domain.domain, certificateHostName), smtpAddr, nil, from, fromDomain, buildAddress(tos), data)
 					}
 				}
 			}
 			if err == nil {
 				return
 			}
-			log.WithContext(ctx).Infof("SMTP STARTTLS on 25 Send Error. %s", err.Error())
+			log.WithContext(ctx).Infof("SMTP STARTTLS on %d Send Error. %s", smtpPort, err.Error())
 
 			// 再试用587投递
 			err = smtp.SendMailWithTls("", domain.mxHost+":587", nil, from, fromDomain, buildAddress(tos), data)
@@ -147,7 +154,7 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 			log.WithContext(ctx).Infof("SMTPS on 465 Send Error. %s", err.Error())
 
 			// 最后尝试非安全方式投递
-			err = smtp.SendMailUnsafe("", domain.mxHost+":25", nil, from, fromDomain, buildAddress(tos), data)
+			err = smtp.SendMailUnsafe("", smtpAddr, nil, from, fromDomain, buildAddress(tos), data)
 			if err == nil {
 				log.WithContext(ctx).Warnf("Send By Unsafe SMTP")
 				return

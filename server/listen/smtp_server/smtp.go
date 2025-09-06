@@ -50,7 +50,7 @@ func Start() {
 	instance = smtp.NewServer(be)
 
 	if config.Instance.SMTPPort == 0 {
-		instance.Addr = ":25"
+		instance.Addr = ":10025"
 	} else {
 		instance.Addr = fmt.Sprintf(":%d", config.Instance.SMTPPort)
 	}
