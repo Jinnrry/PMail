@@ -62,12 +62,12 @@ func TestMaster(t *testing.T) {
 	cfg.HttpsEnabled = 2
 	cfg.HttpPort = TestPort
 	cfg.LogLevel = "debug"
-	cfg.SMTPPort = 25
-	cfg.IMAPPort = 143
-	cfg.POP3Port = 110
-	cfg.SMTPSPort = 465
-	cfg.IMAPSPort = 993
-	cfg.POP3SPort = 995
+	cfg.SMTPPort = 10025
+	cfg.IMAPPort = 10143
+	cfg.POP3Port = 10110
+	cfg.SMTPSPort = 10465
+	cfg.IMAPSPort = 10993
+	cfg.POP3SPort = 10995
 	err = config.WriteConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
