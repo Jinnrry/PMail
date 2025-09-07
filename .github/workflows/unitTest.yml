@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql
         env:
           MYSQL_DATABASE: pmail
           MYSQL_ROOT_PASSWORD: githubTest
@@ -39,8 +39,8 @@ jobs:
       COMMIT: ${{ github.workflow_sha }}
       EVENT: ${{ github.event_name}}
     steps:
-      - name: Setup Build Tools
-        run: apt update && apt install -y nodejs npm gcc
+      - name: Setup Node.js environment
+        run: apt update && apt install -y nodejs npm
 
       - name: Checkout
         uses: actions/checkout@v4

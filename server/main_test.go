@@ -41,7 +41,15 @@ func TestMain(m *testing.M) {
 	go func() {
 		main()
 	}()
-	time.Sleep(3 * time.Second)
+	
+	// Wait for server to start by checking if port is in use
+	for i := 0; i < 30; i++ {
+		if portCheck(TestPort) {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	time.Sleep(1 * time.Second) // Additional buffer time
 
 	m.Run()
 
