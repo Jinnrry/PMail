@@ -45,29 +45,51 @@ func TestMain(m *testing.M) {
 	
 	// Wait for server to start with more robust health checking
 	log.Println("Waiting for server to start...")
+	log.Printf("Test environment: TestHost=%s, TestPort=%d", TestHost, TestPort)
+	
+	// First check if port is available (should be occupied by our server)
+	log.Println("Checking if port is available...")
+	for i := 0; i < 30; i++ {
+		if portCheck(TestPort) {
+			log.Printf("Port %d is now occupied after %d seconds", TestPort, i+1)
+			break
+		}
+		if i%5 == 0 {
+			log.Printf("Port %d still available... attempt %d/30", TestPort, i+1)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	
+	// Then check HTTP endpoint
+	log.Println("Checking HTTP endpoint...")
 	serverReady := false
-	for i := 0; i < 60; i++ { // Increased timeout to 60 seconds
-		resp, err := http.Get(TestHost + "/api/ping")
+	client := &http.Client{Timeout: 10 * time.Second}
+	for i := 0; i < 90; i++ { // Increased timeout to 90 seconds for container environments
+		resp, err := client.Get(TestHost + "/api/ping")
 		if err == nil {
 			if resp.StatusCode == 200 {
 				resp.Body.Close()
 				log.Printf("Server is ready after %d seconds!", i+1)
 				serverReady = true
 				break
+			} else {
+				log.Printf("HTTP request returned status code: %d", resp.StatusCode)
+				resp.Body.Close()
 			}
-			resp.Body.Close()
-		}
-		if i%10 == 0 {
-			log.Printf("Still waiting for server... attempt %d/60 (error: %v)", i+1, err)
+		} else {
+			if i%15 == 0 {
+				log.Printf("Still waiting for server... attempt %d/90 (error: %v)", i+1, err)
+			}
 		}
 		time.Sleep(1 * time.Second)
 	}
 	
 	if !serverReady {
-		log.Fatal("Server failed to start within 60 seconds")
+		log.Fatal("Server failed to start within 90 seconds")
 	}
 	
-	time.Sleep(2 * time.Second) // Additional buffer time
+	log.Println("Server is ready, waiting additional buffer time...")
+	time.Sleep(3 * time.Second) // Additional buffer time
 
 	m.Run()
 
