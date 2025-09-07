@@ -198,7 +198,8 @@ func testCheckRule(t *testing.T) {
 	if ue.GroupId == 0 {
 		t.Error("【失败】邮件规则执行失败！未找到任何被移动到自定义分组的邮件。")
 	} else {
-		t.Logf("【成功】邮件规则执行成功！找到邮件ID: %d 被移动到分组ID: %d", ue.EmailId, ue.GroupId)
+		// Corrected line: ue.EmailId changed to ue.EmailID
+		t.Logf("【成功】邮件规则执行成功！找到邮件ID: %d 被移动到分组ID: %d", ue.EmailID, ue.GroupId)
 	}
 	t.Log("【子测试 testCheckRule】--- 结束 ---")
 }
