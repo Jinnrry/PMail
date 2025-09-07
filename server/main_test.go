@@ -603,14 +603,14 @@ func testLoginUser2(t *testing.T) {
 func testLoginUser3(t *testing.T) {
 	ret, err := httpClient.Post(TestHost+"/api/login", "application/json", strings.NewReader("{\"account\":\"user3\",\"password\":\"user3\"}"))
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("HTTP request failed: %v", err)
 	}
 	data, err := readResponse(ret.Body)
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("Failed to read response body: %v", err)
 	}
 	if data.ErrorNo != 100 {
-		t.Error("Login User3 Api Error!", data)
+		t.Errorf("Expected ErrorNo 100 for banned user, but got %d. Response: %+v", data.ErrorNo, data)
 	}
 	t.Logf("testLoginUser3 Success! Response: %+v", data)
 }
