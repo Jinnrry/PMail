@@ -15,7 +15,9 @@ import (
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/file"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"os"
+	"path/filepath"
 )
 
 var IsInit bool
@@ -97,6 +99,11 @@ func (l *logFormatter) Format(entry *log.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 func Init() {
+	wd, _ := os.Getwd()
+	logrus.Infof("start init config, work dir: %s", wd)
+	// 检查环境变量中是否有指定配置文件
+	configPath := os.Getenv("PMAIL_CONFIG_PATH")
+	if configPath == "" {
 	var cfgData []byte
 	var err error
 	args := os.Args
