@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -42,14 +43,23 @@ func TestMain(m *testing.M) {
 		main()
 	}()
 	
-	// Wait for server to start by checking if port is in use
-	for i := 0; i < 30; i++ {
-		if portCheck(TestPort) {
-			break
+	// Wait for server to start with more robust health checking
+	log.Println("Waiting for server to start...")
+	for i := 0; i < 60; i++ { // Increased timeout to 60 seconds
+		resp, err := http.Get(TestHost + "/api/ping")
+		if err == nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == 200 {
+				log.Println("Server is ready!")
+				break
+			}
+		}
+		if i%10 == 0 {
+			log.Printf("Still waiting for server... attempt %d/60", i+1)
 		}
 		time.Sleep(1 * time.Second)
 	}
-	time.Sleep(1 * time.Second) // Additional buffer time
+	time.Sleep(2 * time.Second) // Additional buffer time
 
 	m.Run()
 
