@@ -9,3 +9,4 @@ config
 AURORA_SECRET
 pmail
 *.exe
+.vscode
