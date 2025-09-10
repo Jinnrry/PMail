@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Jinnrry/pmail/utils/context"
@@ -97,6 +98,7 @@ func (l *logFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 func Init() {
+	changeToProjectRoot()
 	wd, _ := os.Getwd()
 	logrus.Infof("start init config, work dir: %s", wd)
 	// 检查环境变量中是否有指定配置文件
@@ -160,6 +162,24 @@ func Init() {
 		} else {
 			logrus.SetLevel(logrus.InfoLevel)
 		}
+	}
+}
+
+func changeToProjectRoot() {
+	wd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	for {
+		if file.PathExist(filepath.Join(wd, "config")) {
+			_ = os.Chdir(wd)
+			return
+		}
+		parent := filepath.Dir(wd)
+		if parent == wd {
+			return
+		}
+		wd = parent
 	}
 }
 
