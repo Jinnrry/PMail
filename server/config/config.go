@@ -16,7 +16,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/file"
 	"github.com/sirupsen/logrus"
-	"os"
 	"path/filepath"
 )
 
@@ -81,7 +80,7 @@ type logFormatter struct {
 }
 
 // Format 定义日志输出格式
-func (l *logFormatter) Format(entry *log.Entry) ([]byte, error) {
+func (l *logFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	b := bytes.Buffer{}
 
 	b.WriteString(fmt.Sprintf("[%s]", entry.Level.String()))
@@ -116,7 +115,7 @@ func Init() {
 	} else {
 		cfgData, err = os.ReadFile("./config/config.json")
 		if err != nil {
-			log.Errorf("config file not found,%s", err.Error())
+			logrus.Errorf("config file not found,%s", err.Error())
 			return
 		}
 	}
@@ -135,32 +134,32 @@ func Init() {
 	}
 
 	// 设置日志格式为json格式
-	log.SetFormatter(&logFormatter{})
-	log.SetReportCaller(true)
+	logrus.SetFormatter(&logFormatter{})
+	logrus.SetReportCaller(true)
 
 	// 设置将日志输出到标准输出（默认的输出为stderr,标准错误）
 	// 日志消息输出可以是任意的io.writer类型
-	log.SetOutput(os.Stdout)
+	logrus.SetOutput(os.Stdout)
 
 	var cstZone = time.FixedZone("CST", 8*3600)
 	time.Local = cstZone
 	if Instance != nil {
 		switch Instance.LogLevel {
 		case "":
-			log.SetLevel(log.InfoLevel)
+			logrus.SetLevel(logrus.InfoLevel)
 		case "debug":
-			log.SetLevel(log.DebugLevel)
+			logrus.SetLevel(logrus.DebugLevel)
 		case "info":
-			log.SetLevel(log.InfoLevel)
+			logrus.SetLevel(logrus.InfoLevel)
 		case "warn":
-			log.SetLevel(log.WarnLevel)
+			logrus.SetLevel(logrus.WarnLevel)
 		case "error":
-			log.SetLevel(log.ErrorLevel)
+			logrus.SetLevel(logrus.ErrorLevel)
 		default:
-			log.SetLevel(log.InfoLevel)
+			logrus.SetLevel(logrus.InfoLevel)
 		}
 	} else {
-		log.SetLevel(log.InfoLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 	}
 
 }
@@ -225,19 +224,19 @@ func ReadConfig() (*Config, error) {
 		_ = os.MkdirAll("./config/", 0755)
 		err := os.WriteFile("./config/config.json", bytes, 0666)
 		if err != nil {
-			log.Errorf("Write Config Error:%s", err.Error())
+			logrus.Errorf("Write Config Error:%s", err.Error())
 			return nil, errors.Wrap(err)
 		}
 	} else {
 		cfgData, err := os.ReadFile("./config/config.json")
 		if err != nil {
-			log.Errorf("Read Config Error:%s", err.Error())
+			logrus.Errorf("Read Config Error:%s", err.Error())
 			return nil, errors.Wrap(err)
 		}
 
 		err = json.Unmarshal(cfgData, &configData)
 		if err != nil {
-			log.Errorf("Read Config Unmarshal Error:%s", err.Error())
+			logrus.Errorf("Read Config Unmarshal Error:%s", err.Error())
 			return nil, errors.Wrap(err)
 		}
 	}
