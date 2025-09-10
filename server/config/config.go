@@ -100,7 +100,7 @@ func Init() {
 	wd, _ := os.Getwd()
 	logrus.Infof("start init config, work dir: %s", wd)
 	// 检查环境变量中是否有指定配置文件
-	configPath := os.Getenv("PMAIL_CONFIG_PATH")
+	configPath := os.Getenv("PMail_ROOT") // 从环境变量中获取配置文件路径
 	if configPath == "" {
 		var cfgData []byte
 		var err error
