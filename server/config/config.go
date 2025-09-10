@@ -16,7 +16,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/file"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
 )
 
 var IsInit bool
@@ -103,65 +102,65 @@ func Init() {
 	// 检查环境变量中是否有指定配置文件
 	configPath := os.Getenv("PMAIL_CONFIG_PATH")
 	if configPath == "" {
-	var cfgData []byte
-	var err error
-	args := os.Args
+		var cfgData []byte
+		var err error
+		args := os.Args
 
-	if len(args) >= 2 && args[len(args)-1] == "dev" {
-		cfgData, err = os.ReadFile("./config/config.dev.json")
+		if len(args) >= 2 && args[len(args)-1] == "dev" {
+			cfgData, err = os.ReadFile("./config/config.dev.json")
+			if err != nil {
+				return
+			}
+		} else {
+			cfgData, err = os.ReadFile("./config/config.json")
+			if err != nil {
+				logrus.Errorf("config file not found,%s", err.Error())
+				return
+			}
+		}
+
+		err = json.Unmarshal(cfgData, &Instance)
 		if err != nil {
 			return
 		}
-	} else {
-		cfgData, err = os.ReadFile("./config/config.json")
-		if err != nil {
-			logrus.Errorf("config file not found,%s", err.Error())
-			return
+
+		if len(Instance.Domains) == 0 && Instance.Domain != "" {
+			Instance.Domains = []string{Instance.Domain}
+		}
+
+		if Instance.Domain != "" && Instance.IsInit {
+			IsInit = true
+		}
+
+		// 设置日志格式为json格式
+		logrus.SetFormatter(&logFormatter{})
+		logrus.SetReportCaller(true)
+
+		// 设置将日志输出到标准输出（默认的输出为stderr,标准错误）
+		// 日志消息输出可以是任意的io.writer类型
+		logrus.SetOutput(os.Stdout)
+
+		var cstZone = time.FixedZone("CST", 8*3600)
+		time.Local = cstZone
+		if Instance != nil {
+			switch Instance.LogLevel {
+			case "":
+				logrus.SetLevel(logrus.InfoLevel)
+			case "debug":
+				logrus.SetLevel(logrus.DebugLevel)
+			case "info":
+				logrus.SetLevel(logrus.InfoLevel)
+			case "warn":
+				logrus.SetLevel(logrus.WarnLevel)
+			case "error":
+				logrus.SetLevel(logrus.ErrorLevel)
+			default:
+				logrus.SetLevel(logrus.InfoLevel)
+			}
+		} else {
+			logrus.SetLevel(logrus.InfoLevel)
 		}
 	}
-
-	err = json.Unmarshal(cfgData, &Instance)
-	if err != nil {
-		return
-	}
-
-	if len(Instance.Domains) == 0 && Instance.Domain != "" {
-		Instance.Domains = []string{Instance.Domain}
-	}
-
-	if Instance.Domain != "" && Instance.IsInit {
-		IsInit = true
-	}
-
-	// 设置日志格式为json格式
-	logrus.SetFormatter(&logFormatter{})
-	logrus.SetReportCaller(true)
-
-	// 设置将日志输出到标准输出（默认的输出为stderr,标准错误）
-	// 日志消息输出可以是任意的io.writer类型
-	logrus.SetOutput(os.Stdout)
-
-	var cstZone = time.FixedZone("CST", 8*3600)
-	time.Local = cstZone
-	if Instance != nil {
-		switch Instance.LogLevel {
-		case "":
-			logrus.SetLevel(logrus.InfoLevel)
-		case "debug":
-			logrus.SetLevel(logrus.DebugLevel)
-		case "info":
-			logrus.SetLevel(logrus.InfoLevel)
-		case "warn":
-			logrus.SetLevel(logrus.WarnLevel)
-		case "error":
-			logrus.SetLevel(logrus.ErrorLevel)
-		default:
-			logrus.SetLevel(logrus.InfoLevel)
-		}
-	} else {
-		logrus.SetLevel(logrus.InfoLevel)
-	}
-
 }
 
 func ReadPrivateKey() (*ecdsa.PrivateKey, bool) {
@@ -186,7 +185,10 @@ func createNewPrivateKey() *ecdsa.PrivateKey {
 	x509Encoded, _ := x509.MarshalECPrivateKey(privateKey)
 
 	// 将ec 密钥写入到 pem文件里
-	keypem, _ := os.OpenFile("./config/ssl/account_private.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	keypem, err := os.OpenFile("./config/ssl/account_private.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		panic(err)
+	}
 	err = pem.Encode(keypem, &pem.Block{Type: "EC PRIVATE KEY", Bytes: x509Encoded})
 	if err != nil {
 		panic(err)
