@@ -7,7 +7,6 @@ COPY server .
 
 RUN apk update && apk add git
 RUN go build -ldflags "-s -w -X 'main.version=${VERSION}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=${GITHASH}' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o pmail main.go
-RUN cd /work/hooks/telegram_push && go build -ldflags "-s -w" -o output/telegram_push telegram_push.go
 RUN cd /work/hooks/wechat_push && go build -ldflags "-s -w" -o output/wechat_push wechat_push.go
 RUN cd /work/hooks/spam_block && go build -ldflags "-s -w" -o output/spam_block spam_block.go
 
@@ -24,7 +23,6 @@ RUN apk add --no-cache tzdata \
 
 
 COPY --from=serverbuild /work/pmail .
-COPY --from=serverbuild /work/hooks/telegram_push/output/* ./plugins/
 COPY --from=serverbuild /work/hooks/wechat_push/output/* ./plugins/
 COPY --from=serverbuild /work/hooks/spam_block/output/* ./plugins/
 

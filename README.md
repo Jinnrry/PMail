@@ -111,9 +111,11 @@ IMAP Port: 993(SSL)
 
 [WeChat Push](server/hooks/wechat_push/README.md)
 
-[Telegram Push](server/hooks/telegram_push/README.md)
+[Spam Block](server/hooks/spam_block/README.md)
 
-[Web Push](server/hooks/web_push/README.md)
+# Community plugins
+
+[Telegram Push](https://github.com/ydzydzydz/pmail_telegram_push)
 
 ## Plugin Install
 > [!IMPORTANT]
