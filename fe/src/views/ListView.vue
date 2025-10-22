@@ -1,11 +1,6 @@
 <template>
   <div style="height: 100%">
-    <div id="operation">
-      <div id="action">
-        <RouterLink to="/editer">+{{ lang.compose }}</RouterLink>
-      </div>
-    </div>
-    <div id="title">{{ groupStore.name }}</div>
+    <div id="title">{{ groupStore.name || lang.inbox }}</div>
     <div id="action">
       <el-button @click="del" size="small">{{ lang.del_btn }}</el-button>
       <el-button @click="markRead" size="small">{{ lang.read_btn }}</el-button>
@@ -116,8 +111,8 @@ if (tag === "") {
 }
 
 
-watch(groupStore, async (newV) => {
-  tag = newV.tag;
+watch(() => groupStore.tag, async (newTag) => {
+  tag = newTag;
   if (tag === "") {
     tag = '{"type":0,"status":-1}'
   }

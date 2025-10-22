@@ -89,12 +89,17 @@ use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
   "httpsEnabled": 0, // enabled https , 0:enabled 1:enablde 2:disenabled
   "httpPort": 80, // http port . default 80
   "httpsPort": 443, // https port . default 443
+  "smtpPort": 25, // smtp port . default 25
+  "imapPort": 993, // imap port . default 993
+  "pop3Port": 110, // pop3 port . default 110
   "spamFilterLevel": 0,// Spam filter level, 0: no filter, 1: filtering when `spf` and `dkim` don't pass, 2: filtering when `spf` don't pass
   "isInit": true // If false, it will enter the bootstrap process.
 }
 ```
 
 # Mail Client Configuration
+
+During the setup process, you can customize the ports for POP3, SMTP, and IMAP services. If you use the default settings, the ports are as follows:
 
 POP3 Server Address : pop.[Your Domain]
 

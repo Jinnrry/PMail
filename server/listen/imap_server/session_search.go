@@ -24,28 +24,28 @@ func (s *serverSession) Search(kind imapserver.NumKind, criteria *imap.SearchCri
 	}
 
 	ret := &imap.SearchData{}
-
+	var idList imap.NumSet
 	if kind == imapserver.NumKindSeq {
-		idList := imap.SeqSet{}
+		seqSet := imap.SeqSet{}
 		for _, data := range retList {
-			idList = append(idList, imap.SeqRange{
+			seqSet = append(seqSet, imap.SeqRange{
 				Start: cast.ToUint32(data.SerialNumber),
 				Stop:  cast.ToUint32(data.SerialNumber),
 			})
 		}
-		ret.All = idList
-		ret.Count = uint32(len(retList))
+		idList = seqSet
 	} else {
-		idList := imap.UIDSet{}
+		uidSet := imap.UIDSet{}
 		for _, data := range retList {
-			idList = append(idList, imap.UIDRange{
+			uidSet = append(uidSet, imap.UIDRange{
 				Start: imap.UID(data.ID),
 				Stop:  imap.UID(data.ID),
 			})
 		}
+		idList = uidSet
 		ret.UID = true
-		ret.All = idList
-		ret.Count = uint32(len(retList))
 	}
+	ret.All = idList
+	ret.Count = uint32(len(retList))
 	return ret, nil
 }

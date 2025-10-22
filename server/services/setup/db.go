@@ -17,7 +17,7 @@ func GetDatabaseSettings(ctx *context.Context) (string, string, error) {
 	}
 
 	if configData.DbType == "" && configData.DbDSN == "" {
-		return config.DBTypeSQLite, config.ROOT_PATH + "./config/pmail.db", nil
+		return config.DBTypeSQLite, "./config/pmail.db", nil
 	}
 
 	return configData.DbType, configData.DbDSN, nil
@@ -76,7 +76,8 @@ func SetDatabaseSettings(ctx *context.Context, dbType, dbDSN string) error {
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	config.Init()
+	config.Instance.DbType = dbType
+	config.Instance.DbDSN = dbDSN
 	// 检查数据库是否能正确连接
 	err = db.Init("")
 	if err != nil {

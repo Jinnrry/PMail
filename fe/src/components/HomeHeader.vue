@@ -1,14 +1,13 @@
 <template>
-  <div id="header_main">
-    <div id="logo">
-      <router-link to="/" style="text-decoration: none">
-        <el-text :line-clamp="1" size="large"><h1>PMail</h1></el-text>
+  <div class="header-container">
+    <div class="logo-section">
+      <router-link to="/" class="logo-link">
+        <img src="@/assets/logo.svg" alt="PMail Logo" class="logo-img"/>
+        <span class="logo-text">PMail</span>
       </router-link>
     </div>
-    <div id="settings" @click="settings" v-if="isLogin">
-      <el-icon style="font-size: 25px;">
-        <TbSettings style="color:#FFFFFF"/>
-      </el-icon>
+    <div class="actions-section" v-if="isLogin">
+      <el-button :icon="Setting" circle @click="settings"/>
     </div>
     <el-drawer v-model="openSettings" size="80%" :title="lang.settings">
       <el-tabs tab-position="left">
@@ -34,12 +33,11 @@
 
       </el-tabs>
     </el-drawer>
-
   </div>
 </template>
 
 <script setup>
-import {TbSettings} from "vue-icons-plus/tb";
+import {Setting} from "@element-plus/icons-vue";
 import {ref} from 'vue'
 import SecuritySettings from '@/components/SecuritySettings.vue'
 import lang from '../i18n/i18n';
@@ -72,38 +70,40 @@ const settings = function () {
 
 
 <style scoped>
-
-#header_main {
-  height: 50px;
-  background-color: #000;
+.header-container {
   display: flex;
-  padding: 0;
-}
-
-#logo {
-  height: 3rem;
-  line-height: 3rem;
-  font-size: 2.3rem;
-  flex-grow: 1;
-  width: 200px;
-  color: #FFF;
-  text-align: left;
-}
-
-#logo h1 {
-  padding-left: 20px;
-  color: white;
-}
-
-#search {
-  height: 3rem;
-  width: 100%;
-}
-
-#settings {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  padding-right: 20px;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 20px;
+  background-color: #ffffff;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo-img {
+  height: 32px;
+  width: 32px;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.actions-section {
+  display: flex;
+  align-items: center;
 }
 </style>

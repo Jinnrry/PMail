@@ -4,6 +4,8 @@ dist
 output
 pmail.db
 server/plugins
-config
 *_KEY
 AURORA_SECRET
+pmail
+*.exe
+.vscode

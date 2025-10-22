@@ -107,6 +107,38 @@
                       v-model="domainSettings.multi_domain[i]" :key="item"></el-input>
           </el-form-item>
 
+          <el-form-item label="HTTP Port">
+            <el-input type="number" placeholder="80" v-model="domainSettings.http_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="HTTPS Port">
+            <el-input type="number" placeholder="443" v-model="domainSettings.https_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="SMTP Port">
+            <el-input type="number" placeholder="25" v-model="domainSettings.smtp_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="IMAP Port">
+            <el-input type="number" placeholder="993" v-model="domainSettings.imap_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="POP3 Port">
+            <el-input type="number" placeholder="110" v-model="domainSettings.pop3_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="SMTPS Port">
+            <el-input type="number" placeholder="465" v-model="domainSettings.smtps_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="IMAPS Port">
+            <el-input type="number" placeholder="993" v-model="domainSettings.imaps_port"></el-input>
+          </el-form-item>
+
+          <el-form-item label="POP3S Port">
+            <el-input type="number" placeholder="995" v-model="domainSettings.pop3s_port"></el-input>
+          </el-form-item>
+
 
         </el-form>
       </div>
@@ -135,7 +167,7 @@
           <el-table-column prop="type" label="TYPE" width="110px"/>
           <el-table-column prop="value" label="VALUE">
             <template #default="scope">
-              <div style="display: flex; align-items: center">
+              <div style="display: flex; align-items: center; cursor: pointer" @click="copyToClipboard(scope.row.value)">
                 <el-tooltip :content="scope.row.tips" placement="top" v-if="scope.row.tips !== ''">
                   {{ scope.row.value }}
                 </el-tooltip>
@@ -200,7 +232,7 @@
         <el-table-column prop="type" label="TYPE" width="110px"/>
         <el-table-column prop="value" label="VALUE">
           <template #default="scope">
-            <div style="display: flex; align-items: center">
+            <div style="display: flex; align-items: center; cursor: pointer" @click="copyToClipboard(scope.row.value)">
               <el-tooltip :content="scope.row.tips" placement="top" v-if="scope.row.tips !== ''">
                 {{ scope.row.value }}
               </el-tooltip>
@@ -250,7 +282,15 @@ const dbSettings = reactive({
 const domainSettings = reactive({
   "web_domain": "",
   "smtp_domain": "",
-  "multi_domain": []
+  "multi_domain": [],
+  "smtp_port": 0,
+  "imap_port": 0,
+  "pop3_port": 0,
+  "smtps_port": 0,
+  "imaps_port": 0,
+  "pop3s_port": 0,
+  "http_port": 0,
+  "https_port": 0
 })
 
 const sslSettings = reactive({
@@ -337,6 +377,14 @@ const getDomainConfig = () => {
       domainSettings.web_domain = res.data.web_domain;
       domainSettings.smtp_domain = res.data.smtp_domain;
       domainSettings.multi_domain = res.data.domains;
+      domainSettings.smtp_port = res.data.smtp_port;
+      domainSettings.imap_port = res.data.imap_port;
+      domainSettings.pop3_port = res.data.pop3_port;
+      domainSettings.smtps_port = res.data.smtps_port;
+      domainSettings.imaps_port = res.data.imaps_port;
+      domainSettings.pop3s_port = res.data.pop3s_port;
+      domainSettings.http_port = res.data.http_port;
+      domainSettings.https_port = res.data.https_port;
     }
   })
 }
@@ -451,7 +499,15 @@ const setDomainConfig = () => {
     "step": "domain",
     "web_domain": domainSettings.web_domain,
     "smtp_domain": domainSettings.smtp_domain,
-    "multi_domain": domainSettings.multi_domain.join(",")
+    "multi_domain": domainSettings.multi_domain.join(","),
+    "smtp_port": domainSettings.smtp_port,
+    "imap_port": domainSettings.imap_port,
+    "pop3_port": domainSettings.pop3_port,
+    "smtps_port": domainSettings.smtps_port,
+    "imaps_port": domainSettings.imaps_port,
+    "pop3s_port": domainSettings.pop3s_port,
+    "http_port": domainSettings.http_port,
+    "https_port": domainSettings.https_port
   }).then((res) => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)
@@ -481,6 +537,15 @@ const getSSLDNSParams = () => {
 
 }
 
+const copyToClipboard = (text) => {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    ElMessage({
+      message: "Copied to clipboard",
+      type: "success",
+    });
+  });
+};
 
 const next = () => {
   switch (active.value) {

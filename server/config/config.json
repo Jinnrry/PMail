@@ -1,17 +1,1 @@
-{
-  "logLevel": "debug",
-  "domain": "test.domain",
-  "domains": null,
-  "webDomain": "mail.test.domain",
-  "dkimPrivateKeyPath": "config/dkim/dkim.priv",
-  "sslType": "1",
-  "SSLPrivateKeyPath": "./config/ssl/private.key",
-  "SSLPublicKeyPath": "./config/ssl/public.crt",
-  "dbDSN": "./config/pmail_temp.db",
-  "dbType": "sqlite",
-  "httpsEnabled": 2,
-  "spamFilterLevel": 0,
-  "httpPort": 80,
-  "httpsPort": 443,
-  "isInit": true
-}
+{"logLevel":"debug","domain":"test.domain","domains":["test.domain"],"webDomain":"mail.test.domain","dkimPrivateKeyPath":"config/dkim/dkim.priv","sslType":"1","SSLPrivateKeyPath":"./config/ssl/private.key","SSLPublicKeyPath":"./config/ssl/public.crt","dbDSN":"./config/pmail_temp.db","dbType":"sqlite","httpsEnabled":2,"spamFilterLevel":0,"httpPort":17888,"httpsort":0,"frontendPort":5173,"smtpPort":0,"imapPort":0,"pop3Port":0,"smtpsPort":0,"imapsPort":0,"pop3sPort":0,"weChatPushAppId":"","weChatPushSecret":"","weChatPushTemplateId":"","weChatPushUserId":"","tgBotToken":"","tgChatId":"","isInit":true,"webPushUrl":"","webPushToken":""}

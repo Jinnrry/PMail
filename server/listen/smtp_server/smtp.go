@@ -2,56 +2,32 @@ package smtp_server
 
 import (
 	"crypto/tls"
+	"fmt"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/emersion/go-smtp"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 var instance *smtp.Server
 var instanceTls *smtp.Server
-var instanceTlsNew *smtp.Server
-
-func StartWithTLSNew() {
-	be := &Backend{}
-
-	instanceTlsNew = smtp.NewServer(be)
-
-	instanceTlsNew.Addr = ":587"
-	instanceTlsNew.Domain = config.Instance.Domain
-	instanceTlsNew.ReadTimeout = 10 * time.Second
-	instanceTlsNew.WriteTimeout = 10 * time.Second
-	instanceTlsNew.MaxMessageBytes = 1024 * 1024 * 30
-	instanceTlsNew.MaxRecipients = 50
-	// force TLS for auth
-	instanceTlsNew.AllowInsecureAuth = true
-	// Load the certificate and key
-	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	// Configure the TLS support
-	instanceTlsNew.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
-
-	log.Println("Starting Smtp With SSL Server Port:", instanceTlsNew.Addr)
-	if err := instanceTlsNew.ListenAndServeTLS(); err != nil {
-		log.Fatal(err)
-	}
-}
 
 func StartWithTLS() {
 	be := &Backend{}
 
 	instanceTls = smtp.NewServer(be)
 
-	instanceTls.Addr = ":465"
+	if config.Instance.SMTPSPort == 0 {
+		instanceTls.Addr = ":465"
+	} else {
+		instanceTls.Addr = fmt.Sprintf(":%d", config.Instance.SMTPSPort)
+	}
 	instanceTls.Domain = config.Instance.Domain
 	instanceTls.ReadTimeout = 10 * time.Second
 	instanceTls.WriteTimeout = 10 * time.Second
 	instanceTls.MaxMessageBytes = 1024 * 1024 * 30
 	instanceTls.MaxRecipients = 50
-	// force TLS for auth
 	instanceTls.AllowInsecureAuth = true
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
@@ -73,7 +49,11 @@ func Start() {
 
 	instance = smtp.NewServer(be)
 
-	instance.Addr = ":25"
+	if config.Instance.SMTPPort == 0 {
+		instance.Addr = ":10025"
+	} else {
+		instance.Addr = fmt.Sprintf(":%d", config.Instance.SMTPPort)
+	}
 	instance.Domain = config.Instance.Domain
 	instance.ReadTimeout = 10 * time.Second
 	instance.WriteTimeout = 10 * time.Second
@@ -102,9 +82,5 @@ func Stop() {
 	}
 	if instanceTls != nil {
 		instanceTls.Close()
-	}
-
-	if instanceTlsNew != nil {
-		instanceTlsNew.Close()
 	}
 }

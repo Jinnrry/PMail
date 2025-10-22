@@ -4,6 +4,10 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	olog "log"
+	"net/http"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/controllers"
 	"github.com/Jinnrry/pmail/dto/response"
@@ -12,15 +16,12 @@ import (
 	"github.com/Jinnrry/pmail/session"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/id"
-	olog "log"
-	"net/http"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 )
 
-//go:embed dist/*
+//go:embed dist
 var local embed.FS
 
 var httpsServer *http.Server

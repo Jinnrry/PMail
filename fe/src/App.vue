@@ -7,9 +7,6 @@ import {ref, watch} from 'vue'
 const route = useRoute()
 const pageName = ref(route.name)
 
-
-
-
 watch(
     () => route.fullPath,
     () => {
@@ -20,38 +17,36 @@ watch(
 </script>
 
 <template>
-  <div id="main">
-    <HomeHeader/>
-    <div id="content">
-      <div id="aside" v-if="pageName !== 'login' && pageName !== 'setup'">
+  <el-container class="main-container">
+    <el-header class="header">
+      <HomeHeader/>
+    </el-header>
+    <el-container>
+      <el-aside width="240px" v-if="pageName !== 'login' && pageName !== 'setup'">
         <HomeAside/>
-      </div>
-      <div id="body">
+      </el-aside>
+      <el-main>
         <RouterView/>
-      </div>
-    </div>
-  </div>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 
-<style scoped>
-#aside {
-  background-color: #F1F1F1;
+<style>
+html, body, #app, .main-container {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-#body {
-  width: 100%;
-  height: 100%;
+.header {
+  padding: 0 !important;
+  height: auto !important;
+  border-bottom: 1px solid #dcdfe6;
 }
 
-#content {
-  display: flex;
-  height: 100%;
-}
-
-#main {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.el-main {
+  padding: 0 !important;
 }
 </style>

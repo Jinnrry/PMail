@@ -31,12 +31,12 @@ func TestMain(m *testing.M) {
 	}
 
 	var err error
-	clientUnLogin, err = imapclient.DialTLS("127.0.0.1:993", options)
+	clientUnLogin, err = imapclient.DialTLS("127.0.0.1:10993", options)
 	if err != nil {
 		panic(err)
 	}
 
-	clientLogin, err = imapclient.DialTLS("127.0.0.1:993", options)
+	clientLogin, err = imapclient.DialTLS("127.0.0.1:10993", options)
 	if err != nil {
 		panic(err)
 	}

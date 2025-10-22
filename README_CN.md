@@ -95,11 +95,16 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "spamFilterLevel": 0,// 垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时过滤，2 spf校验不通过时过滤
   "httpPort": 80, // http 端口 . 默认 80
   "httpsPort": 443, // https 端口 . 默认 443
+  "smtpPort": 25, // smtp 端口 . 默认 25
+  "imapPort": 993, // imap 端口 . 默认 993
+  "pop3Port": 110, // pop3 端口 . 默认 110
   "isInit": true // 为false的时候会进入安装引导流程 
 }
 ```
 
 # 第三方邮件客户端配置
+
+在安装过程中，您可以自定义POP3、SMTP和IMAP服务的端口。如果使用默认设置，端口如下：
 
 POP3地址： pop.[你的域名]
 
@@ -109,7 +114,7 @@ SMTP地址： smtp.[你的域名]
 
 SMTP端口： 25/465、587(SSL)
 
-IMAP地址： imap.[Your Domain]
+IMAP地址： imap.[你的域名]
 
 IMAP端口： 993(SSL)
 

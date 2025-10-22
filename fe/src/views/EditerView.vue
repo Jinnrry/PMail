@@ -77,18 +77,16 @@
         </ol>
       </div>
 
-      <div id="sendButton">
-        <el-button type="primary" @click="send(ruleFormRef)">{{ lang.send }}</el-button>
-        <!-- <el-button>定时发送</el-button> -->
-
-        <div style="margin-left: 15px">
-          <el-button @click="upload">{{ lang.add_att }}</el-button>
-          <input v-show="false" ref="fileRef" type="file" @change="fileChange">
-        </div>
-      </div>
-
+      <el-form-item>
+      </el-form-item>
     </el-form>
 
+    <div class="action-bar">
+      <el-button @click="upload">{{ lang.add_att }}</el-button>
+      <el-button type="primary" @click="send(ruleFormRef)" style="margin-left: 15px;">{{ lang.send }}</el-button>
+      <!-- <el-button>定时发送</el-button> -->
+      <input v-show="false" ref="fileRef" type="file" @change="fileChange">
+    </div>
   </div>
 </template>
 
@@ -102,10 +100,11 @@
   padding-left: 25px;
 }
 
-#sendButton {
-  padding-left: 25px;
-  padding-top: 5px;
-  display: flex;
+.action-bar {
+  text-align: right;
+  padding: 10px 20px;
+  border-top: 1px solid #dcdfe6;
+  margin-top: 20px;
 }
 </style>
 
