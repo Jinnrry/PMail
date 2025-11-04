@@ -80,7 +80,7 @@ func SetSSL(sslType, priKey, crtKey string) error {
 func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 
 	myUser := MyUser{
-		Email: "i@" + cfg.Domain,
+		Email: "SSLMaster@" + cfg.Domain,
 		key:   privateKey,
 	}
 

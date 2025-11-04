@@ -15,6 +15,7 @@ import (
 	olog "log"
 	"net/http"
 	"time"
+	"errors"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
@@ -57,7 +58,14 @@ func HttpsStart() {
 		}
 		err := httpsServer.ListenAndServeTLS(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 		if err != nil {
-			panic(err)
+			if errors.Is(err, http.ErrServerClosed) {
+				// 正常关闭（重启或停机）
+				log.Infof("Https Server closed normally on port :%d", HttpsPort)
+			} else {
+				// 异常错误仍然打印并退出
+				log.Errorf("Https Server error on port :%d, %+v", HttpsPort, err)
+				panic(err)
+			}
 		}
 	}
 }
@@ -67,6 +75,8 @@ func HttpsStop() {
 		httpsServer.Close()
 	}
 }
+
+// 新增：分类处理关闭错误
 
 // 注入context
 func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {

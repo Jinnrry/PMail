@@ -67,6 +67,8 @@ func HttpStart() {
 	}
 
 	if config.Instance.HttpsEnabled != 2 {
+		// 在重定向模式下，也必须显式处理 ACME 挑战，避免跳转导致验证失败
+		mux.HandleFunc("/.well-known/", controllers.AcmeChallenge)
 		mux.HandleFunc("/api/ping", controllers.Ping)
 		mux.HandleFunc("/", controllers.Interceptor)
 		httpServer = &http.Server{
