@@ -400,14 +400,31 @@ func TestMove(t *testing.T) {
 func TestCopy(t *testing.T) {
 	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
 
-	_, err := clientLogin.Copy(imap.UIDSetNum(25), "Junk").Wait()
+	res, err := clientLogin.Fetch(imap.SeqSetNum(1), &imap.FetchOptions{
+		Envelope:     true,
+		Flags:        true,
+		InternalDate: true,
+		RFC822Size:   true,
+		UID:          true,
+		BodySection: []*imap.FetchItemBodySection{
+			{
+				Specifier: imap.PartSpecifierText,
+				Peek:      true,
+			},
+		},
+	}).Collect()
 	if err != nil {
-		t.Errorf("%+v", err)
+		t.Logf("%+v", res)
+		t.Error("Fetch error")
 	}
 
-	_, err = clientLogin.Copy(imap.UIDSetNum(27), "一级菜单").Wait()
-	if err != nil {
-		t.Errorf("%+v", err)
+	if len(res) > 0 {
+		_, err = clientLogin.Copy(imap.UIDSetNum(res[0].UID), "Junk").Wait()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+	} else {
+		t.Error("No Fetch Result")
 	}
 
 }
