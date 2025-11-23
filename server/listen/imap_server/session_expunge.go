@@ -5,6 +5,7 @@ import (
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapserver"
 	"github.com/spf13/cast"
+	"log/slog"
 )
 
 func (s *serverSession) Expunge(w *imapserver.ExpungeWriter, uids *imap.UIDSet) error {
@@ -30,6 +31,8 @@ func (s *serverSession) Expunge(w *imapserver.ExpungeWriter, uids *imap.UIDSet) 
 	if len(uidList) == 0 {
 		return nil
 	}
+
+	slog.Debug("DeleteUidList:", slog.Any("uidList", uidList))
 
 	err := del_email.DelByUID(s.ctx, uidList)
 	s.deleteUidList = []int{}

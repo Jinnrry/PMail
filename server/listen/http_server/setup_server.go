@@ -1,6 +1,7 @@
 package http_server
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
@@ -11,7 +12,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -34,12 +34,7 @@ func SetupStart() {
 	flag.Parse()
 
 	if HttpPort == 80 {
-		envs := os.Environ()
-		for _, env := range envs {
-			if strings.HasPrefix(env, "setup_port=") {
-				HttpPort = cast.ToInt(strings.TrimSpace(strings.ReplaceAll(env, "setup_port=", "")))
-			}
-		}
+		HttpPort = cast.ToInt(os.Getenv("setup_port"))
 	}
 
 	if HttpPort <= 0 || HttpPort > 65535 {
@@ -61,7 +56,7 @@ func SetupStart() {
 		WriteTimeout: time.Second * 60,
 	}
 	err = setupServer.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }

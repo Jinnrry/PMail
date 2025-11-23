@@ -167,15 +167,42 @@ func GetUEListByUID(ctx *context.Context, groupName string, star, end int, uidLi
 func getEmailListByUidList(ctx *context.Context, groupName string, req ImapListReq, uid bool) []*response.EmailResponseData {
 	var ret []*response.EmailResponseData
 	var ue []*response.UserEmailUIDData
-	sql := fmt.Sprintf("SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and id in (%s))", array.Join(req.UidList, ","))
+	sql := fmt.Sprintf("SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and id in (%s) and status = ?)", array.Join(req.UidList, ","))
 	if req.Star > 0 && req.End != 0 {
-		sql = fmt.Sprintf("SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and id >=%d and id <= %d)", req.Star, req.End)
+		sql = fmt.Sprintf("SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and id >=%d and id <= %d and status = ?)", req.Star, req.End)
 	}
 	if req.Star > 0 && req.End == 0 {
-		sql = fmt.Sprintf("SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and id >=%d )", req.Star)
+		sql = fmt.Sprintf("SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and id >=%d and status = ?)", req.Star)
 	}
 
-	err := db.Instance.SQL(sql, ctx.UserID).Find(&ue)
+	var err error
+	switch groupName {
+	case "INBOX":
+		err = db.Instance.SQL(sql, ctx.UserID, 0).Find(&ue)
+	case "Sent Messages":
+		err = db.Instance.SQL(sql, ctx.UserID, 1).Find(&ue)
+	case "Drafts":
+		err = db.Instance.SQL(sql, ctx.UserID, 4).Find(&ue)
+	case "Deleted Messages":
+		err = db.Instance.SQL(sql, ctx.UserID, 3).Find(&ue)
+	case "Junk":
+		err = db.Instance.SQL(sql, ctx.UserID, 5).Find(&ue)
+	default:
+		groupNames := strings.Split(groupName, "/")
+		groupName = groupNames[len(groupNames)-1]
+
+		var group models.Group
+		db.Instance.Table("group").Where("user_id=? and name=?", ctx.UserID, groupName).Get(&group)
+		if group.ID == 0 {
+			return ret
+		}
+		err = db.Instance.
+			SQL(fmt.Sprintf(
+				"SELECT * from (SELECT id,email_id, is_read, ROW_NUMBER() OVER (ORDER BY id) AS serial_number FROM `user_email` WHERE (user_id = ? and group_id = ?)) a WHERE serial_number in (%s)",
+				array.Join(req.UidList, ","))).
+			Find(&ue, ctx.UserID, group.ID)
+	}
+
 	if err != nil {
 		log.WithContext(ctx).Errorf("SQL ERROR: %s ,Error:%s", sql, err)
 	}
