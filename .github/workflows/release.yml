@@ -38,7 +38,6 @@ jobs:
       - name: Gen output name
         run: |
           echo "FILENAME=pmail_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
-          echo "TGFILENAME=telegram_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
           echo "WCFILENAME=wechat_push_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
           echo "SPAMBLOCKFILENAME=spam_block_${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
           echo "ZIPNAME=${{ matrix.goos }}_${{ matrix.goarch }}" >> ${GITHUB_ENV}
@@ -46,7 +45,6 @@ jobs:
         if: matrix.goos == 'windows'
         run: |
           echo "FILENAME=pmail_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
-          echo "TGFILENAME=telegram_push_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
           echo "WCFILENAME=wechat_push_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
           echo "SPAMBLOCKFILENAME=spam_block_${{ matrix.goos }}_${{ matrix.goarch }}.exe" >> ${GITHUB_ENV}
       - name: FE Build
@@ -55,7 +53,6 @@ jobs:
         run: |
           cd server && cp -rf ../fe/dist listen/http_server
           go build -ldflags "-s -w -X 'main.version=${{ env.VERSION }}' -X 'main.goVersion=$(go version)' -X 'main.gitHash=$(git show -s --format=%H)' -X 'main.buildTime=$(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)'" -o ${{ env.FILENAME }}  main.go
-          go build -ldflags "-s -w" -o ${{ env.TGFILENAME }} hooks/telegram_push/telegram_push.go 
           go build -ldflags "-s -w" -o ${{ env.WCFILENAME }} hooks/wechat_push/wechat_push.go
           go build -ldflags "-s -w" -o ${{ env.SPAMBLOCKFILENAME }} hooks/spam_block/spam_block.go
           ls -alh
@@ -63,7 +60,6 @@ jobs:
         run: |
           cd ./server
           mkdir plugins
-          mv ${{ env.TGFILENAME }} plugins/
           mv ${{ env.WCFILENAME }} plugins/
           mv ${{ env.SPAMBLOCKFILENAME }} plugins/
           zip -r ${{ env.ZIPNAME }}.zip ${{ env.FILENAME }} plugins

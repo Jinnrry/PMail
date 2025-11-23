@@ -117,9 +117,11 @@ IMAP端口： 993(SSL)
 
 [微信推送](server/hooks/wechat_push/README.md)
 
-[Telegram推送](server/hooks/telegram_push/README.md)
+[垃圾邮件屏蔽](server/hooks/spam_block/README.md)
 
-[WebHook推送](server/hooks/web_push/README.md)
+# 其他优秀开源插件
+
+[Telegram推送](https://github.com/ydzydzydz/pmail_telegram_push)
 
 ## 插件安装
 > [!IMPORTANT]

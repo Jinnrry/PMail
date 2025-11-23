@@ -16,9 +16,9 @@ import (
 
 func GetUserGroupList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	defaultGroup := []*models.Group{
-		{models.INBOX, i18n.GetText(ctx.Lang, "inbox"), 0, 0, "/"},
-		{models.Junk, i18n.GetText(ctx.Lang, "junk"), 0, 0, "/"},
-		{models.Deleted, i18n.GetText(ctx.Lang, "deleted"), 0, 0, "/"},
+		{models.INBOX, i18n.GetText(ctx.Lang, "inbox"), 0, 0, "/"},     // 收件箱
+		{models.Junk, i18n.GetText(ctx.Lang, "junk"), 0, 0, "/"},       //垃圾邮件
+		{models.Deleted, i18n.GetText(ctx.Lang, "deleted"), 0, 0, "/"}, //已删除
 	}
 
 	infos := group.GetGroupList(ctx)
@@ -42,7 +42,7 @@ func GetUserGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request
 				},
 				{
 					Label: i18n.GetText(ctx.Lang, "sketch"),
-					Tag:   dto.SearchTag{Type: 1, Status: 0}.ToString(),
+					Tag:   dto.SearchTag{Type: 0, Status: 4}.ToString(),
 				},
 				{
 					Label: i18n.GetText(ctx.Lang, "junk"),
