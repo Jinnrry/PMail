@@ -14,7 +14,7 @@ var (
 		"login_exp":             "登录已失效",
 		"ip_taps":               "这是你服务器IP，确保这个IP正确",
 		"invalid_email_address": "无效的邮箱地址！",
-		"deleted":               "垃圾箱",
+		"deleted":               "已删除",
 		"junk":                  "广告箱",
 	}
 	en = map[string]string{

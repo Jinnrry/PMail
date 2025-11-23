@@ -218,7 +218,7 @@ func GetGroupStatus(ctx *context.Context, groupName string, params []string) (st
 			case "MESSAGES":
 				db.Instance.Table("user_email").Select("count(1)").Where("group_id=?", group.ID).Get(&value)
 			case "UIDNEXT":
-				db.Instance.Table("user_email").Select("id").OrderBy("id desc").Get(&value)
+				db.Instance.Table("user_email").Select("id").Where("group_id=?", group.ID).OrderBy("id desc").Get(&value)
 				value += 1
 			case "UIDVALIDITY":
 				value = group.ID
@@ -242,8 +242,7 @@ func GetGroupStatus(ctx *context.Context, groupName string, params []string) (st
 		case "MESSAGES":
 			value = getGroupNum(ctx, groupName, false)
 		case "UIDNEXT":
-			db.Instance.Table("user_email").Select("id").OrderBy("id desc").Get(&value)
-			value += 1
+			value = getNextUID(ctx, groupName)
 		case "UIDVALIDITY":
 			value = models.GroupNameToCode[groupName]
 		case "UNSEEN":
@@ -260,6 +259,23 @@ func GetGroupStatus(ctx *context.Context, groupName string, params []string) (st
 
 	return fmt.Sprintf("(%s)", ret), retMap
 
+}
+
+func getNextUID(ctx *context.Context, groupName string) int {
+	var lastId int
+	switch groupName {
+	case "INBOX":
+		db.Instance.Table("user_email").Select("id").Where("user_id=? and group_id=0 and status = 0", ctx.UserID).OrderBy("id desc").Get(&lastId)
+	case "Sent Messages":
+		db.Instance.Table("user_email").Select("id").Where("user_id=? and group_id=0 and status = 1", ctx.UserID).OrderBy("id desc").Get(&lastId)
+	case "Drafts":
+		db.Instance.Table("user_email").Select("id").Where("user_id=? and group_id=0 and status = 4", ctx.UserID).OrderBy("id desc").Get(&lastId)
+	case "Deleted Messages":
+		db.Instance.Table("user_email").Select("id").Where("user_id=? and status = 3", ctx.UserID).OrderBy("id desc").Get(&lastId)
+	case "Junk":
+		db.Instance.Table("user_email").Select("id").Where("user_id=? and group_id=0 and status = 5", ctx.UserID).OrderBy("id desc").Get(&lastId)
+	}
+	return lastId + 1
 }
 
 func getGroupNum(ctx *context.Context, groupName string, mustUnread bool) int {

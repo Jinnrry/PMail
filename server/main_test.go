@@ -37,10 +37,12 @@ func TestMain(m *testing.M) {
 	httpClient = &http.Client{Jar: cookeieJar, Timeout: 5 * time.Minute}
 	os.Remove("config/config.json")
 	os.Remove("config/pmail_temp.db")
+	os.Setenv("setup_port", cast.ToString(TestPort))
+
 	go func() {
 		main()
 	}()
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	m.Run()
 
@@ -79,6 +81,7 @@ func TestMaster(t *testing.T) {
 	t.Run("testDelEmail", testDelEmail)
 
 	t.Run("testSendEmail2User1", testSendEmail2User1)
+	t.Run("testSendEmail2User12", testSendEmail2User12)
 	t.Run("testSendEmail2User2", testSendEmail2User2)
 	t.Run("testSendEmail2User3", testSendEmail2User3)
 	time.Sleep(8 * time.Second)
@@ -88,6 +91,8 @@ func TestMaster(t *testing.T) {
 	t.Run("testLoginUser2", testLoginUser2) // 测试登录普通账号
 
 	t.Run("testUser2EmailList", testUser2EmailList)
+
+	t.Run("testUser2DelEmail", testUser2DelEmail) // 删除2个人共同拥有的邮件
 
 	// 创建group
 	t.Run("testCreateGroup", testCreateGroup)
@@ -708,6 +713,46 @@ func genTestEmailData(t *testing.T) {
 
 }
 
+func testSendEmail2User12(t *testing.T) {
+	ret, err := httpClient.Post(TestHost+"/api/email/send", "application/json", strings.NewReader(`
+		{
+    "from": {
+        "name": "i",
+        "email": "i@test.domain"
+    },
+    "to": [
+        {
+            "name": "y",
+            "email": "user1@test.domain"
+        },
+		{
+            "name": "y2",
+            "email": "user2@test.domain"
+        }
+    ],
+    "cc": [
+        
+    ],
+    "subject": "HelloUser1User2",
+    "text": "HelloUser1User2",
+    "html": "<div>HelloUser1User2</div>"
+}
+
+`))
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := readResponse(ret.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if data.ErrorNo != 0 {
+		t.Error("Send Email Api Error!")
+	}
+
+	t.Logf("testSendEmail2User1 Success! Response: %+v", data)
+}
+
 func testSendEmail2User1(t *testing.T) {
 	ret, err := httpClient.Post(TestHost+"/api/email/send", "application/json", strings.NewReader(`
 		{
@@ -859,7 +904,7 @@ func testUser2EmailList(t *testing.T) {
 	}
 	dt := data.Data.(map[string]interface{})
 
-	if dt["list"] == nil || len(dt["list"].([]interface{})) != 1 {
+	if dt["list"] == nil || len(dt["list"].([]interface{})) != 2 {
 		t.Error("Email List Is Empty!")
 	}
 
@@ -904,6 +949,60 @@ func testDelEmail(t *testing.T) {
 	db.Instance.Where("email_id = ?", id).Get(&mail)
 	if mail.Status != 3 {
 		t.Error("Email Delete Api Error!")
+	}
+
+	t.Logf("testDelEmail Success! Response: %+v", data)
+}
+
+func testUser2DelEmail(t *testing.T) {
+	ret, err := httpClient.Post(TestHost+"/api/email/list", "application/json", strings.NewReader(`{}`))
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := readResponse(ret.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if data.ErrorNo != 0 {
+		t.Error("Get Email List Api Error!")
+	}
+	dt := data.Data.(map[string]interface{})
+	if len(dt["list"].([]interface{})) == 0 {
+		t.Error("Email List Is Empty!")
+	}
+	lst := dt["list"].([]interface{})
+
+	for _, item := range lst {
+		// 删除两个用户的邮件
+		title := cast.ToString(item.(map[string]interface{})["title"])
+		id := cast.ToInt(item.(map[string]interface{})["id"])
+		if title == "HelloUser1User2" {
+			ret, err = httpClient.Post(TestHost+"/api/email/del", "application/json", strings.NewReader(fmt.Sprintf(`{
+	"ids":[%d]	
+}`, id)))
+			if err != nil {
+				t.Error(err)
+			}
+			data, err = readResponse(ret.Body)
+			if err != nil {
+				t.Error(err)
+			}
+			if data.ErrorNo != 0 {
+				t.Error("Email Delete Api Error!")
+			}
+			var mails []models.UserEmail
+			db.Instance.Where("email_id = ?", id).Find(&mails)
+			for _, mail := range mails {
+				if mail.Status != 3 && mail.UserID == 3 {
+					t.Error("Email Delete Api Error!")
+				}
+				if mail.UserID != 3 && mail.Status == 3 {
+					t.Error("Email Delete Api Error!")
+				}
+			}
+
+		}
+
 	}
 
 	t.Logf("testDelEmail Success! Response: %+v", data)

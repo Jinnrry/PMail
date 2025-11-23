@@ -7,6 +7,7 @@ import (
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
+	"log/slog"
 	"xorm.io/xorm"
 )
 import . "xorm.io/builder"
@@ -64,7 +65,7 @@ func DelByUID(ctx *context.Context, ids []int) error {
 	defer session.Close()
 	for _, id := range ids {
 		var ue models.UserEmail
-		session.Table("user_email").Where(Eq{"id": ids, "user_id": ctx.UserID}).Get(&ue)
+		session.Table("user_email").Where(Eq{"id": id, "user_id": ctx.UserID}).Get(&ue)
 		if ue.ID == 0 {
 			log.WithContext(ctx).Warn("no user email found")
 			return nil
@@ -74,6 +75,7 @@ func DelByUID(ctx *context.Context, ids []int) error {
 		// 先删除关联关系
 		_, err := session.Table(&models.UserEmail{}).Where("id=? and user_id=?", id, ctx.UserID).Delete(&ue)
 		if err != nil {
+			slog.Error("SQLError", slog.Any("err", err))
 			session.Rollback()
 			return err
 		}
@@ -82,12 +84,16 @@ func DelByUID(ctx *context.Context, ids []int) error {
 		var Num num
 		_, err = session.Table(&models.UserEmail{}).Select("count(1) as num").Where("email_id=? ", emailId).Get(&Num)
 		if err != nil {
+			slog.Error("SQLError", slog.Any("err", err))
+			session.Rollback()
 			return err
 		}
 		if Num.Num == 0 {
 			var email models.Email
-			_, err = session.Table(&email).Where("id=?", id).Delete(&email)
-
+			_, err = session.Table(&email).Where("id=?", emailId).Delete(&email)
+			if err != nil {
+				slog.Error("SQLError", slog.Any("err", err))
+			}
 		}
 	}
 	session.Commit()

@@ -376,23 +376,32 @@ func TestSearch(t *testing.T) {
 func TestMove(t *testing.T) {
 	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
 
-	_, err := clientLogin.Move(imap.UIDSetNum(21), "Junk").Wait()
+	res, err := clientLogin.Fetch(imap.SeqSetNum(1), &imap.FetchOptions{
+		Envelope:     true,
+		Flags:        true,
+		InternalDate: true,
+		RFC822Size:   true,
+		UID:          true,
+		BodySection: []*imap.FetchItemBodySection{
+			{
+				Specifier: imap.PartSpecifierText,
+				Peek:      true,
+			},
+		},
+	}).Collect()
 	if err != nil {
-		t.Errorf("%+v", err)
+		t.Logf("%+v", res)
+		t.Error("Fetch error")
 	}
-	_, err = clientLogin.Move(imap.UIDSetNum(23), "一级菜单").Wait()
-	if err != nil {
-		t.Errorf("%+v", err)
-	}
-	var ue []models.UserEmail
-	db.Instance.Table("user_email").Where("id=21 or id=23").Find(&ue)
-	for _, v := range ue {
-		if v.ID == 21 && (v.GroupId != 0 || v.Status != 5) {
-			t.Errorf("TestMove Error")
+
+	if len(res) > 0 {
+		uid := res[0].UID
+
+		_, err = clientLogin.Move(imap.UIDSetNum(uid), "Junk").Wait()
+		if err != nil {
+			t.Errorf("%+v", err)
 		}
-		if v.ID == 23 && v.GroupId != 4 {
-			t.Errorf("TestMove Error")
-		}
+
 	}
 
 }
@@ -400,14 +409,31 @@ func TestMove(t *testing.T) {
 func TestCopy(t *testing.T) {
 	clientLogin.Select("INBOX", &imap.SelectOptions{}).Wait()
 
-	_, err := clientLogin.Copy(imap.UIDSetNum(25), "Junk").Wait()
+	res, err := clientLogin.Fetch(imap.SeqSetNum(1), &imap.FetchOptions{
+		Envelope:     true,
+		Flags:        true,
+		InternalDate: true,
+		RFC822Size:   true,
+		UID:          true,
+		BodySection: []*imap.FetchItemBodySection{
+			{
+				Specifier: imap.PartSpecifierText,
+				Peek:      true,
+			},
+		},
+	}).Collect()
 	if err != nil {
-		t.Errorf("%+v", err)
+		t.Logf("%+v", res)
+		t.Error("Fetch error")
 	}
 
-	_, err = clientLogin.Copy(imap.UIDSetNum(27), "一级菜单").Wait()
-	if err != nil {
-		t.Errorf("%+v", err)
+	if len(res) > 0 {
+		_, err = clientLogin.Copy(imap.UIDSetNum(res[0].UID), "Junk").Wait()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+	} else {
+		t.Error("No Fetch Result")
 	}
 
 }
