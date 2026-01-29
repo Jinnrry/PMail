@@ -2,10 +2,11 @@ package smtp_server
 
 import (
 	"crypto/tls"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/emersion/go-smtp"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 var instance *smtp.Server
@@ -31,11 +32,12 @@ func StartWithTLSNew() {
 		log.Fatal(err)
 		return
 	}
-	// Configure the TLS support
+	// Configure the TLS support for STARTTLS
 	instanceTlsNew.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	log.Println("Starting Smtp With SSL Server Port:", instanceTlsNew.Addr)
-	if err := instanceTlsNew.ListenAndServeTLS(); err != nil {
+	log.Println("Starting Smtp With STARTTLS Server Port:", instanceTlsNew.Addr)
+	// 587端口使用STARTTLS（先明文连接，再升级TLS），而非隐式TLS
+	if err := instanceTlsNew.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -5,6 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime"
+	"net/textproto"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -14,12 +21,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"mime"
-	"net/textproto"
-	"regexp"
-	"strings"
-	"time"
 )
 
 type User struct {
@@ -164,6 +165,10 @@ func (e *Email) BuildTo2String() string {
 
 func (e *Email) BuildCc2String() string {
 	return users2String(e.Cc)
+}
+
+func (e *Email) BuildBcc2String() string {
+	return users2String(e.Bcc)
 }
 
 func NewEmailFromModel(d models.Email) *Email {
@@ -461,27 +466,63 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []b
 }
 
 func (e *Email) BuildPart(ctx *context.Context, loc []int) []byte {
-	if len(loc) < 2 {
+	if len(loc) == 0 {
 		return nil
 	}
-	if loc[0] == 1 && loc[1] == 2 {
 
-		encoded := base64.StdEncoding.EncodeToString(e.HTML)
-		encoded += "\r\n"
-
-		return []byte(encoded)
-	}
-	if loc[0] == 1 && loc[1] == 1 {
-		if len(e.Text) == 0 {
-			encoded := base64.StdEncoding.EncodeToString(e.HTML)
+	// 处理顶层 part (part 1 = alternative, part 2+ = attachments)
+	if len(loc) == 1 {
+		partIdx := loc[0]
+		if partIdx == 1 {
+			// Part 1 是 alternative，不能直接获取，需要获取子部分
+			return nil
+		}
+		// Part 2, 3, ... 是附件
+		attachIdx := partIdx - 2
+		if attachIdx >= 0 && attachIdx < len(e.Attachments) {
+			encoded := base64.StdEncoding.EncodeToString(e.Attachments[attachIdx].Content)
 			encoded += "\r\n"
-
 			return []byte(encoded)
 		}
-		encoded := base64.StdEncoding.EncodeToString(e.Text)
-		encoded += "\r\n"
+		return nil
+	}
 
-		return []byte(encoded)
+	// 处理 alternative 的子部分 (1.1, 1.2)
+	if loc[0] == 1 && len(loc) >= 2 {
+		subIdx := loc[1]
+
+		// 根据 BODYSTRUCTURE 的构建顺序：先 text，后 html
+		// 如果只有一个存在，那个就是 1.1
+		hasText := len(e.Text) > 0
+		hasHtml := len(e.HTML) > 0
+
+		if hasText && hasHtml {
+			// 两者都有: 1.1=text, 1.2=html
+			if subIdx == 1 {
+				encoded := base64.StdEncoding.EncodeToString(e.Text)
+				encoded += "\r\n"
+				return []byte(encoded)
+			}
+			if subIdx == 2 {
+				encoded := base64.StdEncoding.EncodeToString(e.HTML)
+				encoded += "\r\n"
+				return []byte(encoded)
+			}
+		} else if hasText {
+			// 只有 text: 1.1=text
+			if subIdx == 1 {
+				encoded := base64.StdEncoding.EncodeToString(e.Text)
+				encoded += "\r\n"
+				return []byte(encoded)
+			}
+		} else if hasHtml {
+			// 只有 html: 1.1=html
+			if subIdx == 1 {
+				encoded := base64.StdEncoding.EncodeToString(e.HTML)
+				encoded += "\r\n"
+				return []byte(encoded)
+			}
+		}
 	}
 
 	return nil

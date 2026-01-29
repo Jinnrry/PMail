@@ -5,6 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	oerrors "errors"
+	"io"
+	"net"
+	"net/netip"
+	"strings"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/parsemail"
@@ -20,13 +26,14 @@ import (
 	"github.com/mileusna/spf"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"net"
-	"net/netip"
-	"strings"
-	"time"
 	. "xorm.io/builder"
 )
+
+// DropUnknownRecipientEmails 是代码级别的功能开关
+// 当设置为 true 时，发给不存在用户的邮件将被直接丢弃，不会保存到数据库
+// 这可以有效防止扫描器产生的垃圾邮件被存入第一个用户（管理员）的邮箱
+// 注意：此开关只能通过修改代码来更改，不暴露给用户配置
+const DropUnknownRecipientEmails = true
 
 func (s *Session) Data(r io.Reader) error {
 
@@ -300,8 +307,24 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 				}
 			}
 		} else {
+			// 找不到收件人
+			// 如果启用了保护功能，且 DKIM 验证失败，则丢弃邮件
+			// DKIM 验证通过的邮件即使收件人不存在也应交给管理员，避免误丢弃合法邮件
+			if DropUnknownRecipientEmails && !dkimStatus {
+				// 启用了丢弃未知收件人邮件的保护功能，且 DKIM 未通过
+				// 直接删除已插入的邮件记录，不关联任何用户
+				log.WithContext(ctx).Infof("收件人不存在且DKIM验证失败，丢弃邮件: %s -> %v", email.From.EmailAddress, accounts)
+				_, delErr := db.Instance.Delete(&models.Email{Id: modelEmail.Id})
+				if delErr != nil {
+					log.WithContext(ctx).Errorf("db delete error:%+v", delErr.Error())
+				}
+				return nil, nil, nil
+			}
+			// DKIM 验证通过或未启用保护功能时，邮件丢给管理员账号
+			if dkimStatus {
+				log.WithContext(ctx).Infof("收件人不存在但DKIM验证通过，转交管理员: %s -> %v", email.From.EmailAddress, accounts)
+			}
 			err = db.Instance.Table(&models.User{}).Where("is_admin=1").Find(&users)
-			// 当邮件找不到收件人的时候，邮件全部丢给管理员账号
 			for _, user := range users {
 				ue := models.UserEmail{EmailID: modelEmail.Id, UserID: user.ID, Status: cast.ToInt8(email.Status)}
 				_, err = db.Instance.Insert(&ue)
