@@ -3,19 +3,22 @@ package http_server
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/controllers"
+	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/i18n"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/session"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/id"
+	"github.com/Jinnrry/pmail/utils/password"
 	olog "log"
 	"net/http"
+	"strings"
 	"time"
-	"errors"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
@@ -96,15 +99,31 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 
 		if config.IsInit {
 			user := cast.ToString(session.Instance.Get(ctx, "user"))
-			var userInfo *models.User
+			var userInfo models.User
 			if user != "" {
 				_ = json.Unmarshal([]byte(user), &userInfo)
 			}
-			if userInfo != nil && userInfo.ID > 0 {
+			if userInfo.ID > 0 {
 				ctx.UserID = userInfo.ID
 				ctx.UserName = userInfo.Name
 				ctx.UserAccount = userInfo.Account
 				ctx.IsAdmin = userInfo.IsAdmin == 1
+			}
+
+			if userInfo.ID == 0 {
+				token := r.Header.Get("Token")
+				if token != "" {
+					user, err := getLoginInfoByToken(token)
+					if user.ID >= 0 && err == nil {
+						ctx.UserID = user.ID
+						ctx.UserName = user.Name
+						ctx.UserAccount = user.Account
+						ctx.IsAdmin = user.IsAdmin == 1
+					} else {
+						response.NewErrorResponse(response.NeedLogin, err.Error(), "").FPrint(w)
+						return
+					}
+				}
 			}
 
 			if ctx.UserID == 0 {
@@ -119,4 +138,33 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 		}
 		h(ctx, w, r)
 	}
+}
+
+/*
+Token 格式：  {account}:md5(md5(md5(password+"pmail")+"pmail2023")+{Unix timestamp}):{Unix timestamp}
+比如：         admin::
+*/
+func getLoginInfoByToken(token string) (models.User, error) {
+	ret := models.User{}
+	data := strings.Split(token, ":")
+	if len(data) != 3 {
+		return ret, errors.New("token format error")
+	}
+	account := data[0]
+	encodePwd := data[1]
+	requestTimeStamp := cast.ToInt64(data[2])
+	if time.Now().Unix()-requestTimeStamp >= 5 {
+		return ret, errors.New("token expired")
+	}
+	var user models.User
+	db.Instance.Table("user").Where("account =? and disabled=0", account).Get(&user)
+	if user.ID == 0 {
+		return ret, errors.New("account or password error")
+	}
+	tokenPwd := password.Md5Encode(fmt.Sprintf("%s%d", user.Password, requestTimeStamp))
+	if tokenPwd != encodePwd {
+		return ret, errors.New("account or password error")
+	}
+
+	return user, nil
 }

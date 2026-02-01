@@ -30,7 +30,7 @@ func ModifyPassword(ctx *context.Context, w http.ResponseWriter, req *http.Reque
 	if retData.Password != "" {
 		encodePwd := password.Encode(retData.Password)
 
-		_, err := db.Instance.Exec(db.WithContext(ctx, "update user set password = ? where id =?"), encodePwd, ctx.UserID)
+		_, err := db.Instance.Table("user").Where("id=?", ctx.UserID).Update(map[string]interface{}{"password": encodePwd})
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
 			return

@@ -89,7 +89,7 @@ use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
   "httpsEnabled": 0, // enabled https , 0:enabled 1:enablde 2:disenabled
   "httpPort": 80, // http port . default 80
   "httpsPort": 443, // https port . default 443
-  "spamFilterLevel": 0,// Spam filter level, 0: no filter, 1: filtering when `spf` and `dkim` don't pass, 2: filtering when `spf` don't pass
+  "spamFilterLevel": 0,// Spam Filtering Levels: 0: No filtering. 1: Filter when both SPF and DKIM fail (in the absence of valid recipient filtering). 2: Filter when SPF check fails (in the absence of valid recipient filtering).  3: Filter when DKIM check fails (in the absence of valid recipient filtering)
   "isInit": true // If false, it will enter the bootstrap process.
 }
 ```
@@ -151,6 +151,4 @@ The code is in `server` folder.
 
 [go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
 
-# Thanks
 
-Thanks to [Jetbrains](http://jetbrains.com/) for donating licenses to the project.

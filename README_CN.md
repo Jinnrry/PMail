@@ -92,7 +92,7 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "dbDSN": "./config/pmail.db", // 数据库连接DSN
   "dbType": "sqlite", //数据库类型，支持sqlite 和 mysql
   "httpsEnabled": 0, // web后台是否启用https 0默认（启用），1启用，2不启用
-  "spamFilterLevel": 0,// 垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时过滤，2 spf校验不通过时过滤
+  "spamFilterLevel": 0,// 垃圾邮件过滤级别，0不过滤、1 spf dkim 校验均失败时且无有效收件人过滤，2 spf校验不通过时且无有效收件人过滤 3,dkim 校验不过的时候且无有效收件人过滤
   "httpPort": 80, // http 端口 . 默认 80
   "httpsPort": 443, // https 端口 . 默认 443
   "isInit": true // 为false的时候会进入安装引导流程 
@@ -157,6 +157,4 @@ IMAP端口： 993(SSL)
 
 [go to wiki](https://github.com/Jinnrry/PMail/wiki/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E)
 
-# 致谢
 
-感谢 [Jetbrains](http://jetbrains.com/) 为本项目免费提供开发工具。

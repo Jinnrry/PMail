@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -114,6 +116,53 @@ func TestMaster(t *testing.T) {
 	// 检查规则执行
 	t.Run("testCheckRule", testCheckRule)
 	time.Sleep(3 * time.Second)
+
+	t.Run("testTokenLogin", testTokenLogin)
+}
+
+func md5Encode(str string) string {
+	h := md5.New()
+	h.Write([]byte(str))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func genToken(account, password string) string {
+	now := cast.ToString(time.Now().Unix())
+	return fmt.Sprintf("%s:%s:%s", account, md5Encode(md5Encode(md5Encode(password+"pmail")+"pmail2023")+now), now)
+}
+
+func testTokenLogin(t *testing.T) {
+
+	req, _ := http.NewRequest("POST", TestHost+"/api/login", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Token", genToken("testCase", "testCase"))
+
+	ret, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := readResponse(ret.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if data.ErrorNo != 0 {
+		t.Error("Get Email List Api Error!")
+	}
+	dt := data.Data.(map[string]interface{})
+	if dt["list"] == nil || len(dt["list"].([]interface{})) == 0 {
+		t.Error("Email List Is Empty!")
+		return
+	}
+
+	lst := dt["list"].([]interface{})
+	item := lst[0].(map[string]interface{})
+	id := cast.ToInt(item["id"])
+	if id == 0 {
+		t.Error("Email List Data Error!")
+	}
+
+	t.Logf("testTokenLogin Success! Response: %+v", data)
+
 }
 
 func testCheckRule(t *testing.T) {
