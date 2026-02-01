@@ -133,7 +133,7 @@ func genToken(account, password string) string {
 
 func testTokenLogin(t *testing.T) {
 
-	req, _ := http.NewRequest("POST", TestHost+"/api/login", strings.NewReader(`{}`))
+	req, _ := http.NewRequest("POST", TestHost+"/api/email/list", strings.NewReader(`{}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Token", genToken("testCase", "testCase"))
 
@@ -147,6 +147,7 @@ func testTokenLogin(t *testing.T) {
 	}
 	if data.ErrorNo != 0 {
 		t.Error("Get Email List Api Error!")
+		t.Errorf("%+v", data)
 	}
 	dt := data.Data.(map[string]interface{})
 	if dt["list"] == nil || len(dt["list"].([]interface{})) == 0 {
