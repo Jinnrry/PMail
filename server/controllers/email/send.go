@@ -191,6 +191,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		CronSendTime: time.Now(),
 		Status:       1,
 		CreateTime:   time.Now(),
+		MsgID:        parsemail.GenerateMsgID(config.Instance.Domain),
 	}
 
 	_, err = db.Instance.Insert(&modelEmail)
@@ -202,6 +203,7 @@ func Send(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	e.MessageId = cast.ToInt64(modelEmail.Id)
+	e.MsgID = modelEmail.MsgID
 
 	async.New(ctx).Process(func(p any) {
 		errMsg := ""

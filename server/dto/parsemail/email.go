@@ -2,6 +2,7 @@ package parsemail
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -68,7 +69,16 @@ type Email struct {
 	Date        string
 	Status      int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
 	MessageId   int64
+	MsgID       string // RFC-compliant Message-ID, persisted in DB
 	Size        int
+}
+
+// GenerateMsgID creates an RFC-compliant Message-ID unique enough to avoid spam filters.
+// It must be called once at email creation time and the result persisted to DB.
+func GenerateMsgID(domain string) string {
+	randBytes := make([]byte, 16)
+	_, _ = rand.Read(randBytes)
+	return fmt.Sprintf("%x.%d@%s", randBytes, time.Now().UnixNano(), domain)
 }
 
 // Xss filter policy
@@ -193,6 +203,7 @@ func NewEmailFromModel(d models.Email) *Email {
 
 	return &Email{
 		MessageId: cast.ToInt64(d.Id),
+		MsgID:     d.MsgID,
 		From: &User{
 			Name:         d.FromName,
 			EmailAddress: d.FromAddress,
@@ -218,6 +229,10 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	}
 
 	ret.Size = size
+	// Preserve the original Message-ID from the sender so it is stored and reused consistently.
+	if mid := m.Header.Get("Message-Id"); mid != "" {
+		ret.MsgID = strings.TrimPrefix(strings.TrimSuffix(strings.TrimSpace(mid), ">"), "<")
+	}
 	ret.From = buildUser(m.Header.Get("From"))
 
 	smtpTo := buildUsers(to)
@@ -402,7 +417,11 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []b
 	h.SetAddressList("Sender", senderAddress)
 	h.SetAddressList("To", to)
 	h.SetText("Subject", e.Subject)
-	h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
+	if e.MsgID != "" {
+		h.SetMessageID(e.MsgID)
+	} else {
+		h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
+	}
 	if len(e.Cc) != 0 {
 		cc := []*mail.Address{}
 		for _, user := range e.Cc {
@@ -553,7 +572,11 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	} else {
 		h.SetDate(time.Now())
 	}
-	h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
+	if e.MsgID != "" {
+		h.SetMessageID(e.MsgID)
+	} else {
+		h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
+	}
 	h.SetAddressList("From", from)
 	h.SetAddressList("Sender", from)
 	h.SetAddressList("To", to)

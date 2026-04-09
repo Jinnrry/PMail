@@ -30,6 +30,7 @@ type Email struct {
 	Error        sql.NullString `xorm:"error text comment('投递错误信息')" json:"error"`
 	SendDate     time.Time      `xorm:"send_date comment('投递时间')" json:"send_date"`
 	CreateTime   time.Time      `xorm:"create_time created" json:"create_time"`
+	MsgID        string         `xorm:"msg_id varchar(255) notnull default('') comment('RFC-compliant Message-ID, generated once on creation')" json:"msg_id"`
 }
 
 func (d *Email) TableName() string {

@@ -221,6 +221,11 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 		return nil, nil, nil
 	}
 
+	msgID := email.MsgID
+	if msgID == "" {
+		msgID = parsemail.GenerateMsgID(config.Instance.Domain)
+	}
+
 	modelEmail := models.Email{
 		Type:         cast.ToInt8(emailType),
 		Subject:      email.Subject,
@@ -242,6 +247,7 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 		Status:       cast.ToInt8(email.Status),
 		CreateTime:   time.Now(),
 		CronSendTime: time.Now(),
+		MsgID:        msgID,
 	}
 
 	_, err := db.Instance.Insert(&modelEmail)
@@ -252,6 +258,7 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 
 	if modelEmail.Id > 0 {
 		email.MessageId = cast.ToInt64(modelEmail.Id)
+		email.MsgID = modelEmail.MsgID
 	}
 	// 收信人信息
 	var users []*models.User

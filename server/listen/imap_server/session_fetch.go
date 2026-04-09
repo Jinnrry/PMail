@@ -88,8 +88,13 @@ func buildEnvelope(email *response.EmailResponseData, traEmail *parsemail.Email)
 		replyTo = from
 	}
 
-	// Message-ID
-	messageID := fmt.Sprintf("<%d@%s>", email.Id, config.Instance.Domain)
+	// Message-ID: use the persisted value so IMAP clients see a stable ID on every sync.
+	var messageID string
+	if email.MsgID != "" {
+		messageID = fmt.Sprintf("<%s>", email.MsgID)
+	} else {
+		messageID = fmt.Sprintf("<%d@%s>", email.Id, config.Instance.Domain)
+	}
 
 	return &imap.Envelope{
 		Date:      email.CreateTime,
