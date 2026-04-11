@@ -2,7 +2,7 @@
   <div id="header_main">
     <div id="logo">
       <router-link to="/" style="text-decoration: none">
-        <el-text :line-clamp="1" size="large"><h1>PMail</h1></el-text>
+        <img height="100%" :src="logo" />
       </router-link>
     </div>
     <div id="settings" @click="settings" v-if="isLogin">
@@ -48,6 +48,7 @@ import RuleSettings from './RuleSettings.vue';
 import UserManagement from './UserManagement.vue';
 import PluginSettings from './PluginSettings.vue';
 import {useGlobalStatusStore} from "@/stores/useGlobalStatusStore";
+import logo from '@/assets/logo.svg'
 
 const globalStatus = useGlobalStatusStore();
 const isLogin = globalStatus.isLogin;
