@@ -1,5 +1,5 @@
 <template>
-  <div id="main">
+  <div id="main" style="min-width: 360px;">
     <el-form label-width="100px" :rules="rules" ref="ruleFormRef" :model="ruleForm" status-icon>
 
       <el-form-item :label="lang.sender" prop="sender">

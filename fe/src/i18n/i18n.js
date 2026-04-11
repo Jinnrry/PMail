@@ -109,6 +109,8 @@ let lang = {
     "rule_params": "Executed params",
     "autoSSLWarn": "PMail is not currently running on port 80. If you want PMail to manage SSL certificates automatically, please forward the /.well-known/* route to PMail. See https://github.com/Jinnrry/PMail/issues/94 for details.",
     "err_db_dsn_empty": "Database path cannot be empty!",
+    "collapse" : "Collapse sidebar",
+    "expand" : "Expand sidebar"
 };
 
 
@@ -223,6 +225,8 @@ const zhCN = {
     "rule_params": "执行参数",
     "autoSSLWarn": "PMail当前未使用80端口启动，如果想要PMail自动管理SSL证书，请将/.well-known/*路由转发到PMail。 详见https://github.com/Jinnrry/PMail/issues/94",
     "err_db_dsn_empty": "数据库路径不能为空!",
+    "collapse" : "收起侧边栏",
+    "expand" : "展开侧边栏"
 }
 
 if (navigator.language === "zh-CN" || navigator.language === "zh") lang = zhCN

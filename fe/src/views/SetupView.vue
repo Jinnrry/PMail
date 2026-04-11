@@ -1,5 +1,5 @@
 <template>
-  <div id="main">
+  <div id="main" style="min-width: 360px;">
     <el-steps :active="active" align-center finish-status="success" id="status">
       <el-step :title="lang.welcome"/>
       <el-step :title="lang.setDatabase"/>

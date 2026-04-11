@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 100%">
+  <div style="height: 100%; min-width: 360px;">
     <div id="operation">
       <div id="action">
         <RouterLink to="/editer">+{{ lang.compose }}</RouterLink>

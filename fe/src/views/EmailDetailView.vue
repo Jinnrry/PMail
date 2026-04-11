@@ -1,5 +1,5 @@
 <template>
-  <div id="main">
+  <div id="main" style="min-width: 360px;">
     <div id="title">{{ detailData.subject }}</div>
     <el-divider/>
 

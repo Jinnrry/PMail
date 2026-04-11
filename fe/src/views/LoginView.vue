@@ -1,5 +1,5 @@
 <template>
-  <div id="main">
+  <div id="main" style="min-width: 360px;">
     <div id="form">
       <el-form :model="form" label-width="120px" @keyup.enter="onSubmit">
         <el-form-item :label="lang.account">
