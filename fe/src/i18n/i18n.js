@@ -109,6 +109,22 @@ let lang = {
     "rule_params": "Executed params",
     "autoSSLWarn": "PMail is not currently running on port 80. If you want PMail to manage SSL certificates automatically, please forward the /.well-known/* route to PMail. See https://github.com/Jinnrry/PMail/issues/94 for details.",
     "err_db_dsn_empty": "Database path cannot be empty!",
+    "modify_pwd_desc": "Update your account password to keep it secure.",
+    "enter_new_pwd": "Enter new password",
+    "confirm_new_pwd": "Confirm new password",
+    "logout_desc": "Sign out of your account on this device.",
+    "email_folders": "Email Folders",
+    "email_folders_desc": "Manage your custom mail folders and their hierarchy.",
+    "folder_name": "Folder name",
+    "auto_rules": "Automatic Rules",
+    "auto_rules_desc": "Configure rules to automatically process incoming emails.",
+    "account_management": "Account Management",
+    "account_management_desc": "Add, edit, or remove user accounts.",
+    "extensions": "Extensions",
+    "extensions_desc": "Manage available plugins and integrations.",
+    "login_brand_desc": "Secure, elegant and distraction-free email experience for your team.",
+    "login_subtitle": "Enter your credentials to access your mailbox",
+    "login_fill_required": "Please fill in both fields"
 };
 
 
@@ -223,8 +239,27 @@ const zhCN = {
     "rule_params": "执行参数",
     "autoSSLWarn": "PMail当前未使用80端口启动，如果想要PMail自动管理SSL证书，请将/.well-known/*路由转发到PMail。 详见https://github.com/Jinnrry/PMail/issues/94",
     "err_db_dsn_empty": "数据库路径不能为空!",
+    "modify_pwd_desc": "修改您的账户密码以确保安全。",
+    "enter_new_pwd": "输入新密码",
+    "confirm_new_pwd": "确认新密码",
+    "logout_desc": "退出此设备上的账户。",
+    "email_folders": "邮件文件夹",
+    "email_folders_desc": "管理您的自定义邮件文件夹及其层级。",
+    "folder_name": "文件夹名",
+    "auto_rules": "自动规则",
+    "auto_rules_desc": "配置规则以自动处理传入的邮件。",
+    "account_management": "账户管理",
+    "account_management_desc": "添加、编辑或删除用户账户。",
+    "extensions": "扩展功能",
+    "extensions_desc": "管理可用的扩展插件。",
+    "login_brand_desc": "为你的团队提供安全、优雅且专注的邮件体验。",
+    "login_subtitle": "请输入凭据以访问你的邮箱",
+    "login_fill_required": "请填写账号和密码"
 }
 
-if (navigator.language === "zh-CN" || navigator.language === "zh") lang = zhCN
+const browserLang = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
+if (browserLang.toLowerCase().startsWith("zh")) {
+    lang = zhCN;
+}
 
 export default lang;

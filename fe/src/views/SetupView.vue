@@ -519,30 +519,73 @@ const next = () => {
 #main {
   width: 100%;
   height: 100%;
-  background-color: #f1f1f1;
+  background:
+      radial-gradient(circle at 10% 10%, rgba(0, 113, 227, 0.09) 0%, transparent 34%),
+      var(--pm-bg-primary);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 16px;
+  padding: 26px;
+  overflow-y: auto;
 }
 
 .desc {
   padding-right: 20px;
+  margin-bottom: 18px;
+}
+
+.desc h2 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 #status {
+  padding: 18px 22px;
+  border-radius: var(--pm-radius-xl);
+  background: var(--pm-surface-glass);
+  border: 1px solid var(--pm-glass-border);
+  box-shadow: var(--pm-shadow-sm);
+  backdrop-filter: blur(12px);
+  animation: pm-rise-in 0.38s var(--pm-ease-out);
 }
 
 .ctn {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
+  border-radius: var(--pm-radius-xl);
+  background: var(--pm-surface-glass);
+  border: 1px solid var(--pm-glass-border);
+  box-shadow: var(--pm-shadow-md);
+  animation: pm-rise-in 0.46s var(--pm-ease-out);
 }
 
 .ctn_s {
   display: flex;
   flex-direction: column;
-
+  gap: 18px;
+  padding: 22px;
+  border-radius: var(--pm-radius-xl);
+  background: var(--pm-surface-glass);
+  border: 1px solid var(--pm-glass-border);
+  box-shadow: var(--pm-shadow-md);
+  animation: pm-rise-in 0.46s var(--pm-ease-out);
 }
 
 #next {
+  align-self: flex-end;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(0, 113, 227, 0.24);
+  transition: transform 0.2s var(--pm-ease-out), box-shadow 0.2s var(--pm-ease-out);
+}
+
+#next:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(0, 113, 227, 0.28);
 }
 </style>

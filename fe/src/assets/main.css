@@ -4,10 +4,21 @@
   margin: 0 auto;
   padding: 0;
   height: 100vh;
+  width: 100vw;
   font-weight: normal;
-  font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+  color: var(--pm-text-primary);
+  background-color: var(--pm-bg-primary);
+  overflow: hidden;
+}
+
+/* Mobile sidebar drawer: remove inner padding so background can be full-bleed */
+.mobile-aside-drawer {
+  background: transparent;
+}
+
+.mobile-aside-drawer .el-drawer__body {
+  padding: 0 !important;
+  background: transparent;
 }

@@ -4,12 +4,14 @@ import {http} from "@/utils/axios";
 const useGlobalStatusStore = defineStore('useGlobalStatusStore', {
     state() {
         return {
-            userInfos: {}
+            userInfos: {},
+            mobileDrawerVisible: false,
+            settingsDrawerVisible: false
         }
     },
     getters: {
         isLogin(state) {
-            return Object.keys(state.userInfos) !== 0
+            return Object.keys(state.userInfos).length !== 0
         }
     },
     actions: {
