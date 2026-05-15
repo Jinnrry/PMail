@@ -71,7 +71,6 @@ type Email struct {
 	MessageId     int64
 	MsgID         string // RFC-compliant Message-ID, persisted in DB
 	Size          int
-	BigAttFileIds []int64 `json:"big_att_file_ids"`
 }
 
 // GenerateMsgID creates an RFC-compliant Message-ID unique enough to avoid spam filters.
