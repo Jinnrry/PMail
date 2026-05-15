@@ -263,7 +263,7 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	}
 
 	subject, _ := m.Header.Text("Subject")
-	ret.Subject = strings.TrimSpace(subject)
+	ret.Subject = strictPolicy.Sanitize(subject)
 
 	sendTime, err := time.Parse(time.RFC1123Z, m.Header.Get("Date"))
 	if err != nil {
@@ -327,7 +327,7 @@ func formatContent(entity *message.Entity, ret *Email) error {
 			return nil
 		}
 
-		ret.HTML = []byte(body)
+		ret.HTML = []byte(relaxedPolicy.Sanitize(string(body)))
 	case "multipart/related":
 		entity.Walk(func(path []int, entity *message.Entity, err error) error {
 			if t, _, _ := entity.Header.ContentType(); t == "multipart/related" {
