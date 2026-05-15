@@ -54,23 +54,24 @@ type Attachment struct {
 
 // Email is the type used for email messages
 type Email struct {
-	ReplyTo     []*User
-	From        *User
-	To          []*User
-	Bcc         []*User
-	Cc          []*User
-	Subject     string
-	Text        []byte // Plaintext message (optional)
-	HTML        []byte // Html message (optional)
-	Sender      *User  // override From as SMTP envelope sender (optional)
-	Headers     textproto.MIMEHeader
-	Attachments []*Attachment
-	ReadReceipt []string
-	Date        string
-	Status      int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
-	MessageId   int64
-	MsgID       string // RFC-compliant Message-ID, persisted in DB
-	Size        int
+	ReplyTo       []*User
+	From          *User
+	To            []*User
+	Bcc           []*User
+	Cc            []*User
+	Subject       string
+	Text          []byte // Plaintext message (optional)
+	HTML          []byte // Html message (optional)
+	Sender        *User  // override From as SMTP envelope sender (optional)
+	Headers       textproto.MIMEHeader
+	Attachments   []*Attachment
+	ReadReceipt   []string
+	Date          string
+	Status        int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
+	MessageId     int64
+	MsgID         string // RFC-compliant Message-ID, persisted in DB
+	Size          int
+	BigAttFileIds []int64 `json:"big_att_file_ids"`
 }
 
 // GenerateMsgID creates an RFC-compliant Message-ID unique enough to avoid spam filters.
@@ -263,7 +264,7 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	}
 
 	subject, _ := m.Header.Text("Subject")
-	ret.Subject = strictPolicy.Sanitize(subject)
+	ret.Subject = strings.TrimSpace(subject)
 
 	sendTime, err := time.Parse(time.RFC1123Z, m.Header.Get("Date"))
 	if err != nil {
@@ -289,16 +290,45 @@ func formatContent(entity *message.Entity, ret *Email) error {
 		log.Errorf("email read error! %+v", err)
 		return err
 	}
-
+	disp := strings.ToLower(entity.Header.Get("Content-Disposition"))
+	isAttachment := strings.Contains(disp, "attachment")
 	switch contentType {
 	case "multipart/alternative":
 	case "multipart/mixed":
 	case "text/plain":
-		testContent, _ := io.ReadAll(entity.Body)
-		ret.Text = []byte(strictPolicy.Sanitize(string(testContent)))
+		body, _ := io.ReadAll(entity.Body)
+
+		if isAttachment {
+			fileName := getFileName(entity, p)
+
+			ret.Attachments = append(ret.Attachments, &Attachment{
+				Filename:    sanitizeText(fileName),
+				ContentType: sanitizeText(strings.TrimSpace(contentType)),
+				Content:     body,
+				ContentID:   strings.TrimPrefix(strings.TrimSuffix(entity.Header.Get("Content-Id"), ">"), "<"),
+			})
+
+			return nil
+		}
+
+		ret.Text = []byte(strictPolicy.Sanitize(string(body)))
 	case "text/html":
-		htmlContent, _ := io.ReadAll(entity.Body)
-		ret.HTML = []byte(relaxedPolicy.Sanitize(string(htmlContent)))
+		body, _ := io.ReadAll(entity.Body)
+
+		if isAttachment {
+			fileName := getFileName(entity, p)
+
+			ret.Attachments = append(ret.Attachments, &Attachment{
+				Filename:    sanitizeText(fileName),
+				ContentType: sanitizeText(strings.TrimSpace(contentType)),
+				Content:     body,
+				ContentID:   strings.TrimPrefix(strings.TrimSuffix(entity.Header.Get("Content-Id"), ">"), "<"),
+			})
+
+			return nil
+		}
+
+		ret.HTML = []byte(body)
 	case "multipart/related":
 		entity.Walk(func(path []int, entity *message.Entity, err error) error {
 			if t, _, _ := entity.Header.ContentType(); t == "multipart/related" {
@@ -308,18 +338,7 @@ func formatContent(entity *message.Entity, ret *Email) error {
 		})
 	default:
 		c, _ := io.ReadAll(entity.Body)
-		fileName := p["name"]
-		if fileName == "" {
-			contentDisposition := entity.Header.Get("Content-Disposition")
-			filenameRegex := regexp.MustCompile(`filename\s*=\s*"?([^";]+)"?`)
-			matches := filenameRegex.FindStringSubmatch(contentDisposition)
-			if len(matches) >= 2 {
-				fileName = strings.TrimSpace(matches[1])
-				fileName = strings.Trim(fileName, `"`)
-			} else {
-				fileName = "no_name_file"
-			}
-		}
+		fileName := getFileName(entity, p)
 
 		ret.Attachments = append(ret.Attachments, &Attachment{
 			Filename:    sanitizeText(fileName),
@@ -330,6 +349,24 @@ func formatContent(entity *message.Entity, ret *Email) error {
 	}
 
 	return nil
+}
+func getFileName(entity *message.Entity, p map[string]string) string {
+	fileName := p["name"]
+
+	if fileName != "" {
+		return fileName
+	}
+
+	contentDisposition := entity.Header.Get("Content-Disposition")
+
+	filenameRegex := regexp.MustCompile(`filename\s*=\s*"?([^";]+)"?`)
+	matches := filenameRegex.FindStringSubmatch(contentDisposition)
+
+	if len(matches) >= 2 {
+		return strings.Trim(strings.TrimSpace(matches[1]), `"`)
+	}
+
+	return "no_name_file"
 }
 
 func BuilderUser(str string) *User {
