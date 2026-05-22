@@ -49,7 +49,8 @@ jobs:
         if: ${{ failure() }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr edit ${{ github.event.pull_request.number }} --add-label "Auto: Test Failed"
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "Auto: Test Failed"
         
       - name: Install Dependencies
         run: npm install --global yarn
