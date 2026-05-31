@@ -42,7 +42,7 @@ func Init(version string) error {
 	}
 
 	Instance.SetConnMaxLifetime(30 * time.Minute)
-	Instance.ShowSQL(false)
+	Instance.ShowSQL(config.Instance.LogLevel == "debug")
 	// 同步表结构
 	syncTables()
 

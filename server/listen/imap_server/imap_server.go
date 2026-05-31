@@ -20,7 +20,14 @@ func Stop() {
 
 // StarTLS 启动TLS端口监听，不加密的代码就懒得写了
 func StarTLS() {
+	instanceTLS = newIMAPServer()
+	log.Infof("IMAP With TLS Server Start On Port :993")
+	if err := instanceTLS.ListenAndServeTLS(":993"); err != nil {
+		panic(err)
+	}
+}
 
+func newIMAPServer() *imapserver.Server {
 	crt, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
 		panic(err)
@@ -37,6 +44,7 @@ func StarTLS() {
 		},
 		Caps: imap.CapSet{
 			imap.CapIMAP4rev1: {},
+			imap.CapIdle:      {},
 		},
 		TLSConfig:    tlsConfig,
 		InsecureAuth: false,
@@ -46,9 +54,5 @@ func StarTLS() {
 		option.DebugWriter = os.Stdout
 	}
 
-	instanceTLS = imapserver.New(option)
-	log.Infof("IMAP With TLS Server Start On Port :993")
-	if err := instanceTLS.ListenAndServeTLS(":993"); err != nil {
-		panic(err)
-	}
+	return imapserver.New(option)
 }

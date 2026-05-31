@@ -30,29 +30,24 @@ func GetUserGroup(ctx *context.Context, w http.ResponseWriter, req *http.Request
 
 	retData := []*group.GroupItem{
 		{
-			Label: i18n.GetText(ctx.Lang, "all_email"),
-			Children: []*group.GroupItem{
-				{
-					Label: i18n.GetText(ctx.Lang, "inbox"),
-					Tag:   dto.SearchTag{Type: 0, Status: -1, GroupId: 0}.ToString(),
-				},
-				{
-					Label: i18n.GetText(ctx.Lang, "outbox"),
-					Tag:   dto.SearchTag{Type: 1, Status: -1}.ToString(),
-				},
-				{
-					Label: i18n.GetText(ctx.Lang, "sketch"),
-					Tag:   dto.SearchTag{Type: 0, Status: 4}.ToString(),
-				},
-				{
-					Label: i18n.GetText(ctx.Lang, "junk"),
-					Tag:   dto.SearchTag{Type: -1, Status: 5}.ToString(),
-				},
-				{
-					Label: i18n.GetText(ctx.Lang, "deleted"),
-					Tag:   dto.SearchTag{Type: -1, Status: 3}.ToString(),
-				},
-			},
+			Label: i18n.GetText(ctx.Lang, "inbox"),
+			Tag:   dto.SearchTag{Type: 0, Status: -1, GroupId: 0}.ToString(),
+		},
+		{
+			Label: i18n.GetText(ctx.Lang, "outbox"),
+			Tag:   dto.SearchTag{Type: 1, Status: -1}.ToString(),
+		},
+		{
+			Label: i18n.GetText(ctx.Lang, "sketch"),
+			Tag:   dto.SearchTag{Type: 0, Status: 4}.ToString(),
+		},
+		{
+			Label: i18n.GetText(ctx.Lang, "junk"),
+			Tag:   dto.SearchTag{Type: -1, Status: 5}.ToString(),
+		},
+		{
+			Label: i18n.GetText(ctx.Lang, "deleted"),
+			Tag:   dto.SearchTag{Type: -1, Status: 3}.ToString(),
 		},
 	}
 

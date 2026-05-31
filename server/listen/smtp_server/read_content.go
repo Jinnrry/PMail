@@ -139,7 +139,6 @@ func (s *Session) Data(r io.Reader) error {
 
 	} else {
 		// 收件
-
 		var dkimStatus, SPFStatus bool
 
 		// DKIM校验
