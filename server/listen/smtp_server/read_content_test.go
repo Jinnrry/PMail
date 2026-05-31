@@ -48,6 +48,95 @@ func testInit() {
 	hooks.Init("dev")
 }
 
+func TestGmail(t *testing.T) {
+	testInit()
+	emailData := `Received: by mail-dl1-f46.google.com with SMTP id a92af1059eb24-132c338a537so5798485c88.0
+        for ; Sun, 24 May 2026 08:18:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1779635898; cv=none;
+        d=google.com; s=arc-20240605;
+        b=T2MoTE0s0bFADLxUOXXGL5f6JyO2V39Pcae2DJ21wpFO3D5b8YXzGP5Qq8BO5y3ya+
+         a2Huxddo3xEJikr9FnvBztxWuwyekSpqM+/NH8Do/ZTEconsziakmma08oLO+Uw5+fxO
+         OmV3oo9N2MtWm7nM1EGkUZ3H1EpEAE7nfQ//gXrEGog+u3dKLns5aS9LHl7fjmHUK4ll
+         +mWj3AcbiBLjOzfV2iSCq8kLD8QgN8kDugXzsMLoXxchzblMMw/G6Z1gMTDtRyFPdEOp
+         eKn70lz4dRJyGIdsPbS2N4hSBLNHMrQ3YIUDJ3UO2/HfTG8uenKAQznt5jZJixKa9hiT
+         +W+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=krMNvdL0wIWIbww3tkM/xlqwm94sXWplcXqGF4i93iM=;
+        fh=6iav8edVevT+IuZxBKkoHjEHmIBsC8UMPcjZALicuAw=;
+        b=WqsmQI22ntkTMVXOTnajcX141N5/B/Xh6R0N5e+LmT8WzQAPNOPK7r/o7ALBmPEA/t
+         3y5z8EsUhxNUnSaQmDoRGz4AhC/PvDlxVhE4SS0rEVGxJFmCwpPFb+QhgDEyRh0WUqcO
+         /4hQ7rFqWN7oJb5YBuJOX241VHW8jFrQAuzgdLPQXSYPz7Rc4gL0pDIj/1GfWVKwEqbT
+         U/oB7u99oaagwwN1u5U2kphaTxCmaa1syxqpNFEcirDGMwf5WaNpOuFj0zgIip7SMEJY
+         AtD0WxQaO2fN7gbiDO62ZoqkgFjKJ3G3psreDP0oS1zXRn8xHeBFnoqUXOVhZCIDlVmb
+         FT2A==;
+        darn=linuxuser.site
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779635898; x=1780240698; darn=linuxuser.site;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=krMNvdL0wIWIbww3tkM/xlqwm94sXWplcXqGF4i93iM=;
+        b=c/8+TeXpadbyFUf68OwKCCq5Oot/asRNC38R0/hUp1gGm6rJvV9ly7ffClrFogdbH+
+         SJRUFMNBDuu5/Tzyuk/4SlWK5sEWC29y0i00pVmOFoet55hm58mLgdmrtpIdCQ6L773R
+         7akIMo3Q6D074PUiK/pxOEGUNp2A7pmZb2q9ZQUeZ/dfblgJh6Q/u+8N1o+nDwabnUPF
+         H/nRaXoA3YdTt0s5tXr0+wDLW4MpXOudo2Of2ELHOzmXA93WJDE1dWNX/xuaF5W9s4nk
+         dVt4A97Zui4t3cPdZEjvrG6yY+t5Fu5gKmVVpVTtvRJITWIqhzxiaxWtQtlbKLK+LD8U
+         3nfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779635898; x=1780240698;
+        h=to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=krMNvdL0wIWIbww3tkM/xlqwm94sXWplcXqGF4i93iM=;
+        b=LLWfy51jPWQLEt/9Vs8TzwMojaDTfB7cUcYc5IdQAn7SScU+N4kqeTLb8aK9fmTeX/
+         G8ZytpEbKbXAyHtNxh0ezs5ro03UljCTEzKZGEcB2Qy0Idjd2vY9saRXbFU/7h7/BdNm
+         Tztf1K5Wvf+ZmQyYGVLb6yJbGv/RTql6ZsLcym+aWv6JEkVtRVMwJ/IHm951eQrur8KE
+         tsiOafkuHRZzkSDSq8hqw61/v/APnjuTVB66UhC8hbAErav9tlIAScqbzSwSimxB/Aj0
+         2OTvo6hHRCsc+I2/6gtkTDZKam/DWVs/hA9hURGRvQORos7Yk3r5snAn5mHB1ybJCrpw
+         7New==
+X-Gm-Message-State: AOJu0Yy7VeDNPEFVk1g6RqPM+hyzjrIVL2deO813Iq4W+3/H6+06AsZG
+     vQbBZjD+YbasztrgwM8FGpqRDiF7NlauyDQyhPzL9NZ7TKa0y0Q5gWah+FKMBcXFOI7r11JyTb/
+     5Dh6yLwCQ2BWrluabz0fPRL/XUXQNmwFGS9du1f4=
+X-Gm-Gg: Acq92OFQjCPQ1C3jnZQayhjIMDz/3uQ0AVjPNBUEdpuEvw5pkJXnD7s6j8PEKgf9jUA
+     gbc+koh+f+m2686BdRuMX58AIQ689Q4WpcdEq4lRpbKZpoasjniA5u1l/lBI1/+i0olLrkHO0LF
+     EF5QEemC93jbaR8hB7EMPoZ4zmIIe0tOqaChCMthhtKp/df2kiLc+BIFVJR04EKqEi48tsdOrrM
+     6qNGo3oufUSAFfhJKUNUF88UhOzWAyfc6t9lEdby+Q+LwOopdenMnV837OlsTIpQMKHJayw6aoW
+     049SxRoJ/Q==
+X-Received: by 2002:a05:7022:6b95:b0:123:3c24:b15 with SMTP id
+ a92af1059eb24-136340ce619mr5527125c88.19.1779635898132; Sun, 24 May 2026
+ 08:18:18 -0700 (PDT)
+MIME-Version: 1.0
+From: Ming Deer 
+Date: Sun, 24 May 2026 23:18:07 +0800
+X-Gm-Features: AVHnY4KsQv0XWokXwRtSxwial70kRdR-hEcbdeCsV7DylqP4mkAA0SzorBeWNMA
+Message-ID: 
+Subject: =?UTF-8?B?5Li76aKY5rWL6K+VMg==?=
+To: xfox@linuxuser.site 
+Content-Type: multipart/alternative; boundary="00000000000089ad93065291c5f4"
+
+--00000000000089ad93065291c5f4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+5q2j5paH5rWL6K+VMg0K
+--00000000000089ad93065291c5f4
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+PGRpdiBkaXI9Imx0ciI+PGRpdj7mraPmlofmtYvor5UyPC9kaXY+PC9kaXY+DQo=
+--00000000000089ad93065291c5f4--
+`
+
+	s := Session{
+		RemoteAddress: net.TCPAddrFromAddrPort(netip.AddrPortFrom(netip.AddrFrom4([4]byte{}), 25)),
+		Ctx:           &context.Context{},
+		To:            []string{"xfox@linuxuser.site"},
+	}
+
+	s.Data(bytes.NewReader([]byte(emailData)))
+
+}
+
 func TestPmailEmail(t *testing.T) {
 	testInit()
 	emailData := `DKIM-Signature: a=rsa-sha256; bh=x7Rh+N2y2K9exccEAyKCTAGDgYKfnLZpMWc25ug5Ny4=;

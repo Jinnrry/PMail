@@ -77,6 +77,11 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		var sender User
 		_ = json.Unmarshal([]byte(email.Sender), &sender)
 
+		if sender.EmailAddress == "" {
+			sender.EmailAddress = email.FromAddress
+			sender.Name = email.FromName
+		}
+
 		var tos []User
 		_ = json.Unmarshal([]byte(email.To), &tos)
 
