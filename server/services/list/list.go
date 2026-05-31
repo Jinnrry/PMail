@@ -2,6 +2,7 @@ package list
 
 import (
 	"fmt"
+	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto"
 	"github.com/Jinnrry/pmail/dto/response"
@@ -48,8 +49,18 @@ func genSQL(ctx *context.Context, count bool, tagInfo dto.SearchTag, keyword str
 	}
 
 	if tagInfo.Status != -1 {
-		sql += " and ue.status =? "
-		sqlParams = append(sqlParams, tagInfo.Status)
+		switch tagInfo.Status {
+		case consts.EmailStatusDel:
+			sql += " and (ue.status =? or ue.group_id=?) "
+			sqlParams = append(sqlParams, tagInfo.Status, models.Deleted)
+		case consts.EmailStatusDrafts:
+			sql += " and (ue.status =? or ue.group_id=?) "
+			sqlParams = append(sqlParams, tagInfo.Status, models.Drafts)
+		case consts.EmailStatusJunk:
+			sql += " and (ue.status =? or ue.group_id=?) "
+			sqlParams = append(sqlParams, tagInfo.Status, models.Junk)
+		}
+
 	} else if tagInfo.Status == -1 {
 		if tagInfo.Type != 1 {
 			sql += " and ue.status = 0"
@@ -59,16 +70,25 @@ func genSQL(ctx *context.Context, count bool, tagInfo dto.SearchTag, keyword str
 		}
 	}
 
-	if tagInfo.Type != -1 {
+	if tagInfo.Type == consts.EmailTypeReceive {
 		sql += " and type =? "
 		sqlParams = append(sqlParams, tagInfo.Type)
+	} else if tagInfo.Type == consts.EmailTypeSend {
+		sql += " and (type =? or ue.group_id=?)"
+		sqlParams = append(sqlParams, tagInfo.Type, models.Sent)
 	}
 
 	if tagInfo.GroupId != -1 {
-		sql += " and ue.group_id=? "
-		sqlParams = append(sqlParams, tagInfo.GroupId)
+		if tagInfo.GroupId > 0 {
+			sql += " and ue.group_id=? "
+			sqlParams = append(sqlParams, tagInfo.GroupId)
+		} else if tagInfo.GroupId == 0 && tagInfo.Status == -1 {
+			sql += " and (ue.group_id=? or ue.group_id=0)"
+			sqlParams = append(sqlParams, models.INBOX)
+		}
 	} else {
-		sql += " and ue.group_id=0 "
+		sql += " and (ue.group_id=0 or ue.group_id =?) "
+		sqlParams = append(sqlParams, models.INBOX)
 	}
 
 	if keyword != "" {

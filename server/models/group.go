@@ -9,11 +9,11 @@ type Group struct {
 }
 
 const (
-	INBOX   = 2000000000
-	Sent    = 2000000001
-	Drafts  = 2000000002
-	Deleted = 2000000003
-	Junk    = 2000000004
+	INBOX   = 2000000000 //收件箱
+	Sent    = 2000000001 //发件箱
+	Drafts  = 2000000002 //草稿箱
+	Deleted = 2000000003 //垃圾箱
+	Junk    = 2000000004 //广告箱
 )
 
 var GroupNameToCode = map[string]int{

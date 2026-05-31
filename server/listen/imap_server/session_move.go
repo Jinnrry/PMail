@@ -38,6 +38,10 @@ func (s *serverSession) Move(w *imapserver.MoveWriter, numSet imap.NumSet, dest 
 		mailIds = append(mailIds, email.Id)
 	}
 
+	if mailIds == nil || len(mailIds) == 0 {
+		return nil
+	}
+
 	if group.IsDefaultBox(dest) {
 		return move2defaultbox(s.ctx, mailIds, dest)
 	} else {

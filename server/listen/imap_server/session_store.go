@@ -2,6 +2,7 @@ package imap_server
 
 import (
 	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/del_email"
 	"github.com/Jinnrry/pmail/services/detail"
 	"github.com/Jinnrry/pmail/services/list"
 	"github.com/Jinnrry/pmail/utils/array"
@@ -49,6 +50,16 @@ func (s *serverSession) Store(w *imapserver.FetchWriter, numSet imap.NumSet, fla
 	if array.InArray(imap.FlagDeleted, flags.Flags) && flags.Op == imap.StoreFlagsAdd {
 		for _, data := range emailList {
 			s.deleteUidList = append(s.deleteUidList, data.UeId)
+		}
+	}
+
+	err := del_email.DelByUID(s.ctx, s.deleteUidList)
+	s.deleteUidList = []int{}
+
+	if err != nil {
+		return &imap.Error{
+			Type: imap.StatusResponseTypeNo,
+			Text: err.Error(),
 		}
 	}
 

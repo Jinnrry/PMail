@@ -31,16 +31,16 @@
     </div>
 
     <div class="list-content">
-      <el-table 
-        ref="taskTableDataRef" 
-        :data="data" 
-        :show-header="false" 
-        class="modern-mail-table"
-        @row-click="rowClick"
-        :row-style="rowStyle"
+      <el-table height="100%"
+                ref="taskTableDataRef"
+                :data="data"
+                :show-header="false"
+                class="modern-mail-table"
+                @row-click="rowClick"
+                :row-style="rowStyle"
       >
         <el-table-column type="selection" width="40"/>
-        
+
         <el-table-column width="30" class-name="status-col">
           <template #default="scope">
             <div class="status-indicator">
@@ -75,11 +75,11 @@
     </div>
 
     <div class="pagination-wrapper" v-if="totalPage > 0">
-      <el-pagination 
-        background 
-        layout="prev, pager, next" 
-        :page-count="totalPage" 
-        @current-change="pageChange"
+      <el-pagination
+          background
+          layout="prev, pager, next"
+          :page-count="totalPage"
+          @current-change="pageChange"
       />
     </div>
   </div>
@@ -171,7 +171,7 @@ const move = function (group_id, group_name) {
     return;
   }
   let ids = rows.map(e => e.id);
-  
+
   ElMessageBox.confirm(lang.move_email_confirm, 'Warning', {
     confirmButtonText: 'OK', cancelButtonText: 'Cancel', type: 'warning'
   }).then(() => {
@@ -224,7 +224,9 @@ const pageChange = function (p) {
 .list-view-container {
   display: flex;
   flex-direction: column;
+  /* 【修复核心】让其优先贴合父元素高度，保底视口高度 */
   height: 100%;
+  min-height: 100vh;
   background: var(--pm-surface-glass);
   border: 1px solid var(--pm-glass-border);
   border-radius: var(--pm-radius-xl);
@@ -236,6 +238,7 @@ const pageChange = function (p) {
 }
 
 .list-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -290,11 +293,12 @@ const pageChange = function (p) {
 }
 
 .list-content {
-  flex-grow: 1;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
   background: var(--pm-surface-glass);
   border-radius: var(--pm-radius-lg);
   border: 1px solid var(--pm-border-color);
-  overflow: hidden;
   box-shadow: inset 0 1px 0 var(--pm-glass-border);
 }
 
@@ -330,9 +334,8 @@ const pageChange = function (p) {
 .mail-main-info {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-grow: 1;
-  overflow: hidden;
+  width: 100%;
+  gap: 12px;
 }
 
 .mail-sender {
@@ -347,23 +350,22 @@ const pageChange = function (p) {
 }
 
 .mail-subject {
-  font-weight: 500;
-  color: var(--pm-text-primary);
+  flex: 0 1 auto;
+  max-width: 40%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 420px;
-  font-size: 14px;
+  font-weight: 500;
+  color: #222;
 }
 
 .mail-snippet {
-  color: var(--pm-text-muted);
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 14px;
-  flex-grow: 1;
-  opacity: 0.95;
+  color: #999;
 }
 
 .mail-meta {
@@ -390,10 +392,13 @@ const pageChange = function (p) {
 }
 
 .pagination-wrapper {
+  flex-shrink: 0;
+  padding: 10px 0;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* 【修复核心】适配 iPhone 底部小黑条 */
+  background-color: transparent; /* 【修复核心】去除白色背景避免暗黑模式突兀 */
   margin-top: 14px;
   display: flex;
   justify-content: center;
-  padding-bottom: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -403,6 +408,13 @@ const pageChange = function (p) {
 }
 
 @media (max-width: 768px) {
+  .list-view-container {
+    /* 【修复核心】移动端强制计算高度，减去顶部 Mobile Header 高度 (通常约为 56px)，使用 dvh 避免滚动遮挡 */
+    height: calc(100dvh - 56px);
+    min-height: auto;
+    padding: 12px; /* 移动端适当减小 padding，留出更多可视空间 */
+  }
+
   .list-header {
     flex-direction: column;
     align-items: flex-start;
@@ -424,7 +436,7 @@ const pageChange = function (p) {
     max-width: 100%;
   }
   .mail-snippet {
-    display: none; /* Hide snippet on very small screens to save space */
+    display: none;
   }
   .mail-row-content {
     align-items: flex-start;
