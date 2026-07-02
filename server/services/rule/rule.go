@@ -1,6 +1,9 @@
 package rule
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
@@ -12,7 +15,6 @@ import (
 	"github.com/Jinnrry/pmail/utils/send"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"strings"
 )
 
 func GetAllRules(ctx *context.Context, userId int) []*dto.Rule {
@@ -60,7 +62,7 @@ func MatchRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email) boo
 	return true
 }
 
-func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email, user *models.User) {
+func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email, user *models.User, rawEmailData []byte) {
 	log.WithContext(ctx).Debugf("执行规则:%s", rule.Name)
 
 	switch rule.Action {
@@ -77,18 +79,88 @@ func DoRule(ctx *context.Context, rule *dto.Rule, email *parsemail.Email, user *
 			log.WithContext(ctx).Errorf("sqlERror :%v", err)
 		}
 	case dto.FORWARD:
-		if strings.Contains(rule.Params, config.Instance.Domain) {
-			log.WithContext(ctx).Errorf("Forward Error! loop forwarding!")
-			return
-		}
-		err := send.Forward(ctx, email, rule.Params, user)
+		err := doForward(ctx, email, rule.Params, user, rawEmailData)
 		if err != nil {
 			log.WithContext(ctx).Errorf("Forward Error:%v", err)
+		} else {
+			log.WithContext(ctx).Infof("Forward Success:%s@%s -> %s", user.Account, config.Instance.Domains[0], rule.Params)
 		}
 	case dto.MOVE:
 		doMove(ctx, rule, email, user)
 	}
 
+}
+
+func doForward(ctx *context.Context, email *parsemail.Email, forwardAddress string, user *models.User, rawEmailData []byte) error {
+	forwardUser := parsemail.BuilderUser(forwardAddress)
+	if forwardUser == nil || forwardUser.EmailAddress == "" {
+		return fmt.Errorf("invalid forward address: %s", forwardAddress)
+	}
+
+	account, domain := forwardUser.GetDomainAccount()
+	if account == "" || domain == "" {
+		return fmt.Errorf("invalid forward address: %s", forwardAddress)
+	}
+
+	if isLocalDomain(domain) {
+		if strings.EqualFold(account, user.Account) {
+			return fmt.Errorf("loop forwarding to self: %s", forwardAddress)
+		}
+		return forwardToLocalUser(ctx, email, account, forwardAddress)
+	}
+
+	if len(rawEmailData) > 0 {
+		err := send.ForwardRaw(ctx, email, rawEmailData, forwardAddress, user)
+		if err == nil {
+			return nil
+		}
+		log.WithContext(ctx).Warnf("Raw forward failed, retry remail forward:%v", err)
+	}
+	return send.Forward(ctx, email, forwardAddress, user)
+}
+
+func forwardToLocalUser(ctx *context.Context, email *parsemail.Email, account, forwardAddress string) error {
+	if email.MessageId <= 0 {
+		return fmt.Errorf("email has not been saved before local forwarding")
+	}
+
+	var user models.User
+	has, err := db.Instance.Table(&models.User{}).
+		Where("LOWER(account)=LOWER(?) and disabled=0", account).
+		Get(&user)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return fmt.Errorf("local forward user not found: %s", forwardAddress)
+	}
+
+	var ue models.UserEmail
+	has, err = db.Instance.Table(&models.UserEmail{}).
+		Where("email_id=? and user_id=?", email.MessageId, user.ID).
+		Get(&ue)
+	if err != nil {
+		return err
+	}
+	if has {
+		return nil
+	}
+
+	_, err = db.Instance.Insert(&models.UserEmail{
+		UserID:  user.ID,
+		EmailID: cast.ToInt(email.MessageId),
+		Status:  cast.ToInt8(email.Status),
+	})
+	return err
+}
+
+func isLocalDomain(domain string) bool {
+	for _, localDomain := range config.Instance.Domains {
+		if strings.EqualFold(domain, localDomain) {
+			return true
+		}
+	}
+	return strings.EqualFold(domain, config.Instance.Domain)
 }
 
 func doMove(ctx *context.Context, rule *dto.Rule, email *parsemail.Email, user *models.User) {

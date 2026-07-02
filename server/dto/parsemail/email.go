@@ -54,23 +54,23 @@ type Attachment struct {
 
 // Email is the type used for email messages
 type Email struct {
-	ReplyTo       []*User
-	From          *User
-	To            []*User
-	Bcc           []*User
-	Cc            []*User
-	Subject       string
-	Text          []byte // Plaintext message (optional)
-	HTML          []byte // Html message (optional)
-	Sender        *User  // override From as SMTP envelope sender (optional)
-	Headers       textproto.MIMEHeader
-	Attachments   []*Attachment
-	ReadReceipt   []string
-	Date          string
-	Status        int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
-	MessageId     int64
-	MsgID         string // RFC-compliant Message-ID, persisted in DB
-	Size          int
+	ReplyTo     []*User
+	From        *User
+	To          []*User
+	Bcc         []*User
+	Cc          []*User
+	Subject     string
+	Text        []byte // Plaintext message (optional)
+	HTML        []byte // Html message (optional)
+	Sender      *User  // override From as SMTP envelope sender (optional)
+	Headers     textproto.MIMEHeader
+	Attachments []*Attachment
+	ReadReceipt []string
+	Date        string
+	Status      int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
+	MessageId   int64
+	MsgID       string // RFC-compliant Message-ID, persisted in DB
+	Size        int
 }
 
 // GenerateMsgID creates an RFC-compliant Message-ID unique enough to avoid spam filters.
@@ -433,40 +433,31 @@ func buildUsers(strs []string) []*User {
 	return ret
 }
 
-func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []byte {
+func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User, forwardAddress string) []byte {
 	var b bytes.Buffer
 
-	from := []*mail.Address{{e.From.Name, e.From.EmailAddress}}
-	to := []*mail.Address{}
-	for _, user := range e.To {
-		to = append(to, &mail.Address{
-			Name:    user.Name,
-			Address: user.EmailAddress,
-		})
-	}
+	forwardUser := buildUser(forwardAddress)
+	to := []*mail.Address{{forwardUser.Name, forwardUser.EmailAddress}}
 
-	senderAddress := []*mail.Address{{sender.Name, fmt.Sprintf("%s@%s", sender.Account, config.Instance.Domains[0])}}
+	senderEmailAddress := fmt.Sprintf("%s@%s", sender.Account, config.Instance.Domains[0])
+	senderAddress := []*mail.Address{{sender.Name, senderEmailAddress}}
 	// Create our mail header
 	var h mail.Header
 	h.SetDate(time.Now())
-	h.SetAddressList("From", from)
+	h.SetAddressList("From", senderAddress)
 	h.SetAddressList("Sender", senderAddress)
 	h.SetAddressList("To", to)
-	h.SetText("Subject", e.Subject)
-	if e.MsgID != "" {
-		h.SetMessageID(e.MsgID)
-	} else {
-		h.SetMessageID(fmt.Sprintf("%d@%s", e.MessageId, config.Instance.Domain))
+	if e.From != nil && e.From.EmailAddress != "" {
+		h.SetAddressList("Reply-To", []*mail.Address{{e.From.Name, e.From.EmailAddress}})
+		h.Set("X-Original-From", e.From.Build())
 	}
-	if len(e.Cc) != 0 {
-		cc := []*mail.Address{}
-		for _, user := range e.Cc {
-			cc = append(cc, &mail.Address{
-				Name:    user.Name,
-				Address: user.EmailAddress,
-			})
-		}
-		h.SetAddressList("Cc", cc)
+	h.Set("X-Forwarded-By", senderEmailAddress)
+	h.Set("X-Forwarded-To", forwardUser.EmailAddress)
+	h.SetText("Subject", e.Subject)
+	h.SetMessageID(GenerateMsgID(config.Instance.Domain))
+	if e.MsgID != "" {
+		h.Set("References", fmt.Sprintf("<%s>", e.MsgID))
+		h.Set("In-Reply-To", fmt.Sprintf("<%s>", e.MsgID))
 	}
 
 	// Create a new mail writer
@@ -515,6 +506,10 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User) []b
 	}
 
 	mw.Close()
+
+	if instance == nil {
+		return b.Bytes()
+	}
 
 	// dkim 签名后返回
 	return instance.Sign(b.String())

@@ -28,17 +28,28 @@ func Forward(ctx *context.Context, e *parsemail.Email, forwardAddress string, us
 
 	log.WithContext(ctx).Debugf("开始转发邮件")
 
-	b := e.ForwardBuildBytes(ctx, user)
+	b := e.ForwardBuildBytes(ctx, user, forwardAddress)
 
 	log.WithContext(ctx).Debugf("%s", b)
 
+	from := user.Account + "@" + config.Instance.Domains[0]
+	return forwardData(ctx, config.Instance.Domains[0], b, forwardAddress, from)
+}
+
+func ForwardRaw(ctx *context.Context, e *parsemail.Email, rawEmailData []byte, forwardAddress string, user *models.User) error {
+	log.WithContext(ctx).Debugf("开始原始邮件转发")
+
+	from := user.Account + "@" + config.Instance.Domains[0]
+	return forwardData(ctx, config.Instance.Domains[0], rawEmailData, forwardAddress, from)
+}
+
+func forwardData(ctx *context.Context, fromDomain string, data []byte, forwardAddress string, from string) error {
 	var to []*parsemail.User
 	to = []*parsemail.User{
 		{EmailAddress: forwardAddress},
 	}
 
-	err, _ := doSend(ctx, config.Instance.Domains[0], b, to, e.From.EmailAddress)
-
+	err, _ := doSend(ctx, fromDomain, data, to, from)
 	return err
 }
 
