@@ -171,7 +171,7 @@ func (s *Session) Data(r io.Reader) error {
 				rs := rule.GetAllRules(ctx, user.ID)
 				for _, r := range rs {
 					if rule.MatchRule(ctx, r, email) {
-						rule.DoRule(ctx, r, email, user)
+						rule.DoRule(ctx, r, email, user, emailData)
 					}
 				}
 			}
