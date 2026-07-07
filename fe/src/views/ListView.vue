@@ -5,6 +5,14 @@
         <h2>{{ groupStore.name }}</h2>
       </div>
       <div class="header-actions">
+        <div class="selection-actions">
+          <el-button @click="selectAll" class="action-btn selection-btn" plain :disabled="data.length === 0">
+            <el-icon><CircleCheck /></el-icon> {{ lang.select_all_btn }}
+          </el-button>
+          <el-button @click="invertSelection" class="action-btn selection-btn" plain :disabled="data.length === 0">
+            <el-icon><Switch /></el-icon> {{ lang.invert_selection_btn }}
+          </el-button>
+        </div>
         <el-button @click="del" class="action-btn" plain>
           <el-icon><Delete /></el-icon> {{ lang.del_btn }}
         </el-button>
@@ -37,6 +45,7 @@
                 :show-header="false"
                 class="modern-mail-table"
                 @row-click="rowClick"
+                @selection-change="selectionChange"
                 :row-style="rowStyle"
       >
         <el-table-column type="selection" width="40"/>
@@ -87,7 +96,7 @@
 
 <script setup>
 import {EpArrowDownBold} from "vue-icons-plus/ep";
-import {Delete, View, Folder, EditPen, Warning} from "@element-plus/icons-vue";
+import {Delete, View, Folder, EditPen, Warning, CircleCheck, Switch} from "@element-plus/icons-vue";
 import {useRouter} from 'vue-router'
 import {ref, watch} from 'vue'
 import useGroupStore from '../stores/group'
@@ -99,6 +108,7 @@ const router = useRouter();
 const groupStore = useGroupStore()
 const groupList = ref([])
 const taskTableDataRef = ref(null)
+const selectedRows = ref([])
 let tag = groupStore.tag;
 
 if (tag === "") {
@@ -145,6 +155,22 @@ const formatShortDate = (dateStr) => {
     return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   }
   return d.toLocaleDateString([], {month: 'short', day: 'numeric'});
+}
+
+const selectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const selectAll = () => {
+  taskTableDataRef.value?.clearSelection()
+  data.value.forEach(row => taskTableDataRef.value?.toggleRowSelection(row, true))
+}
+
+const invertSelection = () => {
+  const selectedIds = new Set(selectedRows.value.map(row => row.id))
+  data.value.forEach(row => {
+    taskTableDataRef.value?.toggleRowSelection(row, !selectedIds.has(row.id))
+  })
 }
 
 const markRead = function () {
@@ -260,6 +286,17 @@ const pageChange = function (p) {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.selection-actions {
+  display: flex;
+  padding-right: 8px;
+  margin-right: 2px;
+  border-right: 1px solid var(--pm-border-color);
+}
+
+.selection-actions .selection-btn + .selection-btn {
+  margin-left: 8px;
 }
 
 .action-btn {
