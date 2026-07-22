@@ -63,6 +63,9 @@ func (s *SpamBlock) SettingsHtml(ctx *context.Context, url string, requestData s
 		}
 		return fmt.Sprintf(index, s.cfg.ApiURL, s.cfg.ApiTimeout, s.cfg.Threshold)
 	}
+	if !ctx.IsAdmin {
+		return "No Access Privileges"
+	}
 
 	var cfg SpamBlockConfig
 	var tempCfg map[string]string
