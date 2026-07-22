@@ -20,7 +20,7 @@ import . "xorm.io/builder"
 func GetEmailDetail(ctx *context.Context, id int, markRead bool) (*response.EmailResponseData, error) {
 	// 先查是否是本人的邮件
 	var ue models.UserEmail
-	_, err := db.Instance.Where("email_id = ?", id).Get(&ue)
+	_, err := db.Instance.Where("email_id = ? AND user_id = ?", id, ctx.UserID).Get(&ue)
 	if err != nil {
 		log.Error(err)
 	}

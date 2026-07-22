@@ -61,7 +61,7 @@ func UpsertRule(ctx *context.Context, w http.ResponseWriter, req *http.Request) 
 func save(ctx *context.Context, p *models.Rule) error {
 
 	if p.Id > 0 {
-		_, err := db.Instance.Exec(db.WithContext(ctx, "update rule set name=? ,value = ? ,action = ?,params = ?,sort = ? where id = ?"), p.Name, p.Value, p.Action, p.Params, p.Sort, p.Id)
+		_, err := db.Instance.Exec(db.WithContext(ctx, "update rule set name=? ,value = ? ,action = ?,params = ?,sort = ? where id = ? and user_id = ?"), p.Name, p.Value, p.Action, p.Params, p.Sort, p.Id, ctx.UserID)
 		if err != nil {
 			return errors.Wrap(err)
 		}
