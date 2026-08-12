@@ -146,19 +146,25 @@ func (s *Session) Data(r io.Reader) error {
 
 		SPFStatus = spfCheck(s.RemoteAddress.String(), email.Sender, email.Sender.EmailAddress)
 
+		_, formDomain := email.From.GetDomainAccount()
+		spoofed := array.InArray(formDomain, config.Instance.Domains) && SPFStatus == false
+		if spoofed {
+			dkimStatus = false
+		}
+		email.Authentication = parsemail.NewEmailAuthentication(SPFStatus, dkimStatus)
+
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！")
 		for _, hook := range hooks.HookList {
 			if hook == nil {
 				continue
 			}
+			email.Authentication = parsemail.NewEmailAuthentication(SPFStatus, dkimStatus)
 			hook.ReceiveParseAfter(ctx, email)
 		}
 		log.WithContext(ctx).Debugf("开始执行插件ReceiveParseAfter！End")
-
-		_, formDomain := email.From.GetDomainAccount()
-		// 伪造邮件
-		if array.InArray(formDomain, config.Instance.Domains) && SPFStatus == false {
-			dkimStatus = false
+		email.Authentication = parsemail.NewEmailAuthentication(SPFStatus, dkimStatus)
+		// 伪造邮件状态必须覆盖插件分类结果，保持原有处理优先级。
+		if spoofed {
 			email.Status = 3
 		}
 
@@ -206,6 +212,10 @@ func (s *Session) Data(r io.Reader) error {
 }
 
 func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserID int, emailType int, reallyTo []string, SPFStatus, dkimStatus bool) ([]*models.User, *models.Email, error) {
+	if emailType == 0 && email != nil && email.Authentication != nil {
+		SPFStatus = email.Authentication.SPFPassed
+		dkimStatus = email.Authentication.DKIMPassed
+	}
 	var dkimV, spfV int8
 	if dkimStatus {
 		dkimV = 1

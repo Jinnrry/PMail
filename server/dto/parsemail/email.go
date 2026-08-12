@@ -52,25 +52,42 @@ type Attachment struct {
 	ContentID   string
 }
 
+// EmailAuthentication 表示收信时的发件人身份认证结果。
+type EmailAuthentication struct {
+	SPFPassed  bool
+	DKIMPassed bool
+	Dangerous  bool
+}
+
+// NewEmailAuthentication 根据 SPF 和 DKIM 结果创建统一的邮件认证结论。
+func NewEmailAuthentication(spfPassed, dkimPassed bool) *EmailAuthentication {
+	return &EmailAuthentication{
+		SPFPassed:  spfPassed,
+		DKIMPassed: dkimPassed,
+		Dangerous:  !spfPassed && !dkimPassed,
+	}
+}
+
 // Email is the type used for email messages
 type Email struct {
-	ReplyTo     []*User
-	From        *User
-	To          []*User
-	Bcc         []*User
-	Cc          []*User
-	Subject     string
-	Text        []byte // Plaintext message (optional)
-	HTML        []byte // Html message (optional)
-	Sender      *User  // override From as SMTP envelope sender (optional)
-	Headers     textproto.MIMEHeader
-	Attachments []*Attachment
-	ReadReceipt []string
-	Date        string
-	Status      int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
-	MessageId   int64
-	MsgID       string // RFC-compliant Message-ID, persisted in DB
-	Size        int
+	ReplyTo        []*User
+	From           *User
+	To             []*User
+	Bcc            []*User
+	Cc             []*User
+	Subject        string
+	Text           []byte // Plaintext message (optional)
+	HTML           []byte // Html message (optional)
+	Sender         *User  // override From as SMTP envelope sender (optional)
+	Headers        textproto.MIMEHeader
+	Attachments    []*Attachment
+	ReadReceipt    []string
+	Date           string
+	Status         int // 0未发送，1已发送，2发送失败，3删除，5广告邮件
+	MessageId      int64
+	MsgID          string // RFC-compliant Message-ID, persisted in DB
+	Size           int
+	Authentication *EmailAuthentication
 }
 
 // GenerateMsgID creates an RFC-compliant Message-ID unique enough to avoid spam filters.
@@ -201,7 +218,7 @@ func NewEmailFromModel(d models.Email) *Email {
 	var Attachments []*Attachment
 	json.Unmarshal([]byte(d.Attachments), &Attachments)
 
-	return &Email{
+	ret := &Email{
 		MessageId: cast.ToInt64(d.Id),
 		MsgID:     d.MsgID,
 		From: &User{
@@ -219,6 +236,10 @@ func NewEmailFromModel(d models.Email) *Email {
 		Attachments: Attachments,
 		Date:        d.SendDate.Format("2006-01-02 15:04:05"),
 	}
+	if d.Type == 0 {
+		ret.Authentication = NewEmailAuthentication(d.SPFCheck == 1, d.DKIMCheck == 1)
+	}
+	return ret
 }
 
 func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
