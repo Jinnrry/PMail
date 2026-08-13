@@ -3,6 +3,7 @@ package email
 import (
 	"encoding/json"
 	"github.com/Jinnrry/pmail/dto"
+	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/services/list"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -84,6 +85,7 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 
 		var tos []User
 		_ = json.Unmarshal([]byte(email.To), &tos)
+		authentication := parsemail.NewEmailAuthentication(email.SPFCheck == 1, email.DKIMCheck == 1)
 
 		lst = append(lst, &emilItem{
 			ID:        email.Id,
@@ -93,7 +95,7 @@ func EmailList(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 			IsRead:    email.IsRead == 1,
 			Sender:    sender,
 			To:        tos,
-			Dangerous: email.SPFCheck == 0 && email.DKIMCheck == 0,
+			Dangerous: authentication.Dangerous,
 			Error:     email.Error.String,
 		})
 	}
