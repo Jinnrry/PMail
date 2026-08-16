@@ -234,7 +234,7 @@ func NewEmailFromModel(d models.Email) *Email {
 		Bcc:         Bcc,
 		Cc:          Cc,
 		Attachments: Attachments,
-		Date:        d.SendDate.Format("2006-01-02 15:04:05"),
+		Date:        d.SendDate.Format(time.RFC3339),
 	}
 	if d.Type == 0 {
 		ret.Authentication = NewEmailAuthentication(d.SPFCheck == 1, d.DKIMCheck == 1)
@@ -290,7 +290,7 @@ func NewEmailFromReader(to []string, r io.Reader, size int) *Email {
 	if err != nil {
 		sendTime = time.Now()
 	}
-	ret.Date = sendTime.Format(time.DateTime)
+	ret.Date = sendTime.Format(time.RFC3339)
 	m.Walk(func(path []int, entity *message.Entity, err error) error {
 		return formatContent(entity, ret)
 	})
@@ -614,7 +614,11 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 	// Create our mail header
 	var h mail.Header
 	if e.Date != "" {
-		t, err := time.ParseInLocation("2006-01-02 15:04:05", e.Date, time.Local)
+		t, err := time.Parse(time.RFC3339, e.Date)
+		if err != nil {
+			// Keep compatibility with Date values stored before timezone offsets were preserved.
+			t, err = time.ParseInLocation(time.DateTime, e.Date, time.Local)
+		}
 		if err != nil {
 			log.WithContext(ctx).Errorf("Time Error ! Err:%+v", err)
 			h.SetDate(time.Now())
