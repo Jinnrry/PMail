@@ -36,6 +36,8 @@ import (
 var NoSupportSTARTTLSError = errors.New("smtp: server doesn't support STARTTLS")
 var EOFError = errors.New("EOF")
 
+const outboundSMTPQuitWriteTimeout = 250 * time.Millisecond
+
 // A Client represents a client connection to an SMTP server.
 type Client struct {
 	// Text is the textproto.Conn used by the Client. It is exported to allow for
@@ -341,6 +343,26 @@ func (c *Client) Data() (io.WriteCloser, error) {
 	return &dataCloser{c, c.Text.DotWriter()}, nil
 }
 
+func finishDelivery(c *Client, w io.WriteCloser, msg []byte) error {
+	if _, err := w.Write(msg); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+
+	// The final 250 response to DATA transfers responsibility for the message.
+	// Send QUIT with a bounded write, but do not wait for 221: a failed or
+	// missing reply after acceptance must not block or trigger redelivery.
+	if err := c.conn.SetWriteDeadline(time.Now().Add(outboundSMTPQuitWriteTimeout)); err != nil {
+		log.Debugf("Could not bound SMTP QUIT write after message acceptance: %v", err)
+	}
+	if err := c.Text.PrintfLine("QUIT"); err != nil {
+		log.Debugf("SMTP QUIT failed after message acceptance: %v", err)
+	}
+	return nil
+}
+
 func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, fromDomain string, to []string, msg []byte) error {
 	if err := validateLine(from); err != nil {
 		return err
@@ -378,15 +400,7 @@ func SendMailWithTls(domain string, addr string, a smtp.Auth, from string, fromD
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(msg)
-	if err != nil {
-		return err
-	}
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-	return c.Quit()
+	return finishDelivery(c, w, msg)
 }
 
 // SendMail connects to the server at addr, switches to TLS if
@@ -464,15 +478,7 @@ func SendMail(domain string, addr string, a smtp.Auth, from string, fromDomain s
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(msg)
-	if err != nil {
-		return err
-	}
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-	return c.Quit()
+	return finishDelivery(c, w, msg)
 }
 
 // SendMailUnsafe 无TLS加密的邮件发送方式
@@ -514,15 +520,7 @@ func SendMailUnsafe(domain string, addr string, a smtp.Auth, from string, fromDo
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(msg)
-	if err != nil {
-		return err
-	}
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-	return c.Quit()
+	return finishDelivery(c, w, msg)
 }
 
 // Extension reports whether an extension is support by the server.
