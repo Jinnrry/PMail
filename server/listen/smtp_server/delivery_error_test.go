@@ -18,7 +18,7 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 		domainErrors map[string]error
 		wantCode     int
 		wantEnhanced smtp.EnhancedCode
-		wantMessage  string
+		wantMessages []string
 	}{
 		{name: "success"},
 		{
@@ -27,14 +27,14 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 			domainErrors: map[string]error{"example.com": &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("connection refused")}},
 			wantCode:     451,
 			wantEnhanced: smtp.EnhancedCode{4, 4, 0},
-			wantMessage:  "connection refused",
+			wantMessages: []string{"connection refused"},
 		},
 		{
 			name:         "missing domain details is temporary",
 			deliveryErr:  errors.New("delivery failed"),
 			wantCode:     451,
 			wantEnhanced: smtp.EnhancedCode{4, 4, 0},
-			wantMessage:  "delivery failed",
+			wantMessages: []string{"delivery failed"},
 		},
 		{
 			name:        "downstream 4xx is temporary",
@@ -44,7 +44,7 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 			},
 			wantCode:     451,
 			wantEnhanced: smtp.EnhancedCode{4, 4, 0},
-			wantMessage:  "421 try again later",
+			wantMessages: []string{"421", "try again later"},
 		},
 		{
 			name:        "downstream 5xx is permanent",
@@ -54,7 +54,7 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 			},
 			wantCode:     550,
 			wantEnhanced: smtp.EnhancedCode{5, 0, 0},
-			wantMessage:  "550 mailbox unavailable",
+			wantMessages: []string{"550", "mailbox unavailable"},
 		},
 		{
 			name:        "nxdomain is permanent",
@@ -64,7 +64,7 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 			},
 			wantCode:     550,
 			wantEnhanced: smtp.EnhancedCode{5, 0, 0},
-			wantMessage:  "no such host",
+			wantMessages: []string{"no such host"},
 		},
 		{
 			name:        "mixed permanent and temporary failures are temporary",
@@ -75,7 +75,7 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 			},
 			wantCode:     451,
 			wantEnhanced: smtp.EnhancedCode{4, 4, 0},
-			wantMessage:  "550 mailbox unavailable",
+			wantMessages: []string{"550", "mailbox unavailable"},
 		},
 	}
 
@@ -99,8 +99,10 @@ func TestDownstreamDeliverySMTPError(t *testing.T) {
 			if smtpErr.EnhancedCode != tt.wantEnhanced {
 				t.Errorf("enhanced code = %v, want %v", smtpErr.EnhancedCode, tt.wantEnhanced)
 			}
-			if !strings.Contains(smtpErr.Message, tt.wantMessage) {
-				t.Errorf("SMTP message = %q, want it to contain %q", smtpErr.Message, tt.wantMessage)
+			for _, part := range tt.wantMessages {
+				if !strings.Contains(smtpErr.Message, part) {
+					t.Errorf("SMTP message = %q, want it to contain %q", smtpErr.Message, part)
+				}
 			}
 			if strings.ContainsAny(smtpErr.Message, "\r\n") {
 				t.Errorf("SMTP message must be one line, got %q", smtpErr.Message)
