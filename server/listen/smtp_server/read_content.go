@@ -99,7 +99,7 @@ func (s *Session) Data(r io.Reader) error {
 		}
 
 		errMsg := ""
-		err, sendErr := send.Send(ctx, email)
+		deliveryErr, sendErr := send.Send(ctx, email)
 
 		log.WithContext(ctx).Debugf("插件执行--SendAfter")
 
@@ -115,8 +115,8 @@ func (s *Session) Data(r io.Reader) error {
 		as3.Wait()
 		log.WithContext(ctx).Debugf("插件执行--SendAfter")
 
-		if err != nil {
-			errMsg = err.Error()
+		if deliveryErr != nil {
+			errMsg = deliveryErr.Error()
 			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, email.MessageId)
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
@@ -125,6 +125,8 @@ func (s *Session) Data(r io.Reader) error {
 			if err != nil {
 				log.WithContext(ctx).Errorf("sql Error :%+v", err)
 			}
+
+			return downstreamDeliverySMTPError(deliveryErr, sendErr)
 
 		} else {
 			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), email.MessageId)

@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/models"
@@ -14,6 +15,7 @@ import (
 	"github.com/Jinnrry/pmail/utils/smtp"
 	log "github.com/sirupsen/logrus"
 	"net"
+	"net/textproto"
 	"strings"
 	"sync"
 )
@@ -21,6 +23,19 @@ import (
 type mxDomain struct {
 	domain string
 	mxHost string
+}
+
+type temporaryMXFallbackError struct {
+	lookupErr   error
+	fallbackErr error
+}
+
+func (e *temporaryMXFallbackError) Error() string {
+	return fmt.Sprintf("temporary MX lookup failed (%v); fallback delivery failed: %v", e.lookupErr, e.fallbackErr)
+}
+
+func (e *temporaryMXFallbackError) Unwrap() error {
+	return e.lookupErr
 }
 
 // Forward 转发邮件
@@ -70,6 +85,7 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 
 	// 按域名整理
 	toByDomain := map[mxDomain][]*parsemail.User{}
+	mxLookupErrors := map[mxDomain]error{}
 	for _, s := range to {
 		args := strings.Split(s.EmailAddress, "@")
 		if len(args) == 2 {
@@ -82,19 +98,22 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 				toByDomain[address] = append(toByDomain[address], s)
 			} else {
 				//查询dns mx记录
-				mxInfo, err := net.LookupMX(args[1])
+				mxInfo, lookupErr := net.LookupMX(args[1])
 				address := mxDomain{
 					domain: "smtp." + args[1],
 					mxHost: "smtp." + args[1],
 				}
-				if err != nil {
-					log.WithContext(ctx).Errorf(s.EmailAddress, "域名mx记录查询失败，检查邮箱是否存在！")
+				if lookupErr != nil {
+					log.WithContext(ctx).Errorf("%s 域名mx记录查询失败，检查邮箱是否存在！", s.EmailAddress)
 				}
 				if len(mxInfo) > 0 {
 					address = mxDomain{
 						domain: args[1],
 						mxHost: mxInfo[0].Host,
 					}
+				}
+				if lookupErr != nil {
+					mxLookupErrors[address] = lookupErr
 				}
 				toByDomain[address] = append(toByDomain[address], s)
 			}
@@ -105,6 +124,7 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 	}
 
 	var errEmailAddress []string
+	var errEmailAddressMu sync.Mutex
 
 	errMap := sync.Map{}
 
@@ -112,12 +132,25 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 	for domain, tos := range toByDomain {
 		domain := domain
 		tos := tos
+		mxLookupErr := mxLookupErrors[domain]
 		as.WaitProcess(func(p any) {
+			recordFailure := func(err error) {
+				err = deliveryFailureCause(mxLookupErr, err)
+				log.WithContext(ctx).Errorf("%v 邮件投递失败%+v", tos, err)
+
+				errEmailAddressMu.Lock()
+				for _, user := range tos {
+					errEmailAddress = append(errEmailAddress, user.EmailAddress)
+				}
+				errEmailAddressMu.Unlock()
+
+				errMap.Store(domain.domain, err)
+			}
 
 			if domain.domain == "localhost" {
 				err := smtp.SendMailUnsafe("", domain.mxHost+":25", nil, from, fromDomain, buildAddress(tos), data)
 				if err != nil {
-					log.WithContext(ctx).Errorf("send error %s", err.Error())
+					recordFailure(err)
 				}
 				return
 			}
@@ -143,6 +176,10 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 			if err == nil {
 				return
 			}
+			if isPermanentSMTPResponse(err) {
+				recordFailure(err)
+				return
+			}
 			log.WithContext(ctx).Infof("SMTP STARTTLS on 25 Send Error. %s", err.Error())
 
 			// 再试用587投递
@@ -150,11 +187,19 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 			if err == nil {
 				return
 			}
+			if isPermanentSMTPResponse(err) {
+				recordFailure(err)
+				return
+			}
 			log.WithContext(ctx).Infof("SMTPS on 587 Send Error. %s", err.Error())
 
 			// 再次尝试465投递
 			err = smtp.SendMailWithTls("", domain.mxHost+":465", nil, from, fromDomain, buildAddress(tos), data)
 			if err == nil {
+				return
+			}
+			if isPermanentSMTPResponse(err) {
+				recordFailure(err)
 				return
 			}
 			log.WithContext(ctx).Infof("SMTPS on 465 Send Error. %s", err.Error())
@@ -166,13 +211,7 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 				return
 			}
 
-			if err != nil {
-				log.WithContext(ctx).Errorf("%v 邮件投递失败%+v", tos, err)
-				for _, user := range tos {
-					errEmailAddress = append(errEmailAddress, user.EmailAddress)
-				}
-			}
-			errMap.Store(domain.domain, err)
+			recordFailure(err)
 		}, nil)
 	}
 	as.Wait()
@@ -192,6 +231,32 @@ func doSend(ctx *context.Context, fromDomain string, data []byte, to []*parsemai
 		return errors.New("以下收件人投递失败：" + array.Join(errEmailAddress, ",")), orgMap
 	}
 	return nil, orgMap
+}
+
+func isPermanentSMTPResponse(err error) bool {
+	var protocolErr *textproto.Error
+	return errors.As(err, &protocolErr) && protocolErr.Code >= 500 && protocolErr.Code <= 599
+}
+
+func deliveryFailureCause(mxLookupErr, fallbackErr error) error {
+	if fallbackErr == nil || isPermanentSMTPResponse(fallbackErr) {
+		return fallbackErr
+	}
+
+	var lookupDNSErr *net.DNSError
+	if !errors.As(mxLookupErr, &lookupDNSErr) || (!lookupDNSErr.IsTimeout && !lookupDNSErr.IsTemporary) {
+		return fallbackErr
+	}
+
+	var networkErr net.Error
+	if !errors.As(fallbackErr, &networkErr) {
+		return fallbackErr
+	}
+
+	return &temporaryMXFallbackError{
+		lookupErr:   mxLookupErr,
+		fallbackErr: fallbackErr,
+	}
 }
 
 func buildAddress(u []*parsemail.User) []string {
