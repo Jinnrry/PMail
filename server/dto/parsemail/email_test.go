@@ -3,12 +3,102 @@ package parsemail
 import (
 	"bytes"
 	"fmt"
-	"github.com/emersion/go-message"
 	"io"
+	stdmail "net/mail"
 	"strings"
-
 	"testing"
+	"time"
+
+	"github.com/Jinnrry/pmail/models"
+	"github.com/emersion/go-message"
 )
+
+func builtMessageDate(t *testing.T, raw []byte) time.Time {
+	t.Helper()
+
+	m, err := stdmail.ReadMessage(bytes.NewReader(raw))
+	if err != nil {
+		t.Fatalf("read built message: %v", err)
+	}
+	date, err := stdmail.ParseDate(m.Header.Get("Date"))
+	if err != nil {
+		t.Fatalf("parse built Date header %q: %v", m.Header.Get("Date"), err)
+	}
+	return date
+}
+
+func TestEmailDateFromReaderPreservesInstant(t *testing.T) {
+	const dateHeader = "Sun, 09 Aug 2026 11:51:08 +0000"
+	raw := []byte("From: sender@example.com\r\n" +
+		"To: recipient@example.com\r\n" +
+		"Subject: Date round trip\r\n" +
+		"Date: " + dateHeader + "\r\n" +
+		"Message-ID: <date-reader@example.com>\r\n" +
+		"Content-Type: text/plain; charset=UTF-8\r\n\r\n" +
+		"body")
+
+	expected, err := stdmail.ParseDate(dateHeader)
+	if err != nil {
+		t.Fatalf("parse fixture date: %v", err)
+	}
+
+	email := NewEmailFromReader([]string{"recipient@example.com"}, bytes.NewReader(raw), len(raw))
+	stored, err := time.Parse(time.RFC3339, email.Date)
+	if err != nil {
+		t.Fatalf("stored Date is not RFC3339: %q: %v", email.Date, err)
+	}
+	if !stored.Equal(expected) {
+		t.Fatalf("stored Date changed instant: got %s, want %s", stored, expected)
+	}
+
+	got := builtMessageDate(t, email.BuildBytes(nil, false))
+	if !got.Equal(expected) {
+		t.Fatalf("rebuilt Date changed instant: got %s, want %s", got, expected)
+	}
+}
+
+func TestEmailDateFromModelPreservesUTCInstant(t *testing.T) {
+	expected := time.Date(2026, time.August, 9, 11, 51, 8, 0, time.UTC)
+	email := NewEmailFromModel(models.Email{
+		Id:          1,
+		FromAddress: "sender@example.com",
+		To:          `[{"EmailAddress":"recipient@example.com","Name":""}]`,
+		Subject:     "Model date",
+		SendDate:    expected,
+		MsgID:       "date-model@example.com",
+	})
+
+	if email.Date != expected.Format(time.RFC3339) {
+		t.Fatalf("model Date = %q, want %q", email.Date, expected.Format(time.RFC3339))
+	}
+
+	got := builtMessageDate(t, email.BuildBytes(nil, false))
+	if !got.Equal(expected) {
+		t.Fatalf("rebuilt model Date changed instant: got %s, want %s", got, expected)
+	}
+}
+
+func TestEmailBuildBytesAcceptsLegacyDate(t *testing.T) {
+	const legacyDate = "2026-08-09 11:51:08"
+	expected, err := time.ParseInLocation(time.DateTime, legacyDate, time.Local)
+	if err != nil {
+		t.Fatalf("parse legacy fixture date: %v", err)
+	}
+
+	email := &Email{
+		From:    buildUser("sender@example.com"),
+		To:      buildUsers([]string{"recipient@example.com"}),
+		Subject: "Legacy date",
+		Text:    []byte("body"),
+		Date:    legacyDate,
+		MsgID:   "date-legacy@example.com",
+	}
+
+	got := builtMessageDate(t, email.BuildBytes(nil, false))
+	if !got.Equal(expected) {
+		t.Fatalf("legacy Date changed instant: got %s, want %s", got, expected)
+	}
+}
 
 func TestHtmlTxtAttachment(t *testing.T) {
 	emailBytes := `From: "=?utf-8?B?amlubnJyeQ==?=" <ok@xjiangwei.cn>
