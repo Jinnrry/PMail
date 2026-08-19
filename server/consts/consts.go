@@ -23,4 +23,7 @@ const (
 
 	// EmailStatusJunk 骚扰邮件
 	EmailStatusJunk int8 = 5
+
+	// EmailStatusDeliveryPending marks an outbound audit whose delivery result is not final.
+	EmailStatusDeliveryPending int8 = 6
 )

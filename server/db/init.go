@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -9,8 +11,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
-	_ "modernc.org/sqlite"
-	"time"
 	"xorm.io/xorm"
 )
 
@@ -19,26 +19,33 @@ var Instance *xorm.Engine
 func Init(version string) error {
 	dsn := config.Instance.DbDSN
 	var err error
+	if config.Instance.DbType == config.DBTypeSQLite {
+		dsn, err = sqliteDSNWithReliabilityOptions(dsn)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+	}
 
 	switch config.Instance.DbType {
 	case "mysql":
 		Instance, err = xorm.NewEngine("mysql", dsn)
-		Instance.SetMaxOpenConns(100)
-		Instance.SetMaxIdleConns(10)
 	case "sqlite":
 		Instance, err = xorm.NewEngine("sqlite", dsn)
-		Instance.SetMaxOpenConns(1)
-		Instance.SetMaxIdleConns(1)
 	case "postgres":
 		Instance, err = xorm.NewEngine("postgres", dsn)
-		Instance.SetMaxOpenConns(100)
-		Instance.SetMaxIdleConns(10)
 	default:
 		return errors.New("Database Type Error!")
 	}
 	if err != nil {
 		log.Errorf("DB init Error! %s", err.Error())
 		return errors.Wrap(err)
+	}
+	if config.Instance.DbType == config.DBTypeSQLite {
+		Instance.SetMaxOpenConns(1)
+		Instance.SetMaxIdleConns(1)
+	} else {
+		Instance.SetMaxOpenConns(100)
+		Instance.SetMaxIdleConns(10)
 	}
 
 	Instance.SetConnMaxLifetime(30 * time.Minute)

@@ -3,7 +3,6 @@ package smtp_server
 import (
 	"bytes"
 	"database/sql"
-	"encoding/json"
 	oerrors "errors"
 	"io"
 	"net"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/consts"
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/hooks"
@@ -26,7 +26,6 @@ import (
 	"github.com/mileusna/spf"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	. "xorm.io/builder"
 )
 
 // DropUnknownRecipientEmails 是代码级别的功能开关
@@ -92,52 +91,7 @@ func (s *Session) Data(r io.Reader) error {
 			return nil
 		}
 
-		// 转发
-		_, _, err := saveEmail(ctx, len(emailData), email, s.Ctx.UserID, 1, nil, true, true)
-		if err != nil {
-			log.WithContext(ctx).Errorf("Email Save Error %v", err)
-		}
-
-		errMsg := ""
-		deliveryErr, sendErr := send.Send(ctx, email)
-
-		log.WithContext(ctx).Debugf("插件执行--SendAfter")
-
-		as3 := async.New(ctx)
-		for _, hook := range hooks.HookList {
-			if hook == nil {
-				continue
-			}
-			as3.WaitProcess(func(hk any) {
-				hk.(framework.EmailHook).SendAfter(ctx, email, sendErr)
-			}, hook)
-		}
-		as3.Wait()
-		log.WithContext(ctx).Debugf("插件执行--SendAfter")
-
-		if deliveryErr != nil {
-			errMsg = deliveryErr.Error()
-			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =2 ,error=? where id = ? "), errMsg, email.MessageId)
-			if err != nil {
-				log.WithContext(ctx).Errorf("sql Error :%+v", err)
-			}
-			_, err = db.Instance.Exec(db.WithContext(ctx, "update user_email set status =2  where email_id = ? "), email.MessageId)
-			if err != nil {
-				log.WithContext(ctx).Errorf("sql Error :%+v", err)
-			}
-
-			return downstreamDeliverySMTPError(deliveryErr, sendErr)
-
-		} else {
-			_, err := db.Instance.Exec(db.WithContext(ctx, "update email set status =1  where id = ? "), email.MessageId)
-			if err != nil {
-				log.WithContext(ctx).Errorf("sql Error :%+v", err)
-			}
-			_, err = db.Instance.Exec(db.WithContext(ctx, "update user_email set status =1  where email_id = ? "), email.MessageId)
-			if err != nil {
-				log.WithContext(ctx).Errorf("sql Error :%+v", err)
-			}
-		}
+		return s.deliverOutgoingEmail(email, send.Send)
 
 	} else {
 		// 收件
@@ -170,7 +124,11 @@ func (s *Session) Data(r io.Reader) error {
 			email.Status = 3
 		}
 
-		users, dbEmail, _ := saveEmail(ctx, len(emailData), email, 0, 0, s.To, SPFStatus, dkimStatus)
+		users, dbEmail, saveErr := saveEmail(ctx, len(emailData), email, 0, 0, s.To, SPFStatus, dkimStatus)
+		if saveErr != nil {
+			log.WithContext(ctx).Errorf("CRITICAL audit_event=initial_persist_failed direction=inbound msg_id=%q error=%v", email.MsgID, saveErr)
+			return localPersistenceSMTPError()
+		}
 
 		if email.MessageId > 0 {
 			log.WithContext(ctx).Debugf("开始执行邮件规则！")
@@ -214,27 +172,28 @@ func (s *Session) Data(r io.Reader) error {
 }
 
 func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserID int, emailType int, reallyTo []string, SPFStatus, dkimStatus bool) ([]*models.User, *models.Email, error) {
-	if emailType == 0 && email != nil && email.Authentication != nil {
+	if email == nil {
+		return nil, nil, oerrors.New("email is missing")
+	}
+	if email.From == nil {
+		return nil, nil, oerrors.New("email sender is missing")
+	}
+	if emailType == int(consts.EmailTypeReceive) && email.Authentication != nil {
 		SPFStatus = email.Authentication.SPFPassed
 		dkimStatus = email.Authentication.DKIMPassed
 	}
-	var dkimV, spfV int8
-	if dkimStatus {
-		dkimV = 1
-	}
-	if SPFStatus {
-		spfV = 1
-	}
 
-	log.WithContext(ctx).Debugf("开始入库！")
-
-	if email == nil {
-		return nil, nil, nil
+	users, drop, err := resolveIncomingUsers(ctx, email, emailType, reallyTo, SPFStatus, dkimStatus)
+	if err != nil || drop {
+		return users, nil, err
 	}
 
 	msgID := email.MsgID
 	if msgID == "" {
 		msgID = parsemail.GenerateMsgID(config.Instance.Domain)
+	}
+	if email.Size == 0 {
+		email.Size = size
 	}
 
 	modelEmail := models.Email{
@@ -251,8 +210,8 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 		Sender:       json2string(email.Sender),
 		Attachments:  json2string(email.Attachments),
 		Size:         email.Size,
-		SPFCheck:     spfV,
-		DKIMCheck:    dkimV,
+		SPFCheck:     boolInt8(SPFStatus),
+		DKIMCheck:    boolInt8(dkimStatus),
 		SendUserID:   sendUserID,
 		SendDate:     time.Now(),
 		Status:       cast.ToInt8(email.Status),
@@ -261,108 +220,25 @@ func saveEmail(ctx *context.Context, size int, email *parsemail.Email, sendUserI
 		MsgID:        msgID,
 	}
 
-	_, err := db.Instance.Insert(&modelEmail)
-
-	if err != nil {
-		log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
-	}
-
-	if modelEmail.Id > 0 {
-		email.MessageId = cast.ToInt64(modelEmail.Id)
-		email.MsgID = modelEmail.MsgID
-	}
-	// 收信人信息
-	var users []*models.User
-
-	// 如果是收信
-	if emailType == 0 {
-		// 找到收信人id
-		accounts := []string{}
-		// 优先取smtp协议中的收件人地址
-		if len(reallyTo) > 0 {
-			for _, s := range reallyTo {
-				account := parsemail.BuilderUser(s)
-				if account != nil {
-					acc, domain := account.GetDomainAccount()
-					if array.InArray(domain, config.Instance.Domains) && acc != "" {
-						accounts = append(accounts, strings.ToLower(acc))
-					}
-				}
-			}
-		} else {
-			for _, user := range append(append(email.To, email.Cc...), email.Bcc...) {
-				account, _ := user.GetDomainAccount()
-				if account != "" {
-					accounts = append(accounts, strings.ToLower(account))
-				}
-			}
-		}
-
-		/** 这里会导致索引失效，可以尝试对lower结果加索引
-		PostgreSQL: CREATE INDEX idx_user_account_lower ON "user" (LOWER(account));
-		MySQL8+: ALTER TABLE user ADD INDEX ((LOWER(account)));
-		*/
-		where, params, _ := ToSQL(In("LOWER(account)", accounts))
-
-		err = db.Instance.Table(&models.User{}).Where(where, params...).Find(&users)
-		if err != nil {
-			log.WithContext(ctx).Errorf("db Select error:%+v", err.Error())
-		}
-
-		if len(users) > 0 {
-			for _, user := range users {
-				ue := models.UserEmail{EmailID: modelEmail.Id, UserID: user.ID, Status: cast.ToInt8(email.Status)}
-				_, err = db.Instance.Insert(&ue)
-				if err != nil {
-					log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
-				}
-			}
-		} else {
-			// 找不到收件人
-			// 如果启用了保护功能，且 验证失败，则丢弃邮件
-			// 验证通过的邮件即使收件人不存在也应交给管理员，避免误丢弃合法邮件
-
-			// 垃圾过滤
-			if DropUnknownRecipientEmails &&
-				((config.Instance.SpamFilterLevel == 1 && !SPFStatus && !dkimStatus) ||
-					(config.Instance.SpamFilterLevel == 2 && !SPFStatus) ||
-					(config.Instance.SpamFilterLevel == 3 && !dkimStatus)) {
-				log.WithContext(ctx).Infoln("垃圾邮件，拒信")
-				// 直接删除已插入的邮件记录，不关联任何用户
-				log.WithContext(ctx).Infof("收件人不存在且DKIM验证失败，丢弃邮件: %s -> %v", email.From.EmailAddress, accounts)
-				_, delErr := db.Instance.Delete(&models.Email{Id: modelEmail.Id})
-				if delErr != nil {
-					log.WithContext(ctx).Errorf("db delete error:%+v", delErr.Error())
-				}
-				return nil, nil, nil
-			}
-
-			// DKIM 验证通过或未启用保护功能时，邮件丢给管理员账号
-			log.WithContext(ctx).Infof("收件人不存在但DKIM验证通过，转交管理员: %s -> %v", email.From.EmailAddress, accounts)
-
-			err = db.Instance.Table(&models.User{}).Where("is_admin=1").Find(&users)
-			for _, user := range users {
-				ue := models.UserEmail{EmailID: modelEmail.Id, UserID: user.ID, Status: cast.ToInt8(email.Status)}
-				_, err = db.Instance.Insert(&ue)
-				if err != nil {
-					log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
-				}
-			}
+	var userIDs []int
+	if emailType == int(consts.EmailTypeReceive) {
+		for _, user := range users {
+			userIDs = append(userIDs, user.ID)
 		}
 	} else {
-		ue := models.UserEmail{EmailID: modelEmail.Id, UserID: ctx.UserID}
-		_, err = db.Instance.Insert(&ue)
-		if err != nil {
-			log.WithContext(ctx).Errorf("db insert error:%+v", err.Error())
-		}
+		modelEmail.Status = consts.EmailStatusDeliveryPending
+		modelEmail.Error = sql.NullString{String: deliveryPendingError, Valid: true}
+		userIDs = []int{sendUserID}
 	}
 
-	return users, &modelEmail, nil
-}
-
-func json2string(d any) string {
-	by, _ := json.Marshal(d)
-	return string(by)
+	log.WithContext(ctx).Debugf("开始入库！")
+	saved, err := persistInitialAudit(ctx, modelEmail, userIDs)
+	if err != nil {
+		return users, nil, err
+	}
+	email.MessageId = cast.ToInt64(saved.Id)
+	email.MsgID = saved.MsgID
+	return users, saved, nil
 }
 
 func spfCheck(remoteAddress string, sender *parsemail.User, senderString string) bool {
