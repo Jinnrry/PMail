@@ -3,6 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html"
+	"io"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
+	"time"
+	"unicode"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/hooks/framework"
@@ -10,11 +19,14 @@ import (
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"io"
-	"net/http"
-	"os"
-	"strings"
-	"time"
+)
+
+const verificationKeywordExpression = `(?:验证码|校验码|动态码|认证码|一次性(?:密码|口令)|verification[\s-]*code|security[\s-]*code|authentication[\s-]*code|one[\s-]*time[\s-]*(?:password|code)|passcode|\botp\b)`
+
+var (
+	verificationCodeAfterPattern  = regexp.MustCompile(`(?i)` + verificationKeywordExpression + `(?:[[:space:][:punct:]：，。！【】（）]|是|为|is|equals|如下|your|please|use){0,20}\b([A-Z0-9]{4,8})\b`)
+	verificationCodeBeforePattern = regexp.MustCompile(`(?i)\b([A-Z0-9]{4,8})\b(?:[[:space:][:punct:]：，。！【】（）]|是|为|is|your|您的){0,20}` + verificationKeywordExpression)
+	htmlTagPattern                = regexp.MustCompile(`<[^>]*>`)
 )
 
 type accessTokenRes struct {
@@ -53,12 +65,37 @@ func (w *WeChatPushHook) ReceiveSaveAfter(ctx *context.Context, email *parsemail
 	for _, u := range ue {
 		// 管理员（Uid=1）收到邮件且非已读、非已删除 触发通知
 		if u.UserID == 1 && u.IsRead == 0 && u.Status == 0 && email.MessageId > 0 {
-			content := "<<" + email.Subject + ">>  " + string(email.Text)
-
-			w.sendUserMsg(nil, w.pushUser, content)
+			w.sendUserMsg(nil, w.pushUser, buildNotificationContent(email))
 		}
 	}
 
+}
+
+func buildNotificationContent(email *parsemail.Email) string {
+	if code, ok := extractVerificationCode(email); ok {
+		return "验证码:" + code
+	}
+
+	return "<<" + email.Subject + ">>  " + string(email.Text)
+}
+
+func extractVerificationCode(email *parsemail.Email) (string, bool) {
+	content := email.Subject + "\n" + string(email.Text)
+	if len(email.HTML) > 0 {
+		content += "\n" + html.UnescapeString(htmlTagPattern.ReplaceAllString(string(email.HTML), " "))
+	}
+
+	for _, pattern := range []*regexp.Regexp{verificationCodeAfterPattern, verificationCodeBeforePattern} {
+		for _, match := range pattern.FindAllStringSubmatch(content, -1) {
+			code := match[1]
+			// 排除纯字母单词，验证码至少应包含一个数字。
+			if strings.IndexFunc(code, unicode.IsDigit) >= 0 {
+				return code, true
+			}
+		}
+	}
+
+	return "", false
 }
 
 func (w *WeChatPushHook) SendBefore(ctx *context.Context, email *parsemail.Email) {
