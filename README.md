@@ -72,6 +72,9 @@ configure.
 Check if your mailbox has completed all the security configuration. It is recommended to
 use [https://www.mail-tester.com/](https://www.mail-tester.com/) for checking.
 
+To also see which folder Gmail and other providers put your message in, you can
+use [https://email-spam-tester.com/](https://email-spam-tester.com/), which is free and needs no signup.
+
 
 # Configuration file format description
 
