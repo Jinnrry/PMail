@@ -36,7 +36,33 @@ import (
 var NoSupportSTARTTLSError = errors.New("smtp: server doesn't support STARTTLS")
 var EOFError = errors.New("EOF")
 
-const outboundSMTPQuitWriteTimeout = 250 * time.Millisecond
+const (
+	outboundSMTPDialTimeout      = 2 * time.Second
+	outboundSMTPQuitWriteTimeout = 250 * time.Millisecond
+)
+
+// 出站 SMTP 各阶段超时，遵循 RFC 5321 §4.5.3.2 的要求：
+// 客户端必须按"每条命令 / 每个数据块"分别计时，而不能对整个邮件事务
+// 设置统一 Deadline——否则携带大附件（例如 1GB 附件）的邮件传输
+// 必然超过固定时限被误杀。按阶段计时后，整体超时自然随邮件大小线性扩展。
+//
+// 使用 var 而非 const，便于在不重新编译的情况下调整（RFC 5321 §4.5.3.2 SHOULD）。
+var (
+	// RFC 5321 §4.5.3.2.1：等待初始 220 问候。
+	// 许多服务器在高负载时会延迟发送 220，因此给足时间。
+	outboundSMTPGreetingTimeout = 5 * time.Minute
+	// RFC 5321 §4.5.3.2.2 / §4.5.3.2.3：单条命令（EHLO/HELO/MAIL/RCPT 等）
+	// 等待响应的超时。
+	outboundSMTPCommandTimeout = 5 * time.Minute
+	// RFC 5321 §4.5.3.2.4：发出 DATA 命令后等待 354 响应的超时。
+	outboundSMTPDataStartTimeout = 2 * time.Minute
+	// RFC 5321 §4.5.3.2.5：每个数据块写入的超时，随每次 Write 刷新，
+	// 因此大附件传输不会被误杀。
+	outboundSMTPDataBlockTimeout = 3 * time.Minute
+	// RFC 5321 §4.5.3.2.6：正文发送完毕后等待最终 250 的超时。
+	// 此时接收方通常正在做入库/投递处理，过早超时会引发重复投递。
+	outboundSMTPDataEndTimeout = 10 * time.Minute
+)
 
 // A Client represents a client connection to an SMTP server.
 type Client struct {
@@ -61,7 +87,7 @@ type Client struct {
 // Dial returns a new Client connected to an SMTP server at addr.
 // The addr must include a port, as in "mail.example.com:smtp".
 func Dial(addr, fromDomain string) (*Client, error) {
-	conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
+	conn, err := net.DialTimeout("tcp", addr, outboundSMTPDialTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +107,7 @@ func DialTls(addr, domain, fromDomain string) (*Client, error) {
 		ServerName:         domain,
 	}
 
-	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 2 * time.Second}, "tcp", addr, tlsconfig)
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: outboundSMTPDialTimeout}, "tcp", addr, tlsconfig)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +119,19 @@ func DialTls(addr, domain, fromDomain string) (*Client, error) {
 // server name to be used when authenticating.
 func NewClient(conn net.Conn, host, fromDomain string) (*Client, error) {
 	text := textproto.NewConn(conn)
+
+	// RFC 5321 §4.5.3.2.1：仅对初始 220 问候单独计时，
+	// 读取完成后立即清除，不影响后续命令与数据传输阶段。
+	if err := conn.SetReadDeadline(time.Now().Add(outboundSMTPGreetingTimeout)); err != nil {
+		text.Close()
+		return nil, err
+	}
 	_, _, err := text.ReadResponse(220)
 	if err != nil {
+		text.Close()
+		return nil, err
+	}
+	if err := conn.SetReadDeadline(time.Time{}); err != nil {
 		text.Close()
 		return nil, err
 	}
@@ -147,6 +184,17 @@ func (c *Client) Hello(localName string) error {
 
 // cmd is a convenience function that sends a command and returns the response
 func (c *Client) cmd(expectCode int, format string, args ...any) (int, string, error) {
+	return c.cmdWithTimeout(expectCode, outboundSMTPCommandTimeout, format, args...)
+}
+
+// cmdWithTimeout 对单条命令的收发应用超时（RFC 5321 §4.5.3.2 要求的按命令计时）。
+// 命令结束后立即清除 Deadline，避免影响后续数据传输阶段。
+func (c *Client) cmdWithTimeout(expectCode int, timeout time.Duration, format string, args ...any) (int, string, error) {
+	if err := c.conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return 0, "", err
+	}
+	defer func() { _ = c.conn.SetDeadline(time.Time{}) }()
+
 	id, err := c.Text.Cmd(format, args...)
 	if err != nil {
 		return 0, "", err
@@ -326,7 +374,15 @@ type dataCloser struct {
 }
 
 func (d *dataCloser) Close() error {
-	d.WriteCloser.Close()
+	if err := d.WriteCloser.Close(); err != nil {
+		return err
+	}
+	// RFC 5321 §4.5.3.2.6：等待最终 250 响应的超时单独计时。
+	// 此时接收方通常正在做入库处理，过早超时会引发重复投递。
+	if err := d.c.conn.SetReadDeadline(time.Now().Add(outboundSMTPDataEndTimeout)); err != nil {
+		return err
+	}
+	defer func() { _ = d.c.conn.SetReadDeadline(time.Time{}) }()
 	_, _, err := d.c.Text.ReadResponse(250)
 	return err
 }
@@ -336,11 +392,54 @@ func (d *dataCloser) Close() error {
 // close the writer before calling any more methods on c. A call to
 // Data must be preceded by one or more calls to Rcpt.
 func (c *Client) Data() (io.WriteCloser, error) {
-	_, _, err := c.cmd(354, "DATA")
+	// RFC 5321 §4.5.3.2.4：等待 354 响应的超时单独计时。
+	_, _, err := c.cmdWithTimeout(354, outboundSMTPDataStartTimeout, "DATA")
 	if err != nil {
 		return nil, err
 	}
-	return &dataCloser{c, c.Text.DotWriter()}, nil
+	return &dataCloser{c, &dataBlockWriter{c: c, w: c.Text.DotWriter()}}, nil
+}
+
+// dataBlockWriter 在每个数据块写入前刷新写超时（RFC 5321 §4.5.3.2.5：
+// 每个数据块单独计时）。因此整体传输时限随邮件大小线性扩展，
+// 大附件不会被会话级 Deadline 误杀；而对端挂死时，
+// 最后一个数据块也会在超时内失败并释放连接。
+type dataBlockWriter struct {
+	c *Client
+	w io.WriteCloser
+}
+
+// outboundSMTPDataBlockSize 是单个数据块的大小。
+// 上层可能把整封邮件（含超大附件）一次性传入 Write，
+// 这里按固定块切分并逐块刷新超时，确保"每个数据块单独计时"
+// 的语义不依赖调用方的写入粒度。
+const outboundSMTPDataBlockSize = 32 * 1024
+
+func (d *dataBlockWriter) Write(p []byte) (int, error) {
+	written := 0
+	for len(p) > 0 {
+		chunk := p
+		if len(chunk) > outboundSMTPDataBlockSize {
+			chunk = chunk[:outboundSMTPDataBlockSize]
+		}
+		if err := d.c.conn.SetWriteDeadline(time.Now().Add(outboundSMTPDataBlockTimeout)); err != nil {
+			return written, err
+		}
+		n, err := d.w.Write(chunk)
+		written += n
+		if err != nil {
+			return written, err
+		}
+		p = p[n:]
+	}
+	return written, nil
+}
+
+func (d *dataBlockWriter) Close() error {
+	if err := d.c.conn.SetWriteDeadline(time.Now().Add(outboundSMTPDataBlockTimeout)); err != nil {
+		return err
+	}
+	return d.w.Close()
 }
 
 func finishDelivery(c *Client, w io.WriteCloser, msg []byte) error {
