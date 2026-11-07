@@ -446,6 +446,11 @@ const checkStatus = () => {
 
 
 const setDomainConfig = () => {
+  if (domainSettings.smtp_domain.trim() === "" || domainSettings.web_domain.trim() === "") {
+    ElMessage.error(lang.err_domain_empty)
+    return
+  }
+
   http.post("/api/setup", {
     "action": "set",
     "step": "domain",

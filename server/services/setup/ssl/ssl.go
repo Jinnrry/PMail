@@ -62,6 +62,10 @@ func SetSSL(sslType, priKey, crtKey string) error {
 		return errors.New("SSL Type Error!")
 	}
 
+	if cfg.SSLType != config.SSLTypeUser && strings.TrimSpace(cfg.Domain) == "" {
+		return errors.New("Domain must be configured before automatic SSL certificate setup")
+	}
+
 	if cfg.SSLType == config.SSLTypeUser {
 		cfg.SSLPrivateKeyPath = priKey
 		cfg.SSLPublicKeyPath = crtKey
@@ -157,6 +161,9 @@ func renewCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config) error {
 }
 
 func generateCertificate(privateKey *ecdsa.PrivateKey, cfg *config.Config, newAccount bool) error {
+	if strings.TrimSpace(cfg.Domain) == "" {
+		return errors.New("Domain must be configured before automatic SSL certificate setup")
+	}
 
 	myUser := MyUser{
 		Email: "i@" + cfg.Domain,
