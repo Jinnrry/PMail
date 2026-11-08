@@ -296,6 +296,73 @@ func TestEmail_builder(t *testing.T) {
 	fmt.Println(string(rest))
 }
 
+func TestEmailBuilderPreservesInlineCID(t *testing.T) {
+	raw := "From: sender@example.com\r\n" +
+		"To: recipient@example.net\r\n" +
+		"Subject: QR test\r\n" +
+		"Date: Sun, 09 Aug 2026 11:51:08 +0000\r\n" +
+		"MIME-Version: 1.0\r\n" +
+		"Content-Type: multipart/related; boundary=related\r\n\r\n" +
+		"--related\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" +
+		"<p>Scan</p><img src=\"cid:qr-test@example.invalid\" alt=\"QR\">\r\n" +
+		"--related\r\nContent-Type: image/png\r\n" +
+		"Content-Disposition: inline\r\n" +
+		"Content-ID: <qr-test@example.invalid>\r\n\r\nPNG\r\n" +
+		"--related--\r\n"
+
+	e := NewEmailFromReader([]string{"recipient@example.net"}, strings.NewReader(raw), len(raw))
+	if got := string(e.HTML); !strings.Contains(got, `src="cid:qr-test@example.invalid"`) {
+		t.Fatalf("CID source was removed from HTML: %q", got)
+	}
+	if len(e.Attachments) != 1 || e.Attachments[0].ContentID != "qr-test@example.invalid" {
+		t.Fatalf("inline attachment was not parsed: %#v", e.Attachments)
+	}
+
+	built := e.BuildBytes(nil, false)
+	parsed, err := message.Read(bytes.NewReader(built))
+	if err != nil {
+		t.Fatal(err)
+	}
+	outer := parsed.MultipartReader()
+	if outer == nil {
+		t.Fatal("top-level message is not multipart")
+	}
+	related, err := outer.NextPart()
+	if err != nil {
+		t.Fatal(err)
+	}
+	relatedType, _, err := related.Header.ContentType()
+	if err != nil || relatedType != "multipart/related" {
+		t.Fatalf("first part type = %q, want multipart/related: %v", relatedType, err)
+	}
+	relatedReader := related.MultipartReader()
+	if relatedReader == nil {
+		t.Fatal("related part is not multipart")
+	}
+	alternative, err := relatedReader.NextPart()
+	if err != nil {
+		t.Fatal(err)
+	}
+	alternativeType, _, err := alternative.Header.ContentType()
+	if err != nil || alternativeType != "multipart/alternative" {
+		t.Fatalf("related root type = %q, want multipart/alternative: %v", alternativeType, err)
+	}
+	inline, err := relatedReader.NextPart()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := inline.Header.Get("Content-ID"); got != "<qr-test@example.invalid>" {
+		t.Fatalf("inline Content-ID = %q", got)
+	}
+	disposition, _, err := inline.Header.ContentDisposition()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if disposition != "inline" {
+		t.Fatalf("CID part disposition = %q, want inline", disposition)
+	}
+}
+
 func TestEmail_BuildPart(t *testing.T) {
 	e := Email{
 		Text: []byte("text"),

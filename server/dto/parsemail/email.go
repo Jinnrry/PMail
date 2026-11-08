@@ -140,7 +140,7 @@ func init() {
 	relaxedPolicy.AllowElements("style")
 	relaxedPolicy.AllowAttrs("type").OnElements("style")
 
-	relaxedPolicy.AllowURLSchemes("http", "https", "mailto")
+	relaxedPolicy.AllowURLSchemes("http", "https", "mailto", "cid")
 
 	relaxedPolicy.SkipElementsContent("script", "object", "embed", "iframe", "frame", "frameset")
 }
@@ -454,6 +454,110 @@ func buildUsers(strs []string) []*User {
 	return ret
 }
 
+func (e *Email) hasInlineAttachments() bool {
+	for _, attachment := range e.Attachments {
+		if attachment.ContentID != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func writeMessagePart(parent *message.Writer, header message.Header, content []byte) error {
+	part, err := parent.CreatePart(header)
+	if err != nil {
+		return err
+	}
+	if _, err := part.Write(content); err != nil {
+		return err
+	}
+	return part.Close()
+}
+
+func (e *Email) buildRelatedBytes(h mail.Header) ([]byte, error) {
+	var b bytes.Buffer
+
+	rootHeader := h.Header.Copy()
+	rootHeader.SetContentType("multipart/mixed", nil)
+	root, err := message.CreateWriter(&b, rootHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	var relatedHeader message.Header
+	relatedHeader.SetContentType("multipart/related", map[string]string{"type": "multipart/alternative"})
+	related, err := root.CreatePart(relatedHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	var alternativeHeader message.Header
+	alternativeHeader.SetContentType("multipart/alternative", nil)
+	alternative, err := related.CreatePart(alternativeHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(e.Text) > 0 {
+		var textHeader message.Header
+		textHeader.SetContentType("text/plain", map[string]string{"charset": "UTF-8"})
+		textHeader.Set("Content-Disposition", "inline")
+		textHeader.Set("Content-Transfer-Encoding", "base64")
+		if err := writeMessagePart(alternative, textHeader, e.Text); err != nil {
+			return nil, err
+		}
+	}
+
+	var htmlHeader message.Header
+	htmlHeader.SetContentType("text/html", map[string]string{"charset": "UTF-8"})
+	htmlHeader.Set("Content-Disposition", "inline")
+	htmlHeader.Set("Content-Transfer-Encoding", "base64")
+	htmlBody := e.HTML
+	if len(htmlBody) == 0 {
+		htmlBody = e.Text
+	}
+	if err := writeMessagePart(alternative, htmlHeader, htmlBody); err != nil {
+		return nil, err
+	}
+	if err := alternative.Close(); err != nil {
+		return nil, err
+	}
+
+	for _, attachment := range e.Attachments {
+		if attachment.ContentID == "" {
+			continue
+		}
+		var inlineHeader message.Header
+		inlineHeader.Set("Content-Type", attachment.ContentType)
+		inlineHeader.Set("Content-Disposition", "inline")
+		inlineHeader.Set("Content-ID", fmt.Sprintf("<%s>", strings.Trim(attachment.ContentID, "<>")))
+		inlineHeader.Set("Content-Transfer-Encoding", "base64")
+		if err := writeMessagePart(related, inlineHeader, attachment.Content); err != nil {
+			return nil, err
+		}
+	}
+	if err := related.Close(); err != nil {
+		return nil, err
+	}
+
+	for _, attachment := range e.Attachments {
+		if attachment.ContentID != "" {
+			continue
+		}
+		var attachmentHeader mail.AttachmentHeader
+		attachmentHeader.Set("Content-Type", attachment.ContentType)
+		attachmentHeader.SetFilename(attachment.Filename)
+		attachmentHeader.Set("Content-Transfer-Encoding", "base64")
+		if err := writeMessagePart(root, attachmentHeader.Header, attachment.Content); err != nil {
+			return nil, err
+		}
+	}
+	if err := root.Close(); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
 func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User, forwardAddress string) []byte {
 	var b bytes.Buffer
 
@@ -479,6 +583,17 @@ func (e *Email) ForwardBuildBytes(ctx *context.Context, sender *models.User, for
 	if e.MsgID != "" {
 		h.Set("References", fmt.Sprintf("<%s>", e.MsgID))
 		h.Set("In-Reply-To", fmt.Sprintf("<%s>", e.MsgID))
+	}
+	if e.hasInlineAttachments() {
+		data, err := e.buildRelatedBytes(h)
+		if err != nil {
+			log.WithContext(ctx).Error(err)
+			return nil
+		}
+		if instance == nil {
+			return data
+		}
+		return instance.Sign(string(data))
 	}
 
 	// Create a new mail writer
@@ -646,6 +761,17 @@ func (e *Email) BuildBytes(ctx *context.Context, dkim bool) []byte {
 			})
 		}
 		h.SetAddressList("Cc", cc)
+	}
+	if e.hasInlineAttachments() {
+		data, err := e.buildRelatedBytes(h)
+		if err != nil {
+			log.WithContext(ctx).Error(err)
+			return nil
+		}
+		if dkim {
+			return instance.Sign(string(data))
+		}
+		return data
 	}
 
 	// Create a new mail writer
