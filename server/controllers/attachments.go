@@ -13,6 +13,7 @@ import (
 
 func GetAttachments(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Security-Policy", "sandbox")
 	urlInfos := strings.Split(req.RequestURI, "/")
 	if len(urlInfos) != 4 {
 		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)
@@ -31,7 +32,6 @@ func GetAttachments(ctx *context.Context, w http.ResponseWriter, req *http.Reque
 	w.Header().Set("Content-Type", contentType)
 	if !inline {
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": att.Filename}))
-		w.Header().Set("Content-Security-Policy", "sandbox")
 	}
 	w.Write(att.Content)
 }

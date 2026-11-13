@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, ref, watch} from 'vue'
 
 const props = defineProps({
   html: {type: String, default: ''}
@@ -20,30 +20,24 @@ const props = defineProps({
 
 const frame = ref(null)
 const height = ref(200)
-const colors = ref(readColors())
-const colorScheme = window.matchMedia('(prefers-color-scheme: dark)')
 let resizeObserver
 
-function readColors() {
-  const style = getComputedStyle(document.documentElement)
-  return {
-    text: style.getPropertyValue('--pm-text-primary').trim() || 'inherit',
-    link: style.getPropertyValue('--pm-primary-color').trim() || 'inherit'
-  }
-}
-
-const srcdoc = computed(() => `<base target="_blank">
+const srcdoc = computed(() => `<!DOCTYPE html>
+<base target="_blank">
 <style>
   html, body {
     margin: 0;
     font-size: 16px;
     line-height: 1.7;
-    color: ${colors.value.text};
+    color: #1d1d1f;
     background: transparent;
     overflow-wrap: anywhere;
   }
   img { max-width: 100%; height: auto; }
-  a { color: ${colors.value.link}; }
+  a { color: #0071e3; }
+  @media (prefers-color-scheme: dark) {
+    html, body { color: #f5f7fa; }
+  }
 </style>
 ${props.html}`)
 
@@ -63,23 +57,11 @@ function syncHeight() {
   resizeObserver.observe(doc.body)
 }
 
-function syncColors() {
-  colors.value = readColors()
-}
-
 watch(srcdoc, () => {
-  disconnect()
   height.value = 200
 })
 
-onMounted(() => {
-  colorScheme.addEventListener('change', syncColors)
-})
-
-onBeforeUnmount(() => {
-  disconnect()
-  colorScheme.removeEventListener('change', syncColors)
-})
+onBeforeUnmount(disconnect)
 </script>
 
 <style scoped>

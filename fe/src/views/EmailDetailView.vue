@@ -93,10 +93,18 @@ http.post("/api/email/detail", {id: parseInt(route.params.id)}).then(res => {
   detailData.value.attachments = res.data.attachments || [];
   
   if (res.data.to && res.data.to !== "") {
-    try { tos.value = JSON.parse(res.data.to) } catch(e){}
+    try {
+      tos.value = JSON.parse(res.data.to)
+    } catch {
+      // Keep list empty
+    }
   }
   if (res.data.cc && res.data.cc !== "") {
-    try { ccs.value = JSON.parse(res.data.cc) } catch(e){}
+    try {
+      ccs.value = JSON.parse(res.data.cc)
+    } catch {
+      // Keep CC list empty
+    }
   }
   showCC.value = ccs.value && ccs.value.length > 0
 })

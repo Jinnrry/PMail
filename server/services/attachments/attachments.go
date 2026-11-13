@@ -8,19 +8,15 @@ import (
 	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/models"
 	"github.com/Jinnrry/pmail/services/auth"
-	"github.com/Jinnrry/pmail/utils/array"
 	"github.com/Jinnrry/pmail/utils/context"
 	log "github.com/sirupsen/logrus"
 )
 
-// InlineContentType reports whether raw is an image type safe to render inline.
+// InlineContentType returns the safe image type to render inline.
 func InlineContentType(raw string) (string, bool) {
-	contentType, _, _ := mime.ParseMediaType(raw)
-	if array.InArray(contentType, []string{
-		"image/png", "image/jpeg", "image/gif",
-		"image/webp", "image/bmp", "image/x-icon",
-	}) {
-		return contentType, true
+	switch ct, _, _ := mime.ParseMediaType(raw); ct {
+	case "image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp", "image/x-icon":
+		return ct, true
 	}
 	return "application/octet-stream", false
 }
@@ -68,7 +64,7 @@ func GetAttachmentsByIndex(ctx *context.Context, emailId int, index int) (string
 	var atts []parsemail.Attachment
 	_ = json.Unmarshal([]byte(email.Attachments), &atts)
 
-	if len(atts) > index {
+	if index >= 0 && index < len(atts) {
 		return atts[index].Filename, atts[index].Content
 	}
 	return "", nil
