@@ -46,10 +46,10 @@
       <el-divider class="custom-divider"/>
 
       <div class="mail-body">
-        <div class="body-text" v-if="detailData.html === ''">
+        <div class="body-text" v-if="!detailData.html">
           {{ detailData.text }}
         </div>
-        <div class="body-html" v-else v-html="detailData.html"></div>
+        <MailBodyFrame v-else :html="detailData.html" />
       </div>
 
       <div v-if="detailData.attachments && detailData.attachments.length > 0" class="attachments-section">
@@ -75,6 +75,7 @@ import {ElMessage, ElMessageBox} from 'element-plus';
 import lang from '../i18n/i18n';
 import {http} from "@/utils/axios";
 import useGroupStore from '../stores/group';
+import MailBodyFrame from '../components/MailBodyFrame.vue';
 
 const route = useRoute()
 const router = useRouter()
@@ -282,11 +283,6 @@ const handleDelete = () => {
   line-height: 1.7;
   color: var(--pm-text-primary);
   min-height: 200px;
-}
-
-.body-html :deep(img) {
-  max-width: 100%;
-  height: auto;
 }
 
 .body-text {

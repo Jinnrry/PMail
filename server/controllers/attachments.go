@@ -1,16 +1,18 @@
 package controllers
 
 import (
-	"fmt"
+	"mime"
+	"net/http"
+	"strings"
+
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/services/attachments"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/spf13/cast"
-	"net/http"
-	"strings"
 )
 
 func GetAttachments(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	urlInfos := strings.Split(req.RequestURI, "/")
 	if len(urlInfos) != 4 {
 		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)
@@ -19,14 +21,19 @@ func GetAttachments(ctx *context.Context, w http.ResponseWriter, req *http.Reque
 	emailId := cast.ToInt(urlInfos[2])
 	cid := urlInfos[3]
 
-	contentType, content := attachments.GetAttachments(ctx, emailId, cid)
+	att := attachments.GetAttachments(ctx, emailId, cid)
 
-	if len(content) == 0 {
+	if att == nil || len(att.Content) == 0 {
 		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)
 		return
 	}
+	contentType, inline := attachments.InlineContentType(att.ContentType)
 	w.Header().Set("Content-Type", contentType)
-	w.Write(content)
+	if !inline {
+		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": att.Filename}))
+		w.Header().Set("Content-Security-Policy", "sandbox")
+	}
+	w.Write(att.Content)
 }
 
 func Download(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
@@ -44,7 +51,8 @@ func Download(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		response.NewErrorResponse(response.ParamsError, "", "").FPrint(w)
 		return
 	}
-	w.Header().Set("ContentType", "application/octet-stream")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s", fileName))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": fileName}))
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Write(content)
 }
