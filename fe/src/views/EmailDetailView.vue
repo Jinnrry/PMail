@@ -46,10 +46,10 @@
       <el-divider class="custom-divider"/>
 
       <div class="mail-body">
-        <div class="body-text" v-if="detailData.html === ''">
+        <div class="body-text" v-if="!detailData.html">
           {{ detailData.text }}
         </div>
-        <div class="body-html" v-else v-html="detailData.html"></div>
+        <MailBodyFrame v-else :html="detailData.html" />
       </div>
 
       <div v-if="detailData.attachments && detailData.attachments.length > 0" class="attachments-section">
@@ -75,6 +75,7 @@ import {ElMessage, ElMessageBox} from 'element-plus';
 import lang from '../i18n/i18n';
 import {http} from "@/utils/axios";
 import useGroupStore from '../stores/group';
+import MailBodyFrame from '../components/MailBodyFrame.vue';
 
 const route = useRoute()
 const router = useRouter()
@@ -92,10 +93,18 @@ http.post("/api/email/detail", {id: parseInt(route.params.id)}).then(res => {
   detailData.value.attachments = res.data.attachments || [];
   
   if (res.data.to && res.data.to !== "") {
-    try { tos.value = JSON.parse(res.data.to) } catch(e){}
+    try {
+      tos.value = JSON.parse(res.data.to)
+    } catch {
+      // Keep list empty
+    }
   }
   if (res.data.cc && res.data.cc !== "") {
-    try { ccs.value = JSON.parse(res.data.cc) } catch(e){}
+    try {
+      ccs.value = JSON.parse(res.data.cc)
+    } catch {
+      // Keep CC list empty
+    }
   }
   showCC.value = ccs.value && ccs.value.length > 0
 })
@@ -282,11 +291,6 @@ const handleDelete = () => {
   line-height: 1.7;
   color: var(--pm-text-primary);
   min-height: 200px;
-}
-
-.body-html :deep(img) {
-  max-width: 100%;
-  height: auto;
 }
 
 .body-text {
