@@ -2,7 +2,6 @@ package http_server
 
 import (
 	"embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
@@ -98,19 +97,20 @@ func contextIterceptor(h controllers.HandlerFunc) http.HandlerFunc {
 		ctx.Lang = lang
 
 		if config.IsInit {
-			user := cast.ToString(session.Instance.Get(ctx, "user"))
-			var userInfo models.User
-			if user != "" {
-				_ = json.Unmarshal([]byte(user), &userInfo)
+			userInfo, err := session.CurrentUser(ctx)
+			if err != nil {
+				log.WithContext(ctx).Errorf("Validate session: %v", err)
+				response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
+				return
 			}
-			if userInfo.ID > 0 {
+			if userInfo != nil {
 				ctx.UserID = userInfo.ID
 				ctx.UserName = userInfo.Name
 				ctx.UserAccount = userInfo.Account
 				ctx.IsAdmin = userInfo.IsAdmin == 1
 			}
 
-			if userInfo.ID == 0 {
+			if userInfo == nil {
 				token := r.Header.Get("Token")
 				if token != "" {
 					user, err := getLoginInfoByToken(token)

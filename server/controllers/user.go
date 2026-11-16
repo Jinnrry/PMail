@@ -156,8 +156,11 @@ func EditUser(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 		response.NewErrorResponse(response.ParamsError, "User not found", "").FPrint(w)
 		return
 	}
+	revokeSessions := reqData.Password != "" || reqData.Disabled != user.Disabled
+	updates := map[string]interface{}{"disabled": reqData.Disabled}
 	if reqData.Username != "" && reqData.Username != user.Name {
 		user.Name = reqData.Username
+		updates["name"] = user.Name
 	}
 
 	if reqData.Disabled != user.Disabled {
@@ -165,9 +168,14 @@ func EditUser(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 	if reqData.Password != "" {
 		user.Password = password.Encode(reqData.Password)
+		updates["password"] = user.Password
 	}
 
-	num, err := db.Instance.ID(user.ID).Cols("name", "password", "disabled").Update(&user)
+	update := db.Instance.Table(&models.User{}).ID(user.ID)
+	if revokeSessions {
+		update.Incr("auth_version")
+	}
+	num, err := update.Update(updates)
 
 	if err != nil {
 		response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)

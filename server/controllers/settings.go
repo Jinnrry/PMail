@@ -5,6 +5,7 @@ import (
 	"github.com/Jinnrry/pmail/db"
 	"github.com/Jinnrry/pmail/dto/response"
 	"github.com/Jinnrry/pmail/i18n"
+	"github.com/Jinnrry/pmail/session"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/password"
 	log "github.com/sirupsen/logrus"
@@ -30,8 +31,14 @@ func ModifyPassword(ctx *context.Context, w http.ResponseWriter, req *http.Reque
 	if retData.Password != "" {
 		encodePwd := password.Encode(retData.Password)
 
-		_, err := db.Instance.Table("user").Where("id=?", ctx.UserID).Update(map[string]interface{}{"password": encodePwd})
+		_, err := db.Instance.Table("user").Where("id=?", ctx.UserID).Incr("auth_version").Update(map[string]interface{}{"password": encodePwd})
 		if err != nil {
+			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
+			return
+		}
+		// All sessions, including the one changing the password, must sign in again.
+		if err := session.Instance.Destroy(req.Context()); err != nil {
+			log.WithContext(ctx).Errorf("Destroy session after password change: %v", err)
 			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
 			return
 		}
