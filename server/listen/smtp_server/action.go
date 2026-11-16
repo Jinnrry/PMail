@@ -110,7 +110,10 @@ func (s *Session) Rcpt(to string, opts *smtp.RcptOptions) error {
 	return nil
 }
 
-func (s *Session) Reset() {}
+func (s *Session) Reset() {
+	s.From = ""
+	s.To = nil
+}
 
 func (s *Session) Logout() error {
 	return nil
