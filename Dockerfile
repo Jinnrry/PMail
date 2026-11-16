@@ -1,12 +1,14 @@
-FROM node:lts-alpine as febuild
+FROM node:26-alpine AS febuild
 WORKDIR /work
+
+RUN npm install --global yarn@1.22.22
 
 COPY fe .
 
-RUN yarn && yarn build
+RUN yarn install --frozen-lockfile && yarn build
 
 
-FROM golang:alpine as serverbuild
+FROM golang:alpine AS serverbuild
 ARG VERSION
 WORKDIR /work
 COPY . .

@@ -1,4 +1,4 @@
-FROM golang:alpine as serverbuild
+FROM golang:alpine AS serverbuild
 ARG VERSION
 ARG GITHASH
 WORKDIR /work

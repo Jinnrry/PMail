@@ -19,6 +19,7 @@ const props = defineProps({
 })
 
 const frame = ref(null)
+const maxHeight = 1200
 const height = ref(200)
 let resizeObserver
 
@@ -48,9 +49,14 @@ function disconnect() {
 
 function syncHeight() {
   disconnect()
-  const doc = frame.value.contentDocument
+  const doc = frame.value?.contentDocument
+  // A message link can navigate the frame to a different origin.
+  if (!doc?.documentElement || !doc.body) return
   const updateHeight = () => {
-    height.value = Math.max(200, doc.documentElement.scrollHeight)
+    if (frame.value?.contentDocument !== doc) return
+    // Viewport-relative email CSS can grow with the frame on every resize.
+    // Bound auto-sizing and let longer content scroll inside the iframe.
+    height.value = Math.min(maxHeight, Math.max(200, doc.documentElement.scrollHeight))
   }
   updateHeight()
   resizeObserver = new ResizeObserver(updateHeight)
@@ -58,6 +64,7 @@ function syncHeight() {
 }
 
 watch(srcdoc, () => {
+  disconnect()
   height.value = 200
 })
 

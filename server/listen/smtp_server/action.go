@@ -65,7 +65,7 @@ func (s *Session) Auth(mech string) (sasl.Server, error) {
 }
 
 func (s *Session) AuthPlain(username, pwd string) error {
-	log.WithContext(s.Ctx).Debugf("Auth %s %s", username, pwd)
+	log.WithContext(s.Ctx).Debugf("SMTP authentication attempt for %q", username)
 
 	s.User = username
 
@@ -89,11 +89,11 @@ func (s *Session) AuthPlain(username, pwd string) error {
 		s.Ctx.UserName = user.Name
 		s.Ctx.IsAdmin = user.IsAdmin == 1
 
-		log.WithContext(s.Ctx).Debugf("Auth Success %+v", user)
+		log.WithContext(s.Ctx).Debugf("SMTP authentication succeeded for user %d", user.ID)
 		return nil
 	}
 
-	log.WithContext(s.Ctx).Debugf("登陆错误%s %s", username, pwd)
+	log.WithContext(s.Ctx).Debugf("SMTP authentication failed for %q", username)
 	return errors.New("password error")
 }
 

@@ -68,50 +68,53 @@ func GetGroupByFullPath(ctx *context.Context, fullPath string) (*models.Group, e
 }
 
 func DelGroup(ctx *context.Context, groupId int) (bool, error) {
-	allGroupIds := getAllChildId(ctx, groupId)
-	allGroupIds = append(allGroupIds, groupId)
-
-	// 开启一个事务
 	trans := db.Instance.NewSession()
-
-	res, err := trans.Exec(db.WithContext(ctx, fmt.Sprintf("delete from `group` where id in (%s) and user_id =?", array.Join(allGroupIds, ","))), ctx.UserID)
-	if err != nil {
-		trans.Rollback()
+	defer trans.Close()
+	if err := trans.Begin(); err != nil {
 		return false, errors.Wrap(err)
 	}
-	num, err := res.RowsAffected()
+	defer trans.Rollback()
+
+	var root models.Group
+	found, err := trans.Where("id=? and user_id=?", groupId, ctx.UserID).Get(&root)
 	if err != nil {
-		trans.Rollback()
 		return false, errors.Wrap(err)
 	}
-
-	_, err = trans.Exec(db.WithContext(ctx, fmt.Sprintf("update user_email set group_id=0 where group_id in (%s)", array.Join(allGroupIds, ","))))
-	if err != nil {
-		trans.Rollback()
-		return false, errors.Wrap(err)
+	if !found {
+		return false, nil
 	}
 
-	trans.Commit()
+	// Only collect descendants owned by this user, in the same transaction.
+	allGroupIds := []int{groupId}
+	seen := map[int]bool{groupId: true}
+	for pending := []int{groupId}; len(pending) > 0; {
+		var children []models.Group
+		if err := trans.Where("user_id=?", ctx.UserID).In("parent_id", pending).Find(&children); err != nil {
+			return false, errors.Wrap(err)
+		}
+		pending = nil
+		for _, child := range children {
+			if !seen[child.ID] {
+				seen[child.ID] = true
+				allGroupIds = append(allGroupIds, child.ID)
+				pending = append(pending, child.ID)
+			}
+		}
+	}
 
+	num, err := trans.Where("user_id=?", ctx.UserID).In("id", allGroupIds).Delete(&models.Group{})
+	if err != nil {
+		return false, errors.Wrap(err)
+	}
+	_, err = trans.Table(&models.UserEmail{}).Where("user_id=?", ctx.UserID).
+		In("group_id", allGroupIds).Update(map[string]interface{}{"group_id": 0})
+	if err != nil {
+		return false, errors.Wrap(err)
+	}
+	if err := trans.Commit(); err != nil {
+		return false, errors.Wrap(err)
+	}
 	return num > 0, nil
-}
-
-type id struct {
-	Id int `db:"id"`
-}
-
-func getAllChildId(ctx *context.Context, rootId int) []int {
-	var ids []id
-	var ret []int
-	err := db.Instance.Table("group").Where("parent_id=? and user_id=?", rootId, ctx.UserID).Find(&ids)
-	if err != nil {
-		log.WithContext(ctx).Errorf("getAllChildId err: %v", err)
-	}
-	for _, item := range ids {
-		ret = array.Merge(ret, getAllChildId(ctx, item.Id))
-		ret = append(ret, item.Id)
-	}
-	return ret
 }
 
 // GetGroupInfoList 获取全部的分组

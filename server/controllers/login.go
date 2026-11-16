@@ -44,8 +44,11 @@ func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if user.ID != 0 {
-		userStr, _ := json.Marshal(user)
-		session.Instance.Put(req.Context(), "user", string(userStr))
+		if err := session.Login(req.Context(), &user); err != nil {
+			log.WithContext(ctx).Errorf("Create session: %v", err)
+			response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
+			return
+		}
 
 		domains := config.Instance.Domains
 		domains = array.Difference(domains, []string{config.Instance.Domain})
@@ -63,6 +66,9 @@ func Login(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 }
 
 func Logout(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
-	session.Instance.Clear(ctx.Context)
+	if err := session.Instance.Destroy(ctx.Context); err != nil {
+		response.NewErrorResponse(response.ServerError, i18n.GetText(ctx.Lang, "unknowError"), "").FPrint(w)
+		return
+	}
 	response.NewSuccessResponse("Success").FPrint(w)
 }

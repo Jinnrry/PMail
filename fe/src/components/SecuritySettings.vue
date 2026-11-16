@@ -75,6 +75,9 @@ const submit = function () {
       message: res.data,
       type: res.errorNo === 0 ? 'success' : 'error',
     })
+    if (res.errorNo === 0) {
+      location.reload();
+    }
   })
 }
 </script>

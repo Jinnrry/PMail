@@ -13,19 +13,21 @@ var instance *smtp.Server
 var instanceTls *smtp.Server
 var instanceTlsNew *smtp.Server
 
+func newSMTPServer(addr string) *smtp.Server {
+	server := smtp.NewServer(&Backend{})
+	server.Addr = addr
+	server.Domain = config.Instance.Domain
+	server.ReadTimeout = 10 * time.Second
+	server.WriteTimeout = 10 * time.Second
+	server.MaxMessageBytes = 1024 * 1024 * 30
+	server.MaxRecipients = 50
+	// PLAIN and LOGIN credentials may only be sent over TLS, including on 587.
+	server.AllowInsecureAuth = false
+	return server
+}
+
 func StartWithTLSNew() {
-	be := &Backend{}
-
-	instanceTlsNew = smtp.NewServer(be)
-
-	instanceTlsNew.Addr = ":587"
-	instanceTlsNew.Domain = config.Instance.Domain
-	instanceTlsNew.ReadTimeout = 10 * time.Second
-	instanceTlsNew.WriteTimeout = 10 * time.Second
-	instanceTlsNew.MaxMessageBytes = 1024 * 1024 * 30
-	instanceTlsNew.MaxRecipients = 50
-	// force TLS for auth
-	instanceTlsNew.AllowInsecureAuth = true
+	instanceTlsNew = newSMTPServer(":587")
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
@@ -43,18 +45,7 @@ func StartWithTLSNew() {
 }
 
 func StartWithTLS() {
-	be := &Backend{}
-
-	instanceTls = smtp.NewServer(be)
-
-	instanceTls.Addr = ":465"
-	instanceTls.Domain = config.Instance.Domain
-	instanceTls.ReadTimeout = 10 * time.Second
-	instanceTls.WriteTimeout = 10 * time.Second
-	instanceTls.MaxMessageBytes = 1024 * 1024 * 30
-	instanceTls.MaxRecipients = 50
-	// force TLS for auth
-	instanceTls.AllowInsecureAuth = true
+	instanceTls = newSMTPServer(":465")
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {
@@ -71,18 +62,7 @@ func StartWithTLS() {
 }
 
 func Start() {
-	be := &Backend{}
-
-	instance = smtp.NewServer(be)
-
-	instance.Addr = ":25"
-	instance.Domain = config.Instance.Domain
-	instance.ReadTimeout = 10 * time.Second
-	instance.WriteTimeout = 10 * time.Second
-	instance.MaxMessageBytes = 1024 * 1024 * 30
-	instance.MaxRecipients = 50
-	// force TLS for auth
-	instance.AllowInsecureAuth = false
+	instance = newSMTPServer(":25")
 	// Load the certificate and key
 	cer, err := tls.LoadX509KeyPair(config.Instance.SSLPublicKeyPath, config.Instance.SSLPrivateKeyPath)
 	if err != nil {

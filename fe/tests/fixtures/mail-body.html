@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Mail body regression fixture</title></head>
+<body>
+<div id="app"></div>
+<script type="module">
+  import {createApp, h, ref} from 'vue'
+  import MailBodyFrame from '/src/components/MailBodyFrame.vue'
+
+  const html = ref('<p>Initial message</p>')
+  window.setMailHTML = value => { html.value = value }
+  window.scriptExecutions = 0
+  createApp({render: () => h(MailBodyFrame, {html: html.value})}).mount('#app')
+</script>
+</body>
+</html>
