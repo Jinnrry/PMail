@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/dto/response"
+	"github.com/Jinnrry/pmail/services/domain"
 	"github.com/Jinnrry/pmail/services/setup"
 	"github.com/Jinnrry/pmail/services/setup/ssl"
 	"github.com/Jinnrry/pmail/utils/context"
@@ -117,7 +118,12 @@ func Setup(ctx *context.Context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	if reqData["step"] == "dns" && reqData["action"] == "get" {
-		dnsInfos, err := setup.GetDNSSettings(ctx)
+		cfg, err := config.ReadConfig()
+		if err != nil {
+			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
+			return
+		}
+		dnsInfos, err := domain.GetDNSSettings(ctx, cfg, cfg.Domains)
 		if err != nil {
 			response.NewErrorResponse(response.ServerError, err.Error(), "").FPrint(w)
 			return

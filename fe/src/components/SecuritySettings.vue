@@ -25,6 +25,21 @@
 
     <el-divider class="settings-divider"/>
 
+    <template v-if="userInfos.is_admin">
+      <div class="settings-header">
+        <h3>{{ lang.dns_records }}</h3>
+        <p class="settings-desc">{{ lang.dns_desc }}</p>
+      </div>
+      <div class="settings-body">
+        <div v-for="(records, domain) in dnsInfos" :key="domain" class="domain-block">
+          <h4>{{ domain }}</h4>
+          <DNSRecordTable :records="records"/>
+        </div>
+      </div>
+
+      <el-divider class="settings-divider"/>
+    </template>
+
     <div class="settings-header">
       <h3 class="danger-text">{{ lang.logout }}</h3>
       <p class="settings-desc">{{ lang.logout_desc }}</p>
@@ -38,10 +53,26 @@
 </template>
 
 <script setup>
-import {reactive} from 'vue'
+import {onMounted, reactive, ref} from 'vue'
 import {ElNotification} from 'element-plus'
 import lang from '../i18n/i18n';
 import {http} from "@/utils/axios";
+import DNSRecordTable from '@/components/DNSRecordTable.vue'
+import {useGlobalStatusStore} from "@/stores/useGlobalStatusStore";
+
+const userInfos = useGlobalStatusStore().userInfos;
+const dnsInfos = ref({})
+
+onMounted(() => {
+  if (!userInfos.is_admin) return
+  http.post("/api/domain/dns", {}).then(res => {
+    if (res.errorNo !== 0) {
+      ElNotification({title: lang.fail, message: res.errorMsg, type: 'error'})
+      return
+    }
+    dnsInfos.value = res.data
+  })
+})
 
 const ruleForm = reactive({
   new_pwd: "",
@@ -106,6 +137,17 @@ const submit = function () {
   font-size: 14px;
   color: var(--pm-text-secondary);
   margin: 0;
+}
+
+.domain-block {
+  margin-bottom: 24px;
+}
+
+.domain-block h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pm-text-primary);
+  margin: 0 0 10px 0;
 }
 
 .settings-body {
