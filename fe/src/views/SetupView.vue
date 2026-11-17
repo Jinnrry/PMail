@@ -135,11 +135,15 @@
           <el-table-column prop="type" label="TYPE" width="110px"/>
           <el-table-column prop="value" label="VALUE">
             <template #default="scope">
-              <div style="display: flex; align-items: center">
+              <div style="display: flex; align-items: center; word-break: break-all">
                 <el-tooltip :content="scope.row.tips" placement="top" v-if="scope.row.tips !== ''">
                   {{ scope.row.value }}
                 </el-tooltip>
                 <span v-else>{{ scope.row.value }}</span>
+              </div>
+              <div v-if="scope.row.splitValue" style="margin-top: 8px; word-break: break-all">
+                <div style="font-size: 12px; color: var(--el-text-color-secondary)">{{ lang.dns_txt_split_desc }}</div>
+                <div>{{ scope.row.splitValue }}</div>
               </div>
             </template>
           </el-table-column>
@@ -364,12 +368,8 @@ const setDbConfig = () => {
   })
 }
 
-// DNS limits each TXT character-string to 255 bytes; longer values
-// (e.g. 2048-bit DKIM keys) are published as multiple quoted strings.
-const splitTXT = (value) => {
-  if (value.length <= 255) return value
-  return value.match(/.{1,255}/g).map(s => `"${s}"`).join(' ')
-}
+// DNS 单个 TXT 字符串最长 255 字节，更长的值（如 2048 位 DKIM 公钥）拆成多段带引号的字符串
+const splitTXT = (value) => value.match(/.{1,255}/g).map(s => `"${s}"`).join(' ')
 
 const getDNSConfig = () => {
   http.post("/api/setup", {"action": "get", "step": "dns"}).then((res) => {
@@ -378,7 +378,7 @@ const getDNSConfig = () => {
     } else {
       for (const items of Object.values(res.data)) {
         for (const item of items) {
-          if (item.type === 'TXT') item.value = splitTXT(item.value)
+          if (item.type === 'TXT' && item.value.length > 255) item.splitValue = splitTXT(item.value)
         }
       }
       dnsInfos.value = res.data

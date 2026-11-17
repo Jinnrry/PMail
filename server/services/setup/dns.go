@@ -2,10 +2,10 @@ package setup
 
 import (
 	"fmt"
-	"github.com/Jinnrry/pmail/config"
-	"github.com/Jinnrry/pmail/dto/parsemail"
 	"strings"
 
+	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/dto/parsemail"
 	"github.com/Jinnrry/pmail/i18n"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/errors"
