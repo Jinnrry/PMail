@@ -364,11 +364,23 @@ const setDbConfig = () => {
   })
 }
 
+// DNS limits each TXT character-string to 255 bytes; longer values
+// (e.g. 2048-bit DKIM keys) are published as multiple quoted strings.
+const splitTXT = (value) => {
+  if (value.length <= 255) return value
+  return value.match(/.{1,255}/g).map(s => `"${s}"`).join(' ')
+}
+
 const getDNSConfig = () => {
   http.post("/api/setup", {"action": "get", "step": "dns"}).then((res) => {
     if (res.errorNo !== 0) {
       ElMessage.error(res.errorMsg)
     } else {
+      for (const items of Object.values(res.data)) {
+        for (const item of items) {
+          if (item.type === 'TXT') item.value = splitTXT(item.value)
+        }
+      }
       dnsInfos.value = res.data
     }
   })

@@ -3,10 +3,10 @@ package setup
 import (
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
+	"github.com/Jinnrry/pmail/dto/parsemail"
 	"strings"
 
 	"github.com/Jinnrry/pmail/i18n"
-	"github.com/Jinnrry/pmail/services/auth"
 	"github.com/Jinnrry/pmail/utils/context"
 	"github.com/Jinnrry/pmail/utils/errors"
 	"github.com/Jinnrry/pmail/utils/ip"
@@ -26,6 +26,11 @@ func GetDNSSettings(ctx *context.Context) (map[string][]*DNSItem, error) {
 		return nil, errors.Wrap(err)
 	}
 
+	dkimRecord, err := parsemail.DkimRecord(configData.DkimPrivateKeyPath)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
 	ret := make(map[string][]*DNSItem)
 
 	for _, domain := range configData.Domains {
@@ -37,7 +42,7 @@ func GetDNSSettings(ctx *context.Context) (map[string][]*DNSItem, error) {
 			{Type: "A", Host: "@", Value: ip.GetIp(), TTL: 3600, Tips: i18n.GetText(ctx.Lang, "ip_taps")},
 			{Type: "MX", Host: "@", Value: fmt.Sprintf("smtp.%s", domain), TTL: 3600},
 			{Type: "TXT", Host: "@", Value: "v=spf1 a mx ~all", TTL: 3600},
-			{Type: "TXT", Host: "default._domainkey", Value: auth.DkimGen(), TTL: 3600},
+			{Type: "TXT", Host: "default._domainkey", Value: dkimRecord, TTL: 3600},
 		}
 	}
 

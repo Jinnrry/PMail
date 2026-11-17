@@ -3,8 +3,12 @@ package parsemail
 import (
 	"bytes"
 	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/utils/consts"
@@ -13,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ed25519"
 	"io"
+	"io/fs"
 	"os"
 	"strings"
 )
@@ -34,6 +39,35 @@ func Init() {
 	instance = &Dkim{
 		privateKey: privateKey,
 	}
+}
+
+// DkimRecord returns the DKIM TXT record for the private key at path,
+// generating an RSA-2048 key first if the file does not exist.
+func DkimRecord(path string) (string, error) {
+	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
+		key, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return "", err
+		}
+		der, _ := x509.MarshalPKCS8PrivateKey(key)
+		data := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})
+		if err := os.WriteFile(path, data, 0600); err != nil {
+			return "", err
+		}
+	}
+
+	key, err := loadPrivateKey(path)
+	if err != nil {
+		return "", err
+	}
+	switch pub := key.Public().(type) {
+	case *rsa.PublicKey:
+		der, _ := x509.MarshalPKIXPublicKey(pub)
+		return "v=DKIM1; k=rsa; p=" + base64.StdEncoding.EncodeToString(der), nil
+	case ed25519.PublicKey:
+		return "v=DKIM1; k=ed25519; p=" + base64.StdEncoding.EncodeToString(pub), nil
+	}
+	panic("unreachable")
 }
 
 func loadPrivateKey(path string) (crypto.Signer, error) {
