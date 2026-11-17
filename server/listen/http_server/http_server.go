@@ -3,14 +3,15 @@ package http_server
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"net/http"
+	"time"
+
 	"github.com/Jinnrry/pmail/config"
 	"github.com/Jinnrry/pmail/controllers"
 	"github.com/Jinnrry/pmail/controllers/email"
 	"github.com/Jinnrry/pmail/session"
 	log "github.com/sirupsen/logrus"
-	"io/fs"
-	"net/http"
-	"time"
 )
 
 // 这个服务是为了拦截http请求转发到https
@@ -56,6 +57,7 @@ func router(mux *http.ServeMux) {
 	mux.HandleFunc("/api/user/list", contextIterceptor(controllers.UserList))
 	mux.HandleFunc("/api/plugin/settings/", contextIterceptor(controllers.SettingsHtml))
 	mux.HandleFunc("/api/plugin/list", contextIterceptor(controllers.GetPluginList))
+	mux.HandleFunc("/api/domain/dns", contextIterceptor(controllers.GetDNSRecords))
 }
 
 func HttpStart() {
@@ -67,7 +69,6 @@ func HttpStart() {
 	}
 
 	if config.Instance.HttpsEnabled != 2 {
-		// 在重定向模式下，也必须显式处理 ACME 挑战，避免跳转导致验证失败
 		mux.HandleFunc("/.well-known/", controllers.AcmeChallenge)
 		mux.HandleFunc("/api/ping", controllers.Ping)
 		mux.HandleFunc("/", controllers.Interceptor)
