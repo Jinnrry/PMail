@@ -2,6 +2,7 @@
   "logLevel": "info",
   "domain": "domain.com",
   "webDomain": "mail.domain.com",
+  "heloName": "",
   "dkimPrivateKeyPath": "config/dkim/dkim.priv",
   "sslType": "0",
   "SSLPrivateKeyPath": "config/ssl/private.key",

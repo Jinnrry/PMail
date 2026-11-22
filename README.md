@@ -83,6 +83,7 @@ use [https://email-spam-tester.com/](https://email-spam-tester.com/), which is f
   "logLevel": "info", //log output level
   "domain": "domain.com", // Your domain
   "webDomain": "mail.domain.com", // web domain
+  "heloName": "", // hostname used in outgoing EHLO, should match the rDNS (PTR) of the server IP. Empty means the sender domain
   "dkimPrivateKeyPath": "config/dkim/dkim.priv", // dkim key path
   "sslType": "0", // ssl certificate update mode, 0 automatic, 1 manual
   "SSLPrivateKeyPath": "config/ssl/private.key", // ssl certificate path
