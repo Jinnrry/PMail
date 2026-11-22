@@ -85,6 +85,7 @@ PMail是一个追求极简部署流程、极致资源占用的个人域名邮箱
   "logLevel": "info", //日志输出级别
   "domain": "domain.com", // 你的域名
   "webDomain": "mail.domain.com", // web域名
+  "heloName": "", // 发信时 EHLO 使用的主机名，应与服务器 IP 的 rDNS(PTR) 一致，留空则使用发件域名
   "dkimPrivateKeyPath": "config/dkim/dkim.priv", // dkim 私钥地址
   "sslType": "0", // ssl证书更新模式，0自动，HTTP模式，1手动、2自动，DNS模式
   "SSLPrivateKeyPath": "config/ssl/private.key", // ssl 证书地址
