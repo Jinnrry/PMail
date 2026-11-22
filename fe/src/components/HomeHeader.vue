@@ -31,6 +31,9 @@
       <el-tab-pane v-if="userInfos.is_admin" :label="lang.user_management">
         <UserManagement/>
       </el-tab-pane>
+      <el-tab-pane v-if="userInfos.is_admin" :label="lang.dns_records">
+        <DNSSettings/>
+      </el-tab-pane>
       <el-tab-pane :label="lang.plugin_settings">
         <PluginSettings/>
       </el-tab-pane>
@@ -47,6 +50,7 @@ import GroupSettings from './GroupSettings.vue';
 import RuleSettings from './RuleSettings.vue';
 import UserManagement from './UserManagement.vue';
 import PluginSettings from './PluginSettings.vue';
+import DNSSettings from './DNSSettings.vue';
 import {useGlobalStatusStore} from "@/stores/useGlobalStatusStore";
 
 const globalStatus = useGlobalStatusStore();

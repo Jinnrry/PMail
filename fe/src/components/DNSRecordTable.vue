@@ -1,6 +1,6 @@
 <template>
   <el-table :data="rows" border style="width: 100%">
-    <el-table-column prop="host" label="HOSTNAME" width="110px">
+    <el-table-column prop="host" label="HOSTNAME" width="110px" fixed>
       <template #default="scope">
         <div style="display: flex; align-items: center">
           <el-tooltip :content="lang.dns_root_desc" placement="top"
@@ -12,7 +12,7 @@
       </template>
     </el-table-column>
     <el-table-column prop="type" label="TYPE" width="110px"/>
-    <el-table-column prop="value" label="VALUE">
+    <el-table-column prop="value" label="VALUE" min-width="480px">
       <template #default="scope">
         <div style="display: flex; align-items: center; word-break: break-all">
           <el-tooltip :content="scope.row.tips" placement="top" v-if="scope.row.tips !== ''">
